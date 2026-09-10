@@ -1,5 +1,8 @@
 import type { TranslationKey } from '../../localization/translations';
+import { validateDocumentFile } from '../../utils/fileValidation';
 import type { FamilyMemberFormValues } from './types';
+
+export { validateDocumentFile };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_AGE_YEARS = 130;
@@ -38,17 +41,4 @@ export function validateFamilyMemberForm(values: FamilyMemberFormValues): Family
   }
 
   return errors;
-}
-
-export const MAX_DOCUMENT_FILE_SIZE = 20 * 1024 * 1024;
-const ACCEPTED_DOCUMENT_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/png', 'image/heic', 'image/webp'];
-
-export function validateDocumentFile(file: File): TranslationKey | null {
-  if (file.size > MAX_DOCUMENT_FILE_SIZE) {
-    return 'validationFileTooLarge';
-  }
-  if (file.type && !ACCEPTED_DOCUMENT_MIME_TYPES.includes(file.type)) {
-    return 'validationFileTypeUnsupported';
-  }
-  return null;
 }

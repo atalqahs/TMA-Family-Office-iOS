@@ -1,0 +1,27 @@
+.cover-photo-picker {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.cover-photo-picker__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.cover-photo-picker__input {
+  display: none;
+}
+
+.cover-photo-picker__status {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.cover-photo-picker__error {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-danger);
+}

@@ -87,7 +87,29 @@ export type TranslationKey =
   | 'documentOpenAction'
   | 'documentOpenError'
   | 'documentDeleteAction'
-  | 'documentExpiryPrefixLabel';
+  | 'documentExpiryPrefixLabel'
+  | 'validationPropertyNameRequired'
+  | 'propertyFormAddTitle'
+  | 'propertyFormEditTitle'
+  | 'fieldPropertyName'
+  | 'fieldPropertyType'
+  | 'fieldPropertyStatus'
+  | 'fieldCountry'
+  | 'fieldCity'
+  | 'fieldArea'
+  | 'fieldBlock'
+  | 'fieldStreet'
+  | 'fieldAvenue'
+  | 'fieldHouseNumber'
+  | 'fieldPropertyNumber'
+  | 'profileSectionLocation'
+  | 'profileSectionPropertyInfo'
+  | 'propertyNotFoundTitle'
+  | 'backToPropertiesLabel'
+  | 'propertyDeleteAction'
+  | 'propertyDeleteConfirmTitle'
+  | 'propertyDeleteConfirmBody'
+  | 'propertyDeleteConfirmAction';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -113,7 +135,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'معلومات التطبيق',
-    settingsVersionValue: 'نسخة تجريبية — المرحلة 3',
+    settingsVersionValue: 'نسخة تجريبية — المرحلة 4',
     settingsDisclaimer:
       'هذه نسخة تجريبية لتجربة الفكرة والتصميم على آيفون. النسخة النهائية ستكون تطبيق ويندوز مستقل.',
     trashTitle: 'سلة المحذوفات',
@@ -175,6 +197,28 @@ export const translations: Record<Locale, Dictionary> = {
     documentOpenError: 'تعذر فتح هذا المستند.',
     documentDeleteAction: 'إزالة',
     documentExpiryPrefixLabel: 'ينتهي في',
+    validationPropertyNameRequired: 'اسم العقار مطلوب.',
+    propertyFormAddTitle: 'إضافة عقار',
+    propertyFormEditTitle: 'تعديل بيانات العقار',
+    fieldPropertyName: 'اسم العقار',
+    fieldPropertyType: 'نوع العقار',
+    fieldPropertyStatus: 'الحالة',
+    fieldCountry: 'الدولة',
+    fieldCity: 'المدينة',
+    fieldArea: 'المنطقة',
+    fieldBlock: 'القطعة',
+    fieldStreet: 'الشارع',
+    fieldAvenue: 'الجادة',
+    fieldHouseNumber: 'رقم المنزل',
+    fieldPropertyNumber: 'رقم العقار',
+    profileSectionLocation: 'الموقع',
+    profileSectionPropertyInfo: 'معلومات العقار',
+    propertyNotFoundTitle: 'لم يتم العثور على هذا العقار.',
+    backToPropertiesLabel: 'العودة إلى العقارات',
+    propertyDeleteAction: 'حذف العقار',
+    propertyDeleteConfirmTitle: 'هل تريد حذف هذا العقار؟',
+    propertyDeleteConfirmBody: 'سيتم حذف هذا العقار وجميع مستنداته نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    propertyDeleteConfirmAction: 'حذف',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -197,7 +241,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'App Information',
-    settingsVersionValue: 'Prototype — Phase 3',
+    settingsVersionValue: 'Prototype — Phase 4',
     settingsDisclaimer:
       'This is an experimental prototype for testing the idea and design on iPhone. The final version will be a standalone Windows application.',
     trashTitle: 'Trash',
@@ -259,6 +303,28 @@ export const translations: Record<Locale, Dictionary> = {
     documentOpenError: 'Could not open this document.',
     documentDeleteAction: 'Remove',
     documentExpiryPrefixLabel: 'Expires',
+    validationPropertyNameRequired: 'Property name is required.',
+    propertyFormAddTitle: 'Add Property',
+    propertyFormEditTitle: 'Edit Property',
+    fieldPropertyName: 'Property Name',
+    fieldPropertyType: 'Property Type',
+    fieldPropertyStatus: 'Status',
+    fieldCountry: 'Country',
+    fieldCity: 'City',
+    fieldArea: 'Area',
+    fieldBlock: 'Block',
+    fieldStreet: 'Street',
+    fieldAvenue: 'Avenue',
+    fieldHouseNumber: 'House Number',
+    fieldPropertyNumber: 'Property Number',
+    profileSectionLocation: 'Location',
+    profileSectionPropertyInfo: 'Property Information',
+    propertyNotFoundTitle: 'This property could not be found.',
+    backToPropertiesLabel: 'Back to Properties',
+    propertyDeleteAction: 'Delete Property',
+    propertyDeleteConfirmTitle: 'Delete this property?',
+    propertyDeleteConfirmBody: 'This property and all of its documents will be permanently deleted. This cannot be undone.',
+    propertyDeleteConfirmAction: 'Delete',
   },
 };
 

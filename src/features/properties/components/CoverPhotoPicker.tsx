@@ -1,17 +1,16 @@
 import { useRef, type ChangeEvent } from 'react';
-import { Avatar } from '../../../components/Avatar';
+import { CoverPhoto } from '../../../components/CoverPhoto';
 import { SecondaryButton } from '../../../components/SecondaryButton';
-import { usePhotoPicker } from '../../../hooks/usePhotoPicker';
 import { useLanguage } from '../../../hooks/useLanguage';
-import './ProfilePhotoPicker.css';
+import { usePhotoPicker } from '../../../hooks/usePhotoPicker';
+import './CoverPhotoPicker.css';
 
-interface ProfilePhotoPickerProps {
-  name: string;
+interface CoverPhotoPickerProps {
   photo?: Blob;
   onChange: (photo: Blob | undefined) => void;
 }
 
-export function ProfilePhotoPicker({ name, photo, onChange }: ProfilePhotoPickerProps) {
+export function CoverPhotoPicker({ photo, onChange }: CoverPhotoPickerProps) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const { error, processing, handleFile } = usePhotoPicker(onChange);
@@ -23,9 +22,9 @@ export function ProfilePhotoPicker({ name, photo, onChange }: ProfilePhotoPicker
   };
 
   return (
-    <div className="profile-photo-picker">
-      <Avatar photo={photo} name={name} size="lg" />
-      <div className="profile-photo-picker__actions">
+    <div className="cover-photo-picker">
+      <CoverPhoto photo={photo} size="lg" />
+      <div className="cover-photo-picker__actions">
         <SecondaryButton type="button" onClick={() => inputRef.current?.click()} disabled={processing}>
           {photo ? t('photoChangeLabel') : t('photoChooseLabel')}
         </SecondaryButton>
@@ -40,10 +39,10 @@ export function ProfilePhotoPicker({ name, photo, onChange }: ProfilePhotoPicker
         type="file"
         accept="image/*"
         onChange={handleFileChange}
-        className="profile-photo-picker__input"
+        className="cover-photo-picker__input"
       />
-      {processing && <p className="profile-photo-picker__status">{t('photoProcessingLabel')}</p>}
-      {error && <p className="profile-photo-picker__error">{error}</p>}
+      {processing && <p className="cover-photo-picker__status">{t('photoProcessingLabel')}</p>}
+      {error && <p className="cover-photo-picker__error">{error}</p>}
     </div>
   );
 }

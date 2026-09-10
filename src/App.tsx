@@ -6,10 +6,14 @@ import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { FamilyMemberProfilePage } from './pages/FamilyMemberProfilePage';
 import { FamilyPage } from './pages/FamilyPage';
+import { PropertiesPage } from './pages/PropertiesPage';
+import { PropertyProfilePage } from './pages/PropertyProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TrashPage } from './pages/TrashPage';
 
-const PLACEHOLDER_CATEGORIES = CATEGORIES.filter((category) => category.id !== 'family');
+const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
+  (category) => category.id !== 'family' && category.id !== 'properties',
+);
 
 export default function App() {
   return (
@@ -20,6 +24,8 @@ export default function App() {
             <Route index element={<DashboardPage />} />
             <Route path="family" element={<FamilyPage />} />
             <Route path="family/:memberId" element={<FamilyMemberProfilePage />} />
+            <Route path="properties" element={<PropertiesPage />} />
+            <Route path="properties/:propertyId" element={<PropertyProfilePage />} />
             {PLACEHOLDER_CATEGORIES.map((category) => (
               <Route
                 key={category.id}
