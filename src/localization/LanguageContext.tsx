@@ -4,7 +4,7 @@ import { LanguageContext, type LanguageContextValue } from './language-context';
 import { DEFAULT_LOCALE, LOCALE_DIR, translations, type Locale, type TranslationKey } from './translations';
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const { value: locale, setValue: setLocale } = usePersistentSetting<Locale>(
+  const { value: locale, setValue: setLocale, ready } = usePersistentSetting<Locale>(
     'locale',
     DEFAULT_LOCALE,
   );
@@ -26,6 +26,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }),
     [locale, dir, setLocale],
   );
+
+  // Wait for the persisted locale to load from IndexedDB before mounting
+  // children, so a saved English preference can't flash as Arabic (the
+  // default) first. `index.html` already renders lang="ar" dir="rtl" as a
+  // static default, so this brief gap stays a plain dark screen, not a
+  // wrong-direction flash of content.
+  if (!ready) {
+    return null;
+  }
 
   return <LanguageContext.Provider value={contextValue}>{children}</LanguageContext.Provider>;
 }
