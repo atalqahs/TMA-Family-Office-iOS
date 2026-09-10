@@ -1,22 +1,33 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
 
 /**
  * Central IndexedDB schema for the prototype.
  *
- * Feature modules (family, vehicles, staff, properties, ...) will add their
- * own object stores here later, bumping DB_VERSION and handling migration
- * inside `upgrade`. For this skeleton only a generic `settings` store
- * exists, used to persist app preferences (e.g. language).
+ * Feature modules add their own object stores here, bumping DB_VERSION and
+ * extending `upgrade` — existing stores are left untouched by the
+ * `objectStoreNames.contains` guards, so upgrading never drops previously
+ * persisted data (e.g. Phase 1/2 settings survive the v1 -> v2 upgrade that
+ * added the family stores in Phase 3).
  */
 interface TmaDB extends DBSchema {
   settings: {
     key: string;
     value: unknown;
   };
+  familyMembers: {
+    key: string;
+    value: FamilyMember;
+  };
+  familyMemberDocuments: {
+    key: string;
+    value: FamilyMemberDocument;
+    indexes: { familyMemberId: string };
+  };
 }
 
 const DB_NAME = 'tma-family-office';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -27,7 +38,18 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings');
         }
+        if (!db.objectStoreNames.contains('familyMembers')) {
+          db.createObjectStore('familyMembers', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('familyMemberDocuments')) {
+          const store = db.createObjectStore('familyMemberDocuments', { keyPath: 'id' });
+          store.createIndex('familyMemberId', 'familyMemberId');
+        }
       },
+    }).catch((error) => {
+      // Don't cache a broken connection forever — let the next call retry.
+      dbPromise = null;
+      throw error;
     });
   }
   return dbPromise;

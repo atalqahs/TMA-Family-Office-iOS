@@ -4,8 +4,12 @@ import { CATEGORIES } from './features/categories/categories';
 import { LanguageProvider } from './localization/LanguageContext';
 import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { FamilyMemberProfilePage } from './pages/FamilyMemberProfilePage';
+import { FamilyPage } from './pages/FamilyPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { TrashPage } from './pages/TrashPage';
+
+const PLACEHOLDER_CATEGORIES = CATEGORIES.filter((category) => category.id !== 'family');
 
 export default function App() {
   return (
@@ -14,7 +18,9 @@ export default function App() {
         <Routes>
           <Route path="/" element={<AppShell />}>
             <Route index element={<DashboardPage />} />
-            {CATEGORIES.map((category) => (
+            <Route path="family" element={<FamilyPage />} />
+            <Route path="family/:memberId" element={<FamilyMemberProfilePage />} />
+            {PLACEHOLDER_CATEGORIES.map((category) => (
               <Route
                 key={category.id}
                 path={category.path.slice(1)}

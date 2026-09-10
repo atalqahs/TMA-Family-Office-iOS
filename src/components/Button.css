@@ -34,6 +34,15 @@
   background: var(--color-surface-elevated);
 }
 
+.btn--danger {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.btn--danger:active {
+  background: var(--color-danger-soft);
+}
+
 .btn:disabled {
   opacity: 0.5;
 }

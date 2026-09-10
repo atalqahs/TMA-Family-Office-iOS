@@ -1,9 +1,31 @@
+import { useEffect, useState } from 'react';
+import { getActiveFamilyMemberCount } from '../features/family/familyRepository';
+
 /**
- * Item count for a category. Always 0 for now — no entity stores exist
- * yet (Phase 2 is app shell + navigation only). Once a category gets its
- * own IndexedDB store, this is the single place to wire up a live count
- * without touching CategoryCard, the Dashboard, or the header badge.
+ * Item count for a category. Only `family` has a real store so far — every
+ * other category still returns 0 until its own module is built, at which
+ * point it gets the same treatment here without touching any call site.
  */
-export function useCategoryCount(_categoryId: string): number {
-  return 0;
+export function useCategoryCount(categoryId: string): number {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (categoryId !== 'family') {
+      setCount(0);
+      return;
+    }
+    let cancelled = false;
+    getActiveFamilyMemberCount()
+      .then((value) => {
+        if (!cancelled) setCount(value);
+      })
+      .catch((error) => {
+        console.error('Failed to load family member count', error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
+
+  return count;
 }
