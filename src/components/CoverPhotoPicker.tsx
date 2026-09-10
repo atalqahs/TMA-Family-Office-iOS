@@ -1,8 +1,8 @@
 import { useRef, type ChangeEvent } from 'react';
-import { CoverPhoto } from '../../../components/CoverPhoto';
-import { SecondaryButton } from '../../../components/SecondaryButton';
-import { useLanguage } from '../../../hooks/useLanguage';
-import { usePhotoPicker } from '../../../hooks/usePhotoPicker';
+import { CoverPhoto } from './CoverPhoto';
+import { SecondaryButton } from './SecondaryButton';
+import { useLanguage } from '../hooks/useLanguage';
+import { usePhotoPicker } from '../hooks/usePhotoPicker';
 import './CoverPhotoPicker.css';
 
 interface CoverPhotoPickerProps {
@@ -10,6 +10,7 @@ interface CoverPhotoPickerProps {
   onChange: (photo: Blob | undefined) => void;
 }
 
+/** Shared cover-photo picker for any entity with a rectangular cover photo (Properties, Vehicles, ...). */
 export function CoverPhotoPicker({ photo, onChange }: CoverPhotoPickerProps) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);

@@ -1,6 +1,7 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
 import type { Property, PropertyDocument } from '../features/properties/types';
+import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../features/vehicles/types';
 
 /**
  * Central IndexedDB schema for the prototype.
@@ -9,7 +10,9 @@ import type { Property, PropertyDocument } from '../features/properties/types';
  * extending `upgrade` — existing stores are left untouched by the
  * `objectStoreNames.contains` guards, so upgrading never drops previously
  * persisted data (e.g. Phase 1/2 settings and Phase 3 Family data survive
- * the v2 -> v3 upgrade that added the property stores in Phase 4).
+ * the v2 -> v3 upgrade that added the property stores in Phase 4, and all
+ * of that survives the v3 -> v4 upgrade that added the vehicle stores in
+ * Phase 5).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -34,10 +37,24 @@ interface TmaDB extends DBSchema {
     value: PropertyDocument;
     indexes: { propertyId: string };
   };
+  vehicles: {
+    key: string;
+    value: Vehicle;
+  };
+  vehicleDocuments: {
+    key: string;
+    value: VehicleDocument;
+    indexes: { vehicleId: string };
+  };
+  vehicleMaintenanceRecords: {
+    key: string;
+    value: VehicleMaintenanceRecord;
+    indexes: { vehicleId: string };
+  };
 }
 
 const DB_NAME = 'tma-family-office';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -61,6 +78,17 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
         if (!db.objectStoreNames.contains('propertyDocuments')) {
           const store = db.createObjectStore('propertyDocuments', { keyPath: 'id' });
           store.createIndex('propertyId', 'propertyId');
+        }
+        if (!db.objectStoreNames.contains('vehicles')) {
+          db.createObjectStore('vehicles', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('vehicleDocuments')) {
+          const store = db.createObjectStore('vehicleDocuments', { keyPath: 'id' });
+          store.createIndex('vehicleId', 'vehicleId');
+        }
+        if (!db.objectStoreNames.contains('vehicleMaintenanceRecords')) {
+          const store = db.createObjectStore('vehicleMaintenanceRecords', { keyPath: 'id' });
+          store.createIndex('vehicleId', 'vehicleId');
         }
       },
     }).catch((error) => {

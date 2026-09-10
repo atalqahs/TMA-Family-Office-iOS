@@ -109,7 +109,49 @@ export type TranslationKey =
   | 'propertyDeleteAction'
   | 'propertyDeleteConfirmTitle'
   | 'propertyDeleteConfirmBody'
-  | 'propertyDeleteConfirmAction';
+  | 'propertyDeleteConfirmAction'
+  | 'validationVehicleNameRequired'
+  | 'validationYearInvalid'
+  | 'validationMileageNegative'
+  | 'validationMaintenanceTitleRequired'
+  | 'validationMaintenanceDateRequired'
+  | 'vehicleFormAddTitle'
+  | 'vehicleFormEditTitle'
+  | 'fieldVehicleName'
+  | 'fieldMake'
+  | 'fieldModel'
+  | 'fieldYear'
+  | 'fieldTrim'
+  | 'fieldPlateNumber'
+  | 'fieldVin'
+  | 'fieldColor'
+  | 'fieldCurrentMileage'
+  | 'fieldRegistrationExpiry'
+  | 'fieldInsuranceExpiry'
+  | 'mileageUnitLabel'
+  | 'profileSectionVehicleInfo'
+  | 'profileSectionExpiry'
+  | 'profileSectionMaintenance'
+  | 'vehicleNotFoundTitle'
+  | 'backToVehiclesLabel'
+  | 'vehicleDeleteAction'
+  | 'vehicleDeleteConfirmTitle'
+  | 'vehicleDeleteConfirmBody'
+  | 'vehicleDeleteConfirmAction'
+  | 'vehicleStatusGreen'
+  | 'vehicleStatusOrange'
+  | 'vehicleStatusRed'
+  | 'maintenanceEmpty'
+  | 'maintenanceAddAction'
+  | 'maintenanceFormAddTitle'
+  | 'maintenanceFormEditTitle'
+  | 'fieldMaintenanceType'
+  | 'fieldMaintenanceTitle'
+  | 'fieldServiceDate'
+  | 'fieldMileage'
+  | 'fieldNextServiceDate'
+  | 'fieldNextServiceMileage'
+  | 'nextServiceLabel';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -135,7 +177,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'معلومات التطبيق',
-    settingsVersionValue: 'نسخة تجريبية — المرحلة 4',
+    settingsVersionValue: 'نسخة تجريبية — المرحلة 5',
     settingsDisclaimer:
       'هذه نسخة تجريبية لتجربة الفكرة والتصميم على آيفون. النسخة النهائية ستكون تطبيق ويندوز مستقل.',
     trashTitle: 'سلة المحذوفات',
@@ -219,6 +261,49 @@ export const translations: Record<Locale, Dictionary> = {
     propertyDeleteConfirmTitle: 'هل تريد حذف هذا العقار؟',
     propertyDeleteConfirmBody: 'سيتم حذف هذا العقار وجميع مستنداته نهائياً. لا يمكن التراجع عن هذا الإجراء.',
     propertyDeleteConfirmAction: 'حذف',
+    validationVehicleNameRequired: 'اسم المركبة مطلوب.',
+    validationYearInvalid: 'سنة الصنع غير منطقية.',
+    validationMileageNegative: 'لا يمكن أن يكون العداد رقماً سالباً.',
+    validationMaintenanceTitleRequired: 'عنوان الصيانة مطلوب.',
+    validationMaintenanceDateRequired: 'تاريخ الصيانة مطلوب.',
+    vehicleFormAddTitle: 'إضافة مركبة',
+    vehicleFormEditTitle: 'تعديل بيانات المركبة',
+    fieldVehicleName: 'اسم المركبة',
+    fieldMake: 'الشركة المصنعة',
+    fieldModel: 'الطراز',
+    fieldYear: 'سنة الصنع',
+    fieldTrim: 'الفئة',
+    fieldPlateNumber: 'رقم اللوحة',
+    fieldVin: 'رقم الهيكل (VIN)',
+    fieldColor: 'اللون',
+    fieldCurrentMileage: 'قراءة العداد الحالية',
+    fieldRegistrationExpiry: 'انتهاء استمارة التسجيل',
+    fieldInsuranceExpiry: 'انتهاء التأمين',
+    mileageUnitLabel: 'كم',
+    profileSectionVehicleInfo: 'معلومات المركبة',
+    profileSectionExpiry: 'تواريخ الانتهاء',
+    profileSectionMaintenance: 'الصيانة',
+    vehicleNotFoundTitle: 'لم يتم العثور على هذه المركبة.',
+    backToVehiclesLabel: 'العودة إلى المركبات',
+    vehicleDeleteAction: 'حذف المركبة',
+    vehicleDeleteConfirmTitle: 'هل تريد حذف هذه المركبة؟',
+    vehicleDeleteConfirmBody:
+      'سيتم حذف هذه المركبة وجميع مستنداتها وسجلات صيانتها نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    vehicleDeleteConfirmAction: 'حذف',
+    vehicleStatusGreen: 'لا توجد مشاكل',
+    vehicleStatusOrange: 'يقترب الموعد',
+    vehicleStatusRed: 'متأخر',
+    maintenanceEmpty: 'لم تتم إضافة أي سجل صيانة بعد.',
+    maintenanceAddAction: '+ إضافة سجل صيانة',
+    maintenanceFormAddTitle: 'إضافة سجل صيانة',
+    maintenanceFormEditTitle: 'تعديل سجل الصيانة',
+    fieldMaintenanceType: 'نوع الصيانة',
+    fieldMaintenanceTitle: 'عنوان الصيانة',
+    fieldServiceDate: 'تاريخ الصيانة',
+    fieldMileage: 'قراءة العداد',
+    fieldNextServiceDate: 'تاريخ الصيانة القادمة',
+    fieldNextServiceMileage: 'عداد الصيانة القادمة',
+    nextServiceLabel: 'الصيانة القادمة',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -241,7 +326,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'App Information',
-    settingsVersionValue: 'Prototype — Phase 4',
+    settingsVersionValue: 'Prototype — Phase 5',
     settingsDisclaimer:
       'This is an experimental prototype for testing the idea and design on iPhone. The final version will be a standalone Windows application.',
     trashTitle: 'Trash',
@@ -325,6 +410,49 @@ export const translations: Record<Locale, Dictionary> = {
     propertyDeleteConfirmTitle: 'Delete this property?',
     propertyDeleteConfirmBody: 'This property and all of its documents will be permanently deleted. This cannot be undone.',
     propertyDeleteConfirmAction: 'Delete',
+    validationVehicleNameRequired: 'Vehicle name is required.',
+    validationYearInvalid: 'Enter a realistic model year.',
+    validationMileageNegative: 'Mileage cannot be negative.',
+    validationMaintenanceTitleRequired: 'Maintenance title is required.',
+    validationMaintenanceDateRequired: 'Service date is required.',
+    vehicleFormAddTitle: 'Add Vehicle',
+    vehicleFormEditTitle: 'Edit Vehicle',
+    fieldVehicleName: 'Vehicle Name',
+    fieldMake: 'Make',
+    fieldModel: 'Model',
+    fieldYear: 'Year',
+    fieldTrim: 'Trim',
+    fieldPlateNumber: 'Plate Number',
+    fieldVin: 'VIN',
+    fieldColor: 'Color',
+    fieldCurrentMileage: 'Current Mileage',
+    fieldRegistrationExpiry: 'Registration Expiry',
+    fieldInsuranceExpiry: 'Insurance Expiry',
+    mileageUnitLabel: 'km',
+    profileSectionVehicleInfo: 'Vehicle Information',
+    profileSectionExpiry: 'Expiry',
+    profileSectionMaintenance: 'Maintenance',
+    vehicleNotFoundTitle: 'This vehicle could not be found.',
+    backToVehiclesLabel: 'Back to Vehicles',
+    vehicleDeleteAction: 'Delete Vehicle',
+    vehicleDeleteConfirmTitle: 'Delete this vehicle?',
+    vehicleDeleteConfirmBody:
+      'This vehicle and all of its documents and maintenance records will be permanently deleted. This cannot be undone.',
+    vehicleDeleteConfirmAction: 'Delete',
+    vehicleStatusGreen: 'Up to Date',
+    vehicleStatusOrange: 'Due Soon',
+    vehicleStatusRed: 'Overdue',
+    maintenanceEmpty: 'No maintenance records added yet.',
+    maintenanceAddAction: '+ Add Maintenance Record',
+    maintenanceFormAddTitle: 'Add Maintenance Record',
+    maintenanceFormEditTitle: 'Edit Maintenance Record',
+    fieldMaintenanceType: 'Maintenance Type',
+    fieldMaintenanceTitle: 'Maintenance Title',
+    fieldServiceDate: 'Service Date',
+    fieldMileage: 'Mileage',
+    fieldNextServiceDate: 'Next Service Date',
+    fieldNextServiceMileage: 'Next Service Mileage',
+    nextServiceLabel: 'Next service',
   },
 };
 

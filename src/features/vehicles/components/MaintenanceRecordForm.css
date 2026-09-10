@@ -1,0 +1,21 @@
+.maintenance-record-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.maintenance-record-form__actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.maintenance-record-form__actions > * {
+  flex: 1;
+}
+
+.maintenance-record-form__error {
+  margin: 0 0 var(--space-3);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

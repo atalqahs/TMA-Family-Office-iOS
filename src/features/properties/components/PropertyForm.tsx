@@ -1,4 +1,5 @@
 import { useId, useState, type FormEvent } from 'react';
+import { CoverPhotoPicker } from '../../../components/CoverPhotoPicker';
 import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
@@ -6,7 +7,6 @@ import { useLanguage } from '../../../hooks/useLanguage';
 import { PROPERTY_STATUSES, PROPERTY_TYPES } from '../types';
 import type { Property, PropertyFormValues, PropertyStatus, PropertyType } from '../types';
 import { validatePropertyForm } from '../validation';
-import { CoverPhotoPicker } from './CoverPhotoPicker';
 import './PropertyForm.css';
 
 interface PropertyFormProps {
