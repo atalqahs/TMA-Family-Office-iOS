@@ -1,4 +1,5 @@
 import type { TranslationKey } from '../../localization/translations';
+import { computeDateExpiryStatus } from '../../utils/expiryStatus';
 import type { Vehicle, VehicleMaintenanceRecord } from './types';
 
 export type VehicleStatusLevel = 'green' | 'orange' | 'red';
@@ -16,30 +17,13 @@ export const VEHICLE_STATUS_LABEL_KEY: Record<VehicleStatusLevel, TranslationKey
   red: 'vehicleStatusRed',
 };
 
-/** Centralized thresholds so status is never computed inconsistently in two places. */
-const DATE_WARNING_DAYS = 30;
+/** Centralized threshold so mileage status is never computed inconsistently in two places (the date threshold lives in utils/expiryStatus.ts, shared with Staff). */
 const MILEAGE_WARNING_KM = 1000;
 
 const SEVERITY: Record<VehicleStatusLevel, number> = { green: 0, orange: 1, red: 2 };
 
 function worse(a: VehicleStatusLevel, b: VehicleStatusLevel): VehicleStatusLevel {
   return SEVERITY[b] > SEVERITY[a] ? b : a;
-}
-
-function daysUntil(dateStr: string): number {
-  const target = new Date(`${dateStr}T00:00:00`);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return Math.floor((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-}
-
-/** RED when today or past, ORANGE within the warning window, GREEN otherwise. Undefined when there's no date to judge. */
-function dateStatus(dateStr: string | undefined): VehicleStatusLevel | undefined {
-  if (!dateStr) return undefined;
-  const days = daysUntil(dateStr);
-  if (days <= 0) return 'red';
-  if (days <= DATE_WARNING_DAYS) return 'orange';
-  return 'green';
 }
 
 /** RED once mileage has reached/passed the next-service mileage, ORANGE within the warning window. Undefined when either value is missing. */
@@ -66,14 +50,14 @@ export function computeVehicleStatus(
 ): VehicleStatusLevel {
   let status: VehicleStatusLevel = 'green';
 
-  const registrationStatus = dateStatus(vehicle.registrationExpiry);
+  const registrationStatus = computeDateExpiryStatus(vehicle.registrationExpiry);
   if (registrationStatus) status = worse(status, registrationStatus);
 
-  const insuranceStatus = dateStatus(vehicle.insuranceExpiry);
+  const insuranceStatus = computeDateExpiryStatus(vehicle.insuranceExpiry);
   if (insuranceStatus) status = worse(status, insuranceStatus);
 
   for (const record of maintenanceRecords) {
-    const nextDateStatus = dateStatus(record.nextServiceDate);
+    const nextDateStatus = computeDateExpiryStatus(record.nextServiceDate);
     if (nextDateStatus) status = worse(status, nextDateStatus);
 
     const nextMileageStatus = mileageStatus(vehicle.currentMileage, record.nextServiceMileage);
@@ -88,7 +72,7 @@ export function computeMaintenanceRecordStatus(
   record: Pick<VehicleMaintenanceRecord, 'nextServiceDate' | 'nextServiceMileage'>,
   currentMileage: number | undefined,
 ): VehicleStatusLevel | undefined {
-  const nextDateStatus = dateStatus(record.nextServiceDate);
+  const nextDateStatus = computeDateExpiryStatus(record.nextServiceDate);
   const nextMileageStatus = mileageStatus(currentMileage, record.nextServiceMileage);
   if (!nextDateStatus && !nextMileageStatus) return undefined;
   if (nextDateStatus && nextMileageStatus) return worse(nextDateStatus, nextMileageStatus);

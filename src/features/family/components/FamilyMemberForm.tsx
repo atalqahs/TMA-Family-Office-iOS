@@ -1,13 +1,13 @@
 import { useId, useState, type FormEvent } from 'react';
 import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
+import { ProfilePhotoPicker } from '../../../components/ProfilePhotoPicker';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { findFamilyMembersByCivilId } from '../familyRepository';
 import { BLOOD_TYPES } from '../types';
 import type { FamilyMember, FamilyMemberFormValues } from '../types';
 import { validateFamilyMemberForm } from '../validation';
-import { ProfilePhotoPicker } from './ProfilePhotoPicker';
 import './FamilyMemberForm.css';
 
 interface FamilyMemberFormProps {

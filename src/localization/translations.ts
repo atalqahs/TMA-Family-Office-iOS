@@ -151,7 +151,58 @@ export type TranslationKey =
   | 'fieldMileage'
   | 'fieldNextServiceDate'
   | 'fieldNextServiceMileage'
-  | 'nextServiceLabel';
+  | 'nextServiceLabel'
+  | 'fieldRole'
+  | 'fieldPassportNumber'
+  | 'fieldEmploymentStartDate'
+  | 'fieldCivilIdExpiry'
+  | 'fieldPassportExpiry'
+  | 'fieldResidencyExpiry'
+  | 'fieldMonthlySalary'
+  | 'fieldSalaryMonth'
+  | 'fieldAmount'
+  | 'fieldPaidDate'
+  | 'fieldAge'
+  | 'profileSectionIdentification'
+  | 'profileSectionEmployment'
+  | 'profileSectionSalaryPayments'
+  | 'staffRoleUnspecified'
+  | 'validationSalaryNegative'
+  | 'validationSalaryMonthRequired'
+  | 'validationSalaryAmountInvalid'
+  | 'validationPaidDateRequired'
+  | 'validationDuplicateSalaryMonth'
+  | 'staffFormAddTitle'
+  | 'staffFormEditTitle'
+  | 'staffNotFoundTitle'
+  | 'backToStaffLabel'
+  | 'staffDeleteAction'
+  | 'staffDeleteConfirmTitle'
+  | 'staffDeleteConfirmBody'
+  | 'staffDeleteConfirmAction'
+  | 'staffStatusGreen'
+  | 'staffStatusOrange'
+  | 'staffStatusRed'
+  | 'staffReasonCivilIdExpiringSoon'
+  | 'staffReasonCivilIdExpired'
+  | 'staffReasonPassportExpiringSoon'
+  | 'staffReasonPassportExpired'
+  | 'staffReasonResidencyExpiringSoon'
+  | 'staffReasonResidencyExpired'
+  | 'staffReasonDocumentExpiringSoon'
+  | 'staffReasonDocumentExpired'
+  | 'staffReasonSalaryPending'
+  | 'staffReasonSalaryOverdue'
+  | 'salaryPaymentsAddAction'
+  | 'salaryPaymentFormAddTitle'
+  | 'salaryPaymentFormEditTitle'
+  | 'salaryPaymentsEmpty'
+  | 'salaryCurrentMonthLabel'
+  | 'salaryStatusPaid'
+  | 'salaryStatusNotYetDue'
+  | 'salaryStatusPending'
+  | 'salaryStatusOverdue'
+  | 'kwdUnitLabel';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -177,7 +228,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'معلومات التطبيق',
-    settingsVersionValue: 'نسخة تجريبية — المرحلة 5',
+    settingsVersionValue: 'نسخة تجريبية — المرحلة 6',
     settingsDisclaimer:
       'هذه نسخة تجريبية لتجربة الفكرة والتصميم على آيفون. النسخة النهائية ستكون تطبيق ويندوز مستقل.',
     trashTitle: 'سلة المحذوفات',
@@ -304,6 +355,58 @@ export const translations: Record<Locale, Dictionary> = {
     fieldNextServiceDate: 'تاريخ الصيانة القادمة',
     fieldNextServiceMileage: 'عداد الصيانة القادمة',
     nextServiceLabel: 'الصيانة القادمة',
+    fieldRole: 'الوظيفة',
+    fieldPassportNumber: 'رقم جواز السفر',
+    fieldEmploymentStartDate: 'تاريخ بدء العمل',
+    fieldCivilIdExpiry: 'انتهاء البطاقة المدنية',
+    fieldPassportExpiry: 'انتهاء جواز السفر',
+    fieldResidencyExpiry: 'انتهاء الإقامة',
+    fieldMonthlySalary: 'الراتب الشهري',
+    fieldSalaryMonth: 'شهر الراتب',
+    fieldAmount: 'المبلغ',
+    fieldPaidDate: 'تاريخ الدفع',
+    fieldAge: 'العمر',
+    profileSectionIdentification: 'بيانات الهوية',
+    profileSectionEmployment: 'بيانات التوظيف',
+    profileSectionSalaryPayments: 'دفعات الراتب',
+    staffRoleUnspecified: 'غير محدد',
+    validationSalaryNegative: 'لا يمكن أن يكون الراتب رقماً سالباً.',
+    validationSalaryMonthRequired: 'شهر الراتب مطلوب.',
+    validationSalaryAmountInvalid: 'يجب أن يكون المبلغ أكبر من صفر.',
+    validationPaidDateRequired: 'تاريخ الدفع مطلوب.',
+    validationDuplicateSalaryMonth: 'تم تسجيل دفعة راتب لهذا الشهر مسبقاً لهذا الموظف.',
+    staffFormAddTitle: 'إضافة عامل',
+    staffFormEditTitle: 'تعديل بيانات العامل',
+    staffNotFoundTitle: 'لم يتم العثور على هذا العامل.',
+    backToStaffLabel: 'العودة إلى العمالة',
+    staffDeleteAction: 'حذف العامل',
+    staffDeleteConfirmTitle: 'هل تريد حذف هذا العامل؟',
+    staffDeleteConfirmBody:
+      'سيتم حذف هذا العامل وجميع مستنداته ودفعات راتبه نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    staffDeleteConfirmAction: 'حذف',
+    staffStatusGreen: 'لا توجد مشاكل',
+    staffStatusOrange: 'يتطلب انتباه',
+    staffStatusRed: 'يتطلب إجراء',
+    staffReasonCivilIdExpiringSoon: 'البطاقة المدنية تنتهي قريباً',
+    staffReasonCivilIdExpired: 'انتهت البطاقة المدنية',
+    staffReasonPassportExpiringSoon: 'جواز السفر ينتهي قريباً',
+    staffReasonPassportExpired: 'انتهى جواز السفر',
+    staffReasonResidencyExpiringSoon: 'الإقامة تنتهي قريباً',
+    staffReasonResidencyExpired: 'انتهت الإقامة',
+    staffReasonDocumentExpiringSoon: 'مستند ينتهي قريباً',
+    staffReasonDocumentExpired: 'انتهى مستند',
+    staffReasonSalaryPending: 'دفعة الراتب لم تُسجَّل بعد',
+    staffReasonSalaryOverdue: 'دفعة الراتب متأخرة',
+    salaryPaymentsAddAction: '+ إضافة دفعة راتب',
+    salaryPaymentFormAddTitle: 'إضافة دفعة راتب',
+    salaryPaymentFormEditTitle: 'تعديل دفعة الراتب',
+    salaryPaymentsEmpty: 'لم يتم تسجيل أي دفعة راتب بعد.',
+    salaryCurrentMonthLabel: 'الشهر الحالي',
+    salaryStatusPaid: 'تم الدفع',
+    salaryStatusNotYetDue: 'لم يحن موعده بعد',
+    salaryStatusPending: 'الدفع معلّق',
+    salaryStatusOverdue: 'متأخر',
+    kwdUnitLabel: 'د.ك',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -326,7 +429,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'App Information',
-    settingsVersionValue: 'Prototype — Phase 5',
+    settingsVersionValue: 'Prototype — Phase 6',
     settingsDisclaimer:
       'This is an experimental prototype for testing the idea and design on iPhone. The final version will be a standalone Windows application.',
     trashTitle: 'Trash',
@@ -453,6 +556,58 @@ export const translations: Record<Locale, Dictionary> = {
     fieldNextServiceDate: 'Next Service Date',
     fieldNextServiceMileage: 'Next Service Mileage',
     nextServiceLabel: 'Next service',
+    fieldRole: 'Role',
+    fieldPassportNumber: 'Passport Number',
+    fieldEmploymentStartDate: 'Employment Start Date',
+    fieldCivilIdExpiry: 'Civil ID Expiry',
+    fieldPassportExpiry: 'Passport Expiry',
+    fieldResidencyExpiry: 'Residency Expiry',
+    fieldMonthlySalary: 'Monthly Salary',
+    fieldSalaryMonth: 'Salary Month',
+    fieldAmount: 'Amount',
+    fieldPaidDate: 'Paid Date',
+    fieldAge: 'Age',
+    profileSectionIdentification: 'Identification',
+    profileSectionEmployment: 'Employment',
+    profileSectionSalaryPayments: 'Salary Payments',
+    staffRoleUnspecified: 'Not specified',
+    validationSalaryNegative: 'Salary cannot be negative.',
+    validationSalaryMonthRequired: 'Salary month is required.',
+    validationSalaryAmountInvalid: 'Amount must be greater than zero.',
+    validationPaidDateRequired: 'Paid date is required.',
+    validationDuplicateSalaryMonth: 'A salary payment for this month has already been recorded for this staff member.',
+    staffFormAddTitle: 'Add Staff',
+    staffFormEditTitle: 'Edit Staff',
+    staffNotFoundTitle: 'This staff member could not be found.',
+    backToStaffLabel: 'Back to Staff',
+    staffDeleteAction: 'Delete Staff',
+    staffDeleteConfirmTitle: 'Delete this staff member?',
+    staffDeleteConfirmBody:
+      'This staff member and all of their documents and salary payments will be permanently deleted. This cannot be undone.',
+    staffDeleteConfirmAction: 'Delete',
+    staffStatusGreen: 'No Issues',
+    staffStatusOrange: 'Needs Attention',
+    staffStatusRed: 'Action Required',
+    staffReasonCivilIdExpiringSoon: 'Civil ID expires soon',
+    staffReasonCivilIdExpired: 'Civil ID expired',
+    staffReasonPassportExpiringSoon: 'Passport expires soon',
+    staffReasonPassportExpired: 'Passport expired',
+    staffReasonResidencyExpiringSoon: 'Residency expires soon',
+    staffReasonResidencyExpired: 'Residency expired',
+    staffReasonDocumentExpiringSoon: 'Document expiring soon',
+    staffReasonDocumentExpired: 'Document expired',
+    staffReasonSalaryPending: 'Salary payment pending',
+    staffReasonSalaryOverdue: 'Salary payment overdue',
+    salaryPaymentsAddAction: '+ Add Payment',
+    salaryPaymentFormAddTitle: 'Add Salary Payment',
+    salaryPaymentFormEditTitle: 'Edit Salary Payment',
+    salaryPaymentsEmpty: 'No salary payments recorded yet.',
+    salaryCurrentMonthLabel: 'Current Month',
+    salaryStatusPaid: 'Paid',
+    salaryStatusNotYetDue: 'Not yet due',
+    salaryStatusPending: 'Payment pending',
+    salaryStatusOverdue: 'Overdue',
+    kwdUnitLabel: 'KWD',
   },
 };
 

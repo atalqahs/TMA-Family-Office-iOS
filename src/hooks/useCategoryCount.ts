@@ -1,19 +1,21 @@
 import { useEffect, useState } from 'react';
 import { getActiveFamilyMemberCount } from '../features/family/familyRepository';
 import { getPropertyCount } from '../features/properties/propertyRepository';
+import { getStaffCount } from '../features/staff/staffRepository';
 import { getVehicleCount } from '../features/vehicles/vehicleRepository';
 
 const COUNT_LOADERS: Record<string, () => Promise<number>> = {
   family: getActiveFamilyMemberCount,
   properties: getPropertyCount,
   vehicles: getVehicleCount,
+  staff: getStaffCount,
 };
 
 /**
- * Item count for a category. Only `family`, `properties`, and `vehicles`
- * have a real store so far — every other category still returns 0 until
- * its own module is built, at which point it gets the same treatment here
- * without touching any call site.
+ * Item count for a category. Only `family`, `properties`, `vehicles`, and
+ * `staff` have a real store so far — every other category still returns 0
+ * until its own module is built, at which point it gets the same treatment
+ * here without touching any call site.
  */
 export function useCategoryCount(categoryId: string): number {
   const [count, setCount] = useState(0);

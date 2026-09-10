@@ -1,8 +1,8 @@
 import { useRef, type ChangeEvent } from 'react';
-import { Avatar } from '../../../components/Avatar';
-import { SecondaryButton } from '../../../components/SecondaryButton';
-import { usePhotoPicker } from '../../../hooks/usePhotoPicker';
-import { useLanguage } from '../../../hooks/useLanguage';
+import { Avatar } from './Avatar';
+import { SecondaryButton } from './SecondaryButton';
+import { usePhotoPicker } from '../hooks/usePhotoPicker';
+import { useLanguage } from '../hooks/useLanguage';
 import './ProfilePhotoPicker.css';
 
 interface ProfilePhotoPickerProps {
@@ -11,6 +11,7 @@ interface ProfilePhotoPickerProps {
   onChange: (photo: Blob | undefined) => void;
 }
 
+/** Shared circular profile-photo picker for any entity with an Avatar (Family, Staff, ...). */
 export function ProfilePhotoPicker({ name, photo, onChange }: ProfilePhotoPickerProps) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
