@@ -1,0 +1,60 @@
+name: Deploy to GitHub Pages
+
+# This prototype's approved work currently lives only on
+# claude/tma-family-office-prototype-1szgbc (main has no app code yet), so
+# that is the branch that triggers deployment. Once this branch merges to
+# main, add "main" here (or switch to it) so Pages tracks the default
+# branch going forward.
+on:
+  push:
+    branches:
+      - claude/tma-family-office-prototype-1szgbc
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; a new push supersedes an in-flight one.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (GitHub Pages sub-path)
+        run: npm run build
+        env:
+          # Repository project-site sub-path: https://<owner>.github.io/TMA-Family-Office-iOS/
+          VITE_BASE_PATH: /TMA-Family-Office-iOS/
+
+      - name: Upload build artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
