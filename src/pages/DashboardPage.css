@@ -1,0 +1,11 @@
+.dashboard-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.dashboard-page__title {
+  margin: var(--space-5) var(--space-5) 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
