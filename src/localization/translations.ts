@@ -159,7 +159,6 @@ export type TranslationKey =
   | 'fieldPassportExpiry'
   | 'fieldResidencyExpiry'
   | 'fieldMonthlySalary'
-  | 'fieldSalaryMonth'
   | 'fieldAmount'
   | 'fieldPaidDate'
   | 'fieldAge'
@@ -168,10 +167,14 @@ export type TranslationKey =
   | 'profileSectionSalaryPayments'
   | 'staffRoleUnspecified'
   | 'validationSalaryNegative'
-  | 'validationSalaryMonthRequired'
   | 'validationSalaryAmountInvalid'
   | 'validationPaidDateRequired'
-  | 'validationDuplicateSalaryMonth'
+  | 'validationDuplicateSalaryOccurrence'
+  | 'validationScheduleIntervalInvalid'
+  | 'validationDueDayInvalid'
+  | 'validationDueMonthInvalid'
+  | 'validationStartDateRequired'
+  | 'validationEndDateBeforeStart'
   | 'staffFormAddTitle'
   | 'staffFormEditTitle'
   | 'staffNotFoundTitle'
@@ -191,18 +194,35 @@ export type TranslationKey =
   | 'staffReasonResidencyExpired'
   | 'staffReasonDocumentExpiringSoon'
   | 'staffReasonDocumentExpired'
-  | 'staffReasonSalaryPending'
-  | 'staffReasonSalaryOverdue'
+  | 'staffReasonSalaryUnconfirmed'
   | 'salaryPaymentsAddAction'
-  | 'salaryPaymentFormAddTitle'
   | 'salaryPaymentFormEditTitle'
   | 'salaryPaymentsEmpty'
-  | 'salaryCurrentMonthLabel'
-  | 'salaryStatusPaid'
   | 'salaryStatusNotYetDue'
   | 'salaryStatusPending'
   | 'salaryStatusOverdue'
-  | 'kwdUnitLabel';
+  | 'kwdUnitLabel'
+  | 'fieldRepeatsEvery'
+  | 'fieldDueDayOfMonth'
+  | 'fieldDueMonth'
+  | 'fieldStartDate'
+  | 'fieldEndDateOptional'
+  | 'frequencyDay'
+  | 'frequencyMonth'
+  | 'frequencyYear'
+  | 'frequencyEveryLabel'
+  | 'scheduleDueDayLabel'
+  | 'salarySchedulesLabel'
+  | 'salarySchedulesEmpty'
+  | 'salaryScheduleFormAddTitle'
+  | 'salaryScheduleFormEditTitle'
+  | 'salaryUpcomingLabel'
+  | 'salaryUpcomingEmpty'
+  | 'salaryHistoryLabel'
+  | 'salaryConfirmPaymentAction'
+  | 'salaryConfirmPaymentTitle'
+  | 'salaryOccurrenceDueLabel'
+  | 'salaryPaidOnLabel';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -362,19 +382,22 @@ export const translations: Record<Locale, Dictionary> = {
     fieldPassportExpiry: 'انتهاء جواز السفر',
     fieldResidencyExpiry: 'انتهاء الإقامة',
     fieldMonthlySalary: 'الراتب الشهري',
-    fieldSalaryMonth: 'شهر الراتب',
     fieldAmount: 'المبلغ',
     fieldPaidDate: 'تاريخ الدفع',
     fieldAge: 'العمر',
     profileSectionIdentification: 'بيانات الهوية',
     profileSectionEmployment: 'بيانات التوظيف',
-    profileSectionSalaryPayments: 'دفعات الراتب',
+    profileSectionSalaryPayments: 'الراتب',
     staffRoleUnspecified: 'غير محدد',
     validationSalaryNegative: 'لا يمكن أن يكون الراتب رقماً سالباً.',
-    validationSalaryMonthRequired: 'شهر الراتب مطلوب.',
     validationSalaryAmountInvalid: 'يجب أن يكون المبلغ أكبر من صفر.',
     validationPaidDateRequired: 'تاريخ الدفع مطلوب.',
-    validationDuplicateSalaryMonth: 'تم تسجيل دفعة راتب لهذا الشهر مسبقاً لهذا الموظف.',
+    validationDuplicateSalaryOccurrence: 'تم تأكيد دفع هذه الدفعة مسبقاً.',
+    validationScheduleIntervalInvalid: 'يجب أن يكون التكرار رقماً صحيحاً أكبر من صفر.',
+    validationDueDayInvalid: 'يجب اختيار يوم استحقاق صحيح (1-31).',
+    validationDueMonthInvalid: 'يجب اختيار شهر استحقاق صحيح (1-12).',
+    validationStartDateRequired: 'تاريخ البدء مطلوب.',
+    validationEndDateBeforeStart: 'لا يمكن أن يكون تاريخ الانتهاء قبل تاريخ البدء.',
     staffFormAddTitle: 'إضافة عامل',
     staffFormEditTitle: 'تعديل بيانات العامل',
     staffNotFoundTitle: 'لم يتم العثور على هذا العامل.',
@@ -395,18 +418,35 @@ export const translations: Record<Locale, Dictionary> = {
     staffReasonResidencyExpired: 'انتهت الإقامة',
     staffReasonDocumentExpiringSoon: 'مستند ينتهي قريباً',
     staffReasonDocumentExpired: 'انتهى مستند',
-    staffReasonSalaryPending: 'دفعة الراتب لم تُسجَّل بعد',
-    staffReasonSalaryOverdue: 'دفعة الراتب متأخرة',
-    salaryPaymentsAddAction: '+ إضافة دفعة راتب',
-    salaryPaymentFormAddTitle: 'إضافة دفعة راتب',
-    salaryPaymentFormEditTitle: 'تعديل دفعة الراتب',
-    salaryPaymentsEmpty: 'لم يتم تسجيل أي دفعة راتب بعد.',
-    salaryCurrentMonthLabel: 'الشهر الحالي',
-    salaryStatusPaid: 'تم الدفع',
+    staffReasonSalaryUnconfirmed: 'راتب {amount} المستحق {date} لم يتم تأكيد دفعه.',
+    salaryPaymentsAddAction: '+ إضافة راتب',
+    salaryPaymentFormEditTitle: 'تعديل الدفعة',
+    salaryPaymentsEmpty: 'لا يوجد سجل دفعات بعد.',
     salaryStatusNotYetDue: 'لم يحن موعده بعد',
     salaryStatusPending: 'الدفع معلّق',
     salaryStatusOverdue: 'متأخر',
     kwdUnitLabel: 'د.ك',
+    fieldRepeatsEvery: 'يتكرر كل',
+    fieldDueDayOfMonth: 'يوم الاستحقاق',
+    fieldDueMonth: 'شهر الاستحقاق',
+    fieldStartDate: 'تاريخ البدء',
+    fieldEndDateOptional: 'تاريخ الانتهاء (اختياري)',
+    frequencyDay: 'يوم',
+    frequencyMonth: 'شهر',
+    frequencyYear: 'سنة',
+    frequencyEveryLabel: 'كل',
+    scheduleDueDayLabel: 'يوم',
+    salarySchedulesLabel: 'رواتب متكررة',
+    salarySchedulesEmpty: 'لم تتم إضافة أي راتب متكرر بعد.',
+    salaryScheduleFormAddTitle: 'إضافة راتب',
+    salaryScheduleFormEditTitle: 'تعديل الراتب',
+    salaryUpcomingLabel: 'الدفعات الحالية والقادمة',
+    salaryUpcomingEmpty: 'لا توجد دفعات مستحقة حالياً.',
+    salaryHistoryLabel: 'سجل الدفعات',
+    salaryConfirmPaymentAction: 'تأكيد الدفع',
+    salaryConfirmPaymentTitle: 'تأكيد دفع الراتب',
+    salaryOccurrenceDueLabel: 'تاريخ الاستحقاق',
+    salaryPaidOnLabel: 'دُفع في',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -563,19 +603,22 @@ export const translations: Record<Locale, Dictionary> = {
     fieldPassportExpiry: 'Passport Expiry',
     fieldResidencyExpiry: 'Residency Expiry',
     fieldMonthlySalary: 'Monthly Salary',
-    fieldSalaryMonth: 'Salary Month',
     fieldAmount: 'Amount',
     fieldPaidDate: 'Paid Date',
     fieldAge: 'Age',
     profileSectionIdentification: 'Identification',
     profileSectionEmployment: 'Employment',
-    profileSectionSalaryPayments: 'Salary Payments',
+    profileSectionSalaryPayments: 'Salary',
     staffRoleUnspecified: 'Not specified',
     validationSalaryNegative: 'Salary cannot be negative.',
-    validationSalaryMonthRequired: 'Salary month is required.',
     validationSalaryAmountInvalid: 'Amount must be greater than zero.',
     validationPaidDateRequired: 'Paid date is required.',
-    validationDuplicateSalaryMonth: 'A salary payment for this month has already been recorded for this staff member.',
+    validationDuplicateSalaryOccurrence: 'This payment has already been confirmed.',
+    validationScheduleIntervalInvalid: 'Repeat interval must be a whole number greater than zero.',
+    validationDueDayInvalid: 'Choose a valid due day (1-31).',
+    validationDueMonthInvalid: 'Choose a valid due month (1-12).',
+    validationStartDateRequired: 'Start date is required.',
+    validationEndDateBeforeStart: 'End date cannot be before the start date.',
     staffFormAddTitle: 'Add Staff',
     staffFormEditTitle: 'Edit Staff',
     staffNotFoundTitle: 'This staff member could not be found.',
@@ -596,18 +639,35 @@ export const translations: Record<Locale, Dictionary> = {
     staffReasonResidencyExpired: 'Residency expired',
     staffReasonDocumentExpiringSoon: 'Document expiring soon',
     staffReasonDocumentExpired: 'Document expired',
-    staffReasonSalaryPending: 'Salary payment pending',
-    staffReasonSalaryOverdue: 'Salary payment overdue',
-    salaryPaymentsAddAction: '+ Add Payment',
-    salaryPaymentFormAddTitle: 'Add Salary Payment',
-    salaryPaymentFormEditTitle: 'Edit Salary Payment',
-    salaryPaymentsEmpty: 'No salary payments recorded yet.',
-    salaryCurrentMonthLabel: 'Current Month',
-    salaryStatusPaid: 'Paid',
+    staffReasonSalaryUnconfirmed: 'Salary of {amount} due {date} has not been confirmed as paid.',
+    salaryPaymentsAddAction: '+ Add Salary',
+    salaryPaymentFormEditTitle: 'Edit Payment',
+    salaryPaymentsEmpty: 'No payment history yet.',
     salaryStatusNotYetDue: 'Not yet due',
     salaryStatusPending: 'Payment pending',
     salaryStatusOverdue: 'Overdue',
     kwdUnitLabel: 'KWD',
+    fieldRepeatsEvery: 'Repeats every',
+    fieldDueDayOfMonth: 'Due day',
+    fieldDueMonth: 'Due month',
+    fieldStartDate: 'Start Date',
+    fieldEndDateOptional: 'End Date (optional)',
+    frequencyDay: 'Day',
+    frequencyMonth: 'Month',
+    frequencyYear: 'Year',
+    frequencyEveryLabel: 'Every',
+    scheduleDueDayLabel: 'Day',
+    salarySchedulesLabel: 'Recurring Salary Schedules',
+    salarySchedulesEmpty: 'No recurring salary added yet.',
+    salaryScheduleFormAddTitle: 'Add Salary',
+    salaryScheduleFormEditTitle: 'Edit Salary',
+    salaryUpcomingLabel: 'Current / Upcoming Payments',
+    salaryUpcomingEmpty: 'Nothing currently due.',
+    salaryHistoryLabel: 'Payment History',
+    salaryConfirmPaymentAction: 'Confirm Payment',
+    salaryConfirmPaymentTitle: 'Confirm Salary Payment',
+    salaryOccurrenceDueLabel: 'Due date',
+    salaryPaidOnLabel: 'Paid on',
   },
 };
 

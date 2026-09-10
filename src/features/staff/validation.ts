@@ -1,6 +1,6 @@
 import type { TranslationKey } from '../../localization/translations';
 import { validateDocumentFile } from '../../utils/fileValidation';
-import type { StaffFormValues, StaffSalaryPaymentFormValues } from './types';
+import type { StaffFormValues, StaffSalaryPaymentFormValues, StaffSalaryScheduleFormValues } from './types';
 
 export { validateDocumentFile };
 
@@ -42,8 +42,44 @@ export function validateStaffForm(values: StaffFormValues): StaffFormErrors {
   return errors;
 }
 
+export interface SalaryScheduleFormErrors {
+  amount?: TranslationKey;
+  interval?: TranslationKey;
+  dueDayOfMonth?: TranslationKey;
+  dueMonth?: TranslationKey;
+  startDate?: TranslationKey;
+  endDate?: TranslationKey;
+}
+
+export function validateSalaryScheduleForm(values: StaffSalaryScheduleFormValues): SalaryScheduleFormErrors {
+  const errors: SalaryScheduleFormErrors = {};
+
+  if (!Number.isFinite(values.amount) || values.amount <= 0) {
+    errors.amount = 'validationSalaryAmountInvalid';
+  }
+  if (!Number.isInteger(values.interval) || values.interval < 1) {
+    errors.interval = 'validationScheduleIntervalInvalid';
+  }
+  if (!values.startDate) {
+    errors.startDate = 'validationStartDateRequired';
+  }
+  if (
+    (values.frequency === 'month' || values.frequency === 'year') &&
+    (values.dueDayOfMonth === undefined || values.dueDayOfMonth < 1 || values.dueDayOfMonth > 31)
+  ) {
+    errors.dueDayOfMonth = 'validationDueDayInvalid';
+  }
+  if (values.frequency === 'year' && (values.dueMonth === undefined || values.dueMonth < 1 || values.dueMonth > 12)) {
+    errors.dueMonth = 'validationDueMonthInvalid';
+  }
+  if (values.endDate && values.startDate && values.endDate < values.startDate) {
+    errors.endDate = 'validationEndDateBeforeStart';
+  }
+
+  return errors;
+}
+
 export interface SalaryPaymentFormErrors {
-  salaryMonth?: TranslationKey;
   amount?: TranslationKey;
   paidDate?: TranslationKey;
 }
@@ -51,9 +87,6 @@ export interface SalaryPaymentFormErrors {
 export function validateSalaryPaymentForm(values: StaffSalaryPaymentFormValues): SalaryPaymentFormErrors {
   const errors: SalaryPaymentFormErrors = {};
 
-  if (!values.salaryMonth) {
-    errors.salaryMonth = 'validationSalaryMonthRequired';
-  }
   if (!Number.isFinite(values.amount) || values.amount <= 0) {
     errors.amount = 'validationSalaryAmountInvalid';
   }

@@ -3,21 +3,22 @@ import { StatusBadge } from '../../../components/StatusBadge';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { computeStaffStatus, STAFF_STATUS_LABEL_KEY, STAFF_STATUS_VARIANT } from '../staffStatus';
 import { STAFF_ROLES } from '../types';
-import type { HouseholdStaff, StaffDocument } from '../types';
+import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../types';
 import './StaffCard.css';
 
 interface StaffCardProps {
   staff: HouseholdStaff;
   documents: StaffDocument[];
-  hasCurrentMonthPayment: boolean;
+  salarySchedules: StaffSalarySchedule[];
+  salaryPayments: StaffSalaryPayment[];
   onClick: () => void;
 }
 
-export function StaffCard({ staff, documents, hasCurrentMonthPayment, onClick }: StaffCardProps) {
+export function StaffCard({ staff, documents, salarySchedules, salaryPayments, onClick }: StaffCardProps) {
   const { t, locale } = useLanguage();
 
   const roleLabel = staff.role ? STAFF_ROLES.find((option) => option.id === staff.role)?.title[locale] : undefined;
-  const { level } = computeStaffStatus(staff, documents, hasCurrentMonthPayment);
+  const { level } = computeStaffStatus(staff, documents, salarySchedules, salaryPayments);
 
   return (
     <button type="button" className="staff-card" onClick={onClick}>

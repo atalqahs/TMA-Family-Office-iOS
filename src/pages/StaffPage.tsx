@@ -18,7 +18,7 @@ const STAFF_CATEGORY = CATEGORIES.find((category) => category.id === 'staff')!;
 export function StaffPage() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { staff, currentMonthPaidByStaff, documentsByStaff, loading, error, refresh } = useStaffList();
+  const { staff, schedulesByStaff, paymentsByStaff, documentsByStaff, loading, error, refresh } = useStaffList();
   const addSheet = useDisclosure();
 
   const title = useLocalizedText(STAFF_CATEGORY.title);
@@ -47,7 +47,8 @@ export function StaffPage() {
                 key={member.id}
                 staff={member}
                 documents={documentsByStaff[member.id] ?? []}
-                hasCurrentMonthPayment={Boolean(currentMonthPaidByStaff[member.id])}
+                salarySchedules={schedulesByStaff[member.id] ?? []}
+                salaryPayments={paymentsByStaff[member.id] ?? []}
                 onClick={() => navigate(`/staff/${member.id}`)}
               />
             ))}

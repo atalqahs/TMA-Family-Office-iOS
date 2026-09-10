@@ -4,6 +4,7 @@ import { PrimaryButton } from '../../../components/PrimaryButton';
 import { ProfilePhotoPicker } from '../../../components/ProfilePhotoPicker';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { getLocalToday } from '../../../utils/localDate';
 import { STAFF_ROLES } from '../types';
 import type { HouseholdStaff, StaffFormValues, StaffRole } from '../types';
 import { validateStaffForm } from '../validation';
@@ -71,7 +72,7 @@ function toFormValues(state: StaffFormState): StaffFormValues {
   };
 }
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = getLocalToday();
 
 export function StaffForm({ initialValue, onSubmit, onCancel }: StaffFormProps) {
   const { t, locale } = useLanguage();

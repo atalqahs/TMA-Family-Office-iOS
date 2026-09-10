@@ -1,5 +1,6 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/AppShell';
+import { DbLifecycleNotice } from './components/DbLifecycleNotice';
 import { CATEGORIES } from './features/categories/categories';
 import { LanguageProvider } from './localization/LanguageContext';
 import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
@@ -25,32 +26,42 @@ const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <HashRouter>
-        <Routes>
-          <Route path="/" element={<AppShell />}>
-            <Route index element={<DashboardPage />} />
-            <Route path="family" element={<FamilyPage />} />
-            <Route path="family/:memberId" element={<FamilyMemberProfilePage />} />
-            <Route path="properties" element={<PropertiesPage />} />
-            <Route path="properties/:propertyId" element={<PropertyProfilePage />} />
-            <Route path="vehicles" element={<VehiclesPage />} />
-            <Route path="vehicles/:vehicleId" element={<VehicleProfilePage />} />
-            <Route path="staff" element={<StaffPage />} />
-            <Route path="staff/:staffId" element={<StaffProfilePage />} />
-            {PLACEHOLDER_CATEGORIES.map((category) => (
-              <Route
-                key={category.id}
-                path={category.path.slice(1)}
-                element={<CategoryPlaceholderPage category={category} />}
-              />
-            ))}
-            <Route path="settings" element={<SettingsPage />} />
-            <Route path="trash" element={<TrashPage />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </HashRouter>
-    </LanguageProvider>
+    <>
+      {/*
+        Sibling of LanguageProvider, not a child: LanguageProvider renders
+        null until the persisted locale finishes loading from IndexedDB,
+        which can never happen while the database is genuinely blocked —
+        so this notice must live outside that gate to have any chance of
+        being shown during exactly the scenario it exists for.
+      */}
+      <DbLifecycleNotice />
+      <LanguageProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="/" element={<AppShell />}>
+              <Route index element={<DashboardPage />} />
+              <Route path="family" element={<FamilyPage />} />
+              <Route path="family/:memberId" element={<FamilyMemberProfilePage />} />
+              <Route path="properties" element={<PropertiesPage />} />
+              <Route path="properties/:propertyId" element={<PropertyProfilePage />} />
+              <Route path="vehicles" element={<VehiclesPage />} />
+              <Route path="vehicles/:vehicleId" element={<VehicleProfilePage />} />
+              <Route path="staff" element={<StaffPage />} />
+              <Route path="staff/:staffId" element={<StaffProfilePage />} />
+              {PLACEHOLDER_CATEGORIES.map((category) => (
+                <Route
+                  key={category.id}
+                  path={category.path.slice(1)}
+                  element={<CategoryPlaceholderPage category={category} />}
+                />
+              ))}
+              <Route path="settings" element={<SettingsPage />} />
+              <Route path="trash" element={<TrashPage />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </HashRouter>
+      </LanguageProvider>
+    </>
   );
 }

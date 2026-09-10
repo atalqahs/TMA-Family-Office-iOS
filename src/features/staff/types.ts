@@ -92,29 +92,88 @@ export interface StaffDocumentFormValues {
   expiryDate?: string;
 }
 
+export type SalaryFrequency = 'day' | 'month' | 'year';
+
 /**
- * A single month's salary-payment record for one staff member.
- * `salaryMonth` is a calendar month in 'YYYY-MM' form (matches the native
- * `<input type="month">` value). At most one payment per (staffId,
- * salaryMonth) pair is allowed — enforced both by a unique compound index
- * in IndexedDB and by an explicit pre-check in staffService, so accidental
- * duplicates are rejected with a clear, localized message either way.
+ * A recurring salary schedule for one staff member, via `staffId`. A staff
+ * member may have more than one active schedule at once (e.g. paid twice a
+ * month, or one schedule that later got replaced by another with a
+ * different due day) — the redesigned Phase 6 correction replaces the
+ * old "one manually-added record per calendar month" concept with this:
+ * the user configures the recurrence once, and every future occurrence is
+ * *derived* (see salarySchedule.ts), never manually pre-created.
  *
- * This is an operational "was it paid" record, not an accounting ledger —
- * no cost centers, no running balances, no reporting.
+ * - frequency 'day' + interval N: due every N days, starting `startDate`.
+ * - frequency 'month' + interval N + dueDayOfMonth D: due on day D of
+ *   every Nth month (clamped for short months, e.g. day 31 in February).
+ * - frequency 'year' + interval N + dueMonth M + dueDayOfMonth D: due on
+ *   day D of month M, every Nth year.
+ *
+ * `endDate`, if set, stops generating occurrences after that date — the
+ * schedule and its historical payments are otherwise untouched.
  */
-export interface StaffSalaryPayment {
+export interface StaffSalarySchedule {
   id: string;
   staffId: string;
-  salaryMonth: string;
   amount: number;
-  paidDate: string;
+  frequency: SalaryFrequency;
+  interval: number;
+  dueDayOfMonth?: number;
+  dueMonth?: number;
+  startDate: string;
+  endDate?: string;
   notes?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type StaffSalaryPaymentFormValues = Omit<
-  StaffSalaryPayment,
+export type StaffSalaryScheduleFormValues = Omit<
+  StaffSalarySchedule,
   'id' | 'staffId' | 'createdAt' | 'updatedAt'
 >;
+
+/**
+ * A single CONFIRMED salary payment — "this scheduled occurrence was
+ * actually paid" — for one staff member, via `staffId`. New payments are
+ * always created by confirming a specific derived occurrence of a
+ * `StaffSalarySchedule` (`salaryScheduleId` + `dueDate` identify exactly
+ * which occurrence), never pre-created ahead of time.
+ *
+ * At most one confirmed payment per (salaryScheduleId, dueDate) pair is
+ * allowed — enforced both by a unique compound IndexedDB index and by an
+ * explicit pre-check in staffService — but two DIFFERENT schedules may
+ * legitimately share the same due date (e.g. two schedules both due on
+ * the 1st), since the uniqueness is scoped to the schedule, not the date
+ * alone.
+ *
+ * `salaryMonth` is the pre-redesign Phase 6 field ('YYYY-MM'), preserved
+ * as-is on historical records migrated from that schema — new payments
+ * never set it. `dueDate` is optional for exactly that reason (legacy
+ * rows may only have `salaryMonth`); see `getPaymentDueDate()` below for
+ * the display-time fallback. This is an operational "was it paid" record,
+ * not an accounting ledger — no cost centers, no running balances.
+ */
+export interface StaffSalaryPayment {
+  id: string;
+  staffId: string;
+  salaryScheduleId?: string;
+  dueDate?: string;
+  amount: number;
+  paidDate: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  /** @deprecated Legacy Phase 6 field, preserved on historical records only. */
+  salaryMonth?: string;
+}
+
+export type StaffSalaryPaymentFormValues = {
+  amount: number;
+  paidDate: string;
+  notes?: string;
+};
+
+/** The calendar date a payment record covers, preferring the new `dueDate` and falling back to the legacy `salaryMonth` (as that month's 1st) for pre-redesign records. */
+export function getPaymentDueDate(payment: Pick<StaffSalaryPayment, 'dueDate' | 'salaryMonth'>): string | undefined {
+  return payment.dueDate ?? (payment.salaryMonth ? `${payment.salaryMonth}-01` : undefined);
+}

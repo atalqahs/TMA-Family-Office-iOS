@@ -1,6 +1,8 @@
 import type { TranslationKey } from '../../localization/translations';
 import { computeDateExpiryStatus, type ExpiryStatusLevel } from '../../utils/expiryStatus';
-import type { HouseholdStaff, StaffDocument } from './types';
+import { getLocalToday } from '../../utils/localDate';
+import { buildScheduleOccurrences, type SalaryOccurrence } from './salarySchedule';
+import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from './types';
 
 export type StaffStatusLevel = ExpiryStatusLevel;
 
@@ -24,28 +26,30 @@ function worse(a: StaffStatusLevel, b: StaffStatusLevel): StaffStatusLevel {
 
 /**
  * Fixed, documented salary grace rule for this prototype (no configurable
- * payroll settings): a month's salary is not yet due before day 5, is
- * "pending" (expected but not yet recorded) from day 5 through day 14, and
- * becomes "overdue" from day 15 onward — unless a payment for the current
- * month already exists, which is always green regardless of the day.
+ * payroll settings): an unpaid occurrence is "pending" (orange) from its
+ * due date through `SALARY_GRACE_DAYS - 1` days after, and "overdue" (red)
+ * from `SALARY_GRACE_DAYS` days after onward. A due date in the future is
+ * always green — never a warning "too early". This generalizes the old
+ * Phase 6 day-of-month grace window into a duration since any schedule's
+ * due date can now fall on any calendar day, not just the 1st/5th/15th of
+ * a fixed month.
  */
-const SALARY_DUE_DAY = 5;
-const SALARY_OVERDUE_DAY = 15;
+const SALARY_GRACE_DAYS = 10;
 
-export type SalaryPaymentState = 'notTracked' | 'paid' | 'notYetDue' | 'pending' | 'overdue';
+export type SalaryOccurrenceLevel = 'green' | 'orange' | 'red';
 
-/** Pure: whether the current calendar month's salary looks paid, not-yet-due, pending, or overdue. Salary tracking is entirely skipped (notTracked) when no monthlySalary is configured — never a fabricated warning. */
-export function computeCurrentMonthSalaryState(
-  staff: Pick<HouseholdStaff, 'monthlySalary'>,
-  hasCurrentMonthPayment: boolean,
-  now: Date = new Date(),
-): SalaryPaymentState {
-  if (staff.monthlySalary === undefined) return 'notTracked';
-  if (hasCurrentMonthPayment) return 'paid';
-  const day = now.getDate();
-  if (day < SALARY_DUE_DAY) return 'notYetDue';
-  if (day < SALARY_OVERDUE_DAY) return 'pending';
-  return 'overdue';
+function daysBetween(fromDate: string, toDate: string): number {
+  const from = new Date(`${fromDate}T00:00:00`);
+  const to = new Date(`${toDate}T00:00:00`);
+  return Math.round((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/** Pure: status of a single occurrence relative to `today`. Paid or not-yet-due is always green — never a warning for a future due date. */
+export function computeOccurrenceLevel(occurrence: SalaryOccurrence, today: string): SalaryOccurrenceLevel {
+  if (occurrence.paid) return 'green';
+  if (occurrence.dueDate > today) return 'green';
+  const daysPast = daysBetween(occurrence.dueDate, today);
+  return daysPast >= SALARY_GRACE_DAYS ? 'red' : 'orange';
 }
 
 export interface StaffStatusReason {
@@ -53,6 +57,8 @@ export interface StaffStatusReason {
   textKey: TranslationKey;
   /** Extra context appended by the caller (e.g. a document's title) — kept as plain text, not baked into the translation, so it works in either language. */
   detail?: string;
+  /** Template placeholders (e.g. {amount}, {date}) substituted into the translation at render time — used for the salary reason, which needs two dynamic values. */
+  params?: Record<string, string>;
 }
 
 export interface StaffStatus {
@@ -62,26 +68,28 @@ export interface StaffStatus {
 
 /**
  * Overall staff status: the worst signal across civil ID / passport /
- * residency expiry, every StaffDocument's own expiry, and the current
- * month's salary state. Missing data is simply skipped — it never invents
- * a warning. Returns not just a level but the specific reasons behind it
- * (per the Phase 6 spec: a vague "Approaching" was found ambiguous during
- * Phase 5 manual testing), so the Profile page can explain *why* — e.g.
- * "Residency expires soon" rather than just an orange dot. Used by both
+ * residency expiry, every StaffDocument's own expiry, and every unpaid,
+ * due-or-past salary schedule occurrence. Missing data is simply skipped —
+ * it never invents a warning. Returns not just a level but the specific
+ * reasons behind it (per the Phase 6 spec: a vague "Approaching" was found
+ * ambiguous during manual testing), so the Profile page can explain *why*
+ * — e.g. "Residency expires soon" or "Salary of 130 KWD due 11 Oct has not
+ * been confirmed as paid" rather than just an orange dot. Used by both
  * StaffCard (level only) and StaffProfilePage (level + reasons) so the
  * calculation exists in exactly one place.
  */
 export function computeStaffStatus(
-  staff: Pick<HouseholdStaff, 'civilIdExpiry' | 'passportExpiry' | 'residencyExpiry' | 'monthlySalary'>,
+  staff: Pick<HouseholdStaff, 'civilIdExpiry' | 'passportExpiry' | 'residencyExpiry'>,
   documents: Array<Pick<StaffDocument, 'title' | 'expiryDate'>>,
-  hasCurrentMonthPayment: boolean,
+  salarySchedules: StaffSalarySchedule[],
+  salaryPayments: StaffSalaryPayment[],
   now: Date = new Date(),
 ): StaffStatus {
   const reasons: StaffStatusReason[] = [];
   let level: StaffStatusLevel = 'green';
 
-  const addReason = (reasonLevel: 'orange' | 'red', textKey: TranslationKey, detail?: string) => {
-    reasons.push({ level: reasonLevel, textKey, detail });
+  const addReason = (reasonLevel: 'orange' | 'red', textKey: TranslationKey, detail?: string, params?: Record<string, string>) => {
+    reasons.push({ level: reasonLevel, textKey, detail, params });
     level = worse(level, reasonLevel);
   };
 
@@ -103,9 +111,18 @@ export function computeStaffStatus(
     else if (docStatus === 'orange') addReason('orange', 'staffReasonDocumentExpiringSoon', doc.title);
   }
 
-  const salaryState = computeCurrentMonthSalaryState(staff, hasCurrentMonthPayment, now);
-  if (salaryState === 'overdue') addReason('red', 'staffReasonSalaryOverdue');
-  else if (salaryState === 'pending') addReason('orange', 'staffReasonSalaryPending');
+  const today = getLocalToday(now);
+  for (const schedule of salarySchedules) {
+    const occurrences = buildScheduleOccurrences(schedule, salaryPayments, today);
+    for (const occurrence of occurrences) {
+      const occurrenceLevel = computeOccurrenceLevel(occurrence, today);
+      if (occurrenceLevel === 'green') continue;
+      addReason(occurrenceLevel, 'staffReasonSalaryUnconfirmed', undefined, {
+        amount: String(occurrence.amount),
+        date: occurrence.dueDate,
+      });
+    }
+  }
 
   return { level, reasons };
 }

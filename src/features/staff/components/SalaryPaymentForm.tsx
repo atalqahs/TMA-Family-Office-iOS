@@ -3,54 +3,46 @@ import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
-import { DuplicateSalaryMonthError } from '../staffService';
+import { getLocalToday } from '../../../utils/localDate';
+import { DuplicateSalaryOccurrenceError } from '../staffService';
 import type { StaffSalaryPayment, StaffSalaryPaymentFormValues } from '../types';
 import { validateSalaryPaymentForm } from '../validation';
 import './SalaryPaymentForm.css';
 
 interface SalaryPaymentFormProps {
-  initialValue?: StaffSalaryPayment;
-  /** Prefill for a new payment's amount — the staff member's configured monthlySalary, if any. Ignored when editing (the saved amount wins). */
+  /** The occurrence being confirmed/edited — fixed, shown as read-only context (not editable: it identifies WHICH due date this payment is for). */
+  dueDate: string;
+  /** Default amount when confirming a new occurrence (the schedule's amount); ignored once `initialValue` is set (the saved amount wins). */
   defaultAmount?: number;
+  initialValue?: StaffSalaryPayment;
   onSubmit: (values: StaffSalaryPaymentFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
 interface SalaryPaymentFormState {
-  salaryMonth: string;
   amount: string;
   paidDate: string;
   notes: string;
 }
 
-function currentMonth(): string {
-  return new Date().toISOString().slice(0, 7);
-}
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
 function toFormState(payment?: StaffSalaryPayment, defaultAmount?: number): SalaryPaymentFormState {
   return {
-    salaryMonth: payment?.salaryMonth ?? currentMonth(),
     amount: payment?.amount !== undefined ? String(payment.amount) : defaultAmount !== undefined ? String(defaultAmount) : '',
-    paidDate: payment?.paidDate ?? today(),
+    paidDate: payment?.paidDate ?? getLocalToday(),
     notes: payment?.notes ?? '',
   };
 }
 
 function toFormValues(state: SalaryPaymentFormState): StaffSalaryPaymentFormValues {
   return {
-    salaryMonth: state.salaryMonth,
     amount: state.amount.trim() ? Number(state.amount) : Number.NaN,
     paidDate: state.paidDate,
     notes: state.notes.trim() || undefined,
   };
 }
 
-export function SalaryPaymentForm({ initialValue, defaultAmount, onSubmit, onCancel }: SalaryPaymentFormProps) {
-  const { t } = useLanguage();
+export function SalaryPaymentForm({ dueDate, defaultAmount, initialValue, onSubmit, onCancel }: SalaryPaymentFormProps) {
+  const { t, locale } = useLanguage();
   const formId = useId();
   const [state, setState] = useState<SalaryPaymentFormState>(() => toFormState(initialValue, defaultAmount));
   const [errors, setErrors] = useState<ReturnType<typeof validateSalaryPaymentForm>>({});
@@ -74,8 +66,8 @@ export function SalaryPaymentForm({ initialValue, defaultAmount, onSubmit, onCan
     try {
       await onSubmit(values);
     } catch (err) {
-      if (err instanceof DuplicateSalaryMonthError) {
-        setSubmitError(t('validationDuplicateSalaryMonth'));
+      if (err instanceof DuplicateSalaryOccurrenceError) {
+        setSubmitError(t('validationDuplicateSalaryOccurrence'));
       } else {
         console.error('Failed to save salary payment', err);
         setSubmitError(t('formSaveError'));
@@ -84,22 +76,15 @@ export function SalaryPaymentForm({ initialValue, defaultAmount, onSubmit, onCan
     }
   };
 
+  const dueDateLabel = new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(
+    new Date(`${dueDate}T00:00:00`),
+  );
+
   return (
     <form className="salary-payment-form" onSubmit={handleSubmit} noValidate>
-      <FormField
-        label={t('fieldSalaryMonth')}
-        htmlFor={`${formId}-salaryMonth`}
-        error={errors.salaryMonth && t(errors.salaryMonth)}
-      >
-        <input
-          id={`${formId}-salaryMonth`}
-          className="form-input"
-          type="month"
-          value={state.salaryMonth}
-          onChange={(e) => update('salaryMonth', e.target.value)}
-          required
-        />
-      </FormField>
+      <p className="salary-payment-form__context">
+        {t('salaryOccurrenceDueLabel')}: {dueDateLabel}
+      </p>
 
       <FormField label={t('fieldAmount')} htmlFor={`${formId}-amount`} error={errors.amount && t(errors.amount)}>
         <input

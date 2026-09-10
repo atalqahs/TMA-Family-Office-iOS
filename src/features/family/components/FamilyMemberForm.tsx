@@ -4,6 +4,7 @@ import { PrimaryButton } from '../../../components/PrimaryButton';
 import { ProfilePhotoPicker } from '../../../components/ProfilePhotoPicker';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { getLocalToday } from '../../../utils/localDate';
 import { findFamilyMembersByCivilId } from '../familyRepository';
 import { BLOOD_TYPES } from '../types';
 import type { FamilyMember, FamilyMemberFormValues } from '../types';
@@ -31,7 +32,7 @@ function toFormValues(member?: FamilyMember): FamilyMemberFormValues {
   };
 }
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = getLocalToday();
 
 export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMemberFormProps) {
   const { t } = useLanguage();

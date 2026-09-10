@@ -10,35 +10,42 @@ import { SecondaryButton } from '../components/SecondaryButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { Sheet } from '../components/Sheet';
 import { SalaryPaymentForm } from '../features/staff/components/SalaryPaymentForm';
+import { SalaryScheduleForm } from '../features/staff/components/SalaryScheduleForm';
 import { SalarySection } from '../features/staff/components/SalarySection';
 import { StaffDocumentForm } from '../features/staff/components/StaffDocumentForm';
 import { StaffDocumentsSection } from '../features/staff/components/StaffDocumentsSection';
 import { StaffForm } from '../features/staff/components/StaffForm';
 import * as staffService from '../features/staff/staffService';
 import { useStaffMember } from '../features/staff/hooks/useStaffMember';
-import { STAFF_ROLES } from '../features/staff/types';
-import type { StaffSalaryPayment } from '../features/staff/types';
+import type { SalaryOccurrence } from '../features/staff/salarySchedule';
 import { computeStaffStatus, STAFF_STATUS_LABEL_KEY, STAFF_STATUS_VARIANT } from '../features/staff/staffStatus';
+import { getPaymentDueDate, STAFF_ROLES } from '../features/staff/types';
+import type { StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
 import { useDisclosure } from '../hooks/useDisclosure';
 import { useLanguage } from '../hooks/useLanguage';
 import { calculateAge } from '../utils/age';
 import { formatMoneyNumber } from '../utils/money';
 import './StaffProfilePage.css';
 
-function currentMonth(): string {
-  return new Date().toISOString().slice(0, 7);
+interface PaymentContext {
+  dueDate: string;
+  scheduleId?: string;
+  defaultAmount?: number;
+  existing?: StaffSalaryPayment;
 }
 
 export function StaffProfilePage() {
   const { staffId } = useParams<{ staffId: string }>();
   const navigate = useNavigate();
   const { t, locale, dir } = useLanguage();
-  const { staff, documents, salaryPayments, loading, refresh } = useStaffMember(staffId);
+  const { staff, documents, salarySchedules, salaryPayments, loading, refresh } = useStaffMember(staffId);
   const editSheet = useDisclosure();
   const addDocSheet = useDisclosure();
-  const salarySheet = useDisclosure();
+  const scheduleSheet = useDisclosure();
+  const paymentSheet = useDisclosure();
   const deleteSheet = useDisclosure();
-  const [editingPayment, setEditingPayment] = useState<StaffSalaryPayment | null>(null);
+  const [editingSchedule, setEditingSchedule] = useState<StaffSalarySchedule | null>(null);
+  const [paymentContext, setPaymentContext] = useState<PaymentContext | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -59,10 +66,26 @@ export function StaffProfilePage() {
     );
   }
 
-  const hasCurrentMonthPayment = salaryPayments.some((payment) => payment.salaryMonth === currentMonth());
-  const { level: statusLevel, reasons } = computeStaffStatus(staff, documents, hasCurrentMonthPayment);
+  const { level: statusLevel, reasons } = computeStaffStatus(staff, documents, salarySchedules, salaryPayments);
   const roleLabel = staff.role ? STAFF_ROLES.find((option) => option.id === staff.role)?.title[locale] : undefined;
   const age = calculateAge(staff.dateOfBirth);
+
+  const renderReasonText = (reason: (typeof reasons)[number]): string => {
+    let text = t(reason.textKey);
+    if (reason.params) {
+      for (const [key, value] of Object.entries(reason.params)) {
+        const displayValue =
+          key === 'date'
+            ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(new Date(`${value}T00:00:00`))
+            : key === 'amount'
+              ? `${formatMoneyNumber(Number(value), locale)} ${t('kwdUnitLabel')}`
+              : value;
+        text = text.replace(`{${key}}`, displayValue);
+      }
+    }
+    if (reason.detail) text += `: ${reason.detail}`;
+    return text;
+  };
 
   // Only rows that actually have a value are shown — an empty optional
   // field is simply omitted rather than displayed as a "-" placeholder row.
@@ -111,14 +134,28 @@ export function StaffProfilePage() {
     }
   };
 
-  const openAddPayment = () => {
-    setEditingPayment(null);
-    salarySheet.open();
+  const openAddSchedule = () => {
+    setEditingSchedule(null);
+    scheduleSheet.open();
+  };
+
+  const openEditSchedule = (schedule: StaffSalarySchedule) => {
+    setEditingSchedule(schedule);
+    scheduleSheet.open();
+  };
+
+  const openConfirmOccurrence = (occurrence: SalaryOccurrence) => {
+    setPaymentContext({ dueDate: occurrence.dueDate, scheduleId: occurrence.scheduleId, defaultAmount: occurrence.amount });
+    paymentSheet.open();
   };
 
   const openEditPayment = (payment: StaffSalaryPayment) => {
-    setEditingPayment(payment);
-    salarySheet.open();
+    setPaymentContext({
+      dueDate: getPaymentDueDate(payment) ?? payment.paidDate,
+      scheduleId: payment.salaryScheduleId,
+      existing: payment,
+    });
+    paymentSheet.open();
   };
 
   return (
@@ -141,8 +178,7 @@ export function StaffProfilePage() {
           <ul className="staff-profile-page__reasons">
             {reasons.map((reason, index) => (
               <li key={index} className={`staff-profile-page__reason staff-profile-page__reason--${reason.level}`}>
-                {t(reason.textKey)}
-                {reason.detail ? `: ${reason.detail}` : ''}
+                {renderReasonText(reason)}
               </li>
             ))}
           </ul>
@@ -198,11 +234,12 @@ export function StaffProfilePage() {
       <section className="staff-profile-page__section">
         <h2 className="staff-profile-page__section-title">{t('profileSectionSalaryPayments')}</h2>
         <SalarySection
-          staff={staff}
-          hasCurrentMonthPayment={hasCurrentMonthPayment}
-          payments={salaryPayments}
-          onAdd={openAddPayment}
-          onEdit={openEditPayment}
+          salarySchedules={salarySchedules}
+          salaryPayments={salaryPayments}
+          onAddSchedule={openAddSchedule}
+          onEditSchedule={openEditSchedule}
+          onConfirmOccurrence={openConfirmOccurrence}
+          onEditPayment={openEditPayment}
           onRefresh={refresh}
         />
       </section>
@@ -255,26 +292,51 @@ export function StaffProfilePage() {
       </Sheet>
 
       <Sheet
-        open={salarySheet.isOpen}
-        onClose={salarySheet.close}
-        title={editingPayment ? t('salaryPaymentFormEditTitle') : t('salaryPaymentFormAddTitle')}
+        open={scheduleSheet.isOpen}
+        onClose={scheduleSheet.close}
+        title={editingSchedule ? t('salaryScheduleFormEditTitle') : t('salaryScheduleFormAddTitle')}
         closeLabel={t('menuCloseLabel')}
       >
-        <SalaryPaymentForm
-          initialValue={editingPayment ?? undefined}
+        <SalaryScheduleForm
+          initialValue={editingSchedule ?? undefined}
           defaultAmount={staff.monthlySalary}
-          onCancel={salarySheet.close}
+          onCancel={scheduleSheet.close}
           onSubmit={async (values) => {
-            if (editingPayment) {
-              await staffService.updateSalaryPayment(editingPayment.id, staff.id, values);
+            if (editingSchedule) {
+              await staffService.updateSalarySchedule(editingSchedule.id, values);
             } else {
-              await staffService.addSalaryPayment(staff.id, values);
+              await staffService.createSalarySchedule(staff.id, values);
             }
             await refresh();
-            salarySheet.close();
+            scheduleSheet.close();
           }}
         />
       </Sheet>
+
+      {paymentContext && (
+        <Sheet
+          open={paymentSheet.isOpen}
+          onClose={paymentSheet.close}
+          title={paymentContext.existing ? t('salaryPaymentFormEditTitle') : t('salaryConfirmPaymentTitle')}
+          closeLabel={t('menuCloseLabel')}
+        >
+          <SalaryPaymentForm
+            dueDate={paymentContext.dueDate}
+            defaultAmount={paymentContext.defaultAmount}
+            initialValue={paymentContext.existing}
+            onCancel={paymentSheet.close}
+            onSubmit={async (values) => {
+              if (paymentContext.existing) {
+                await staffService.updateSalaryPayment(paymentContext.existing.id, values);
+              } else {
+                await staffService.confirmSalaryPayment(staff.id, paymentContext.scheduleId!, paymentContext.dueDate, values);
+              }
+              await refresh();
+              paymentSheet.close();
+            }}
+          />
+        </Sheet>
+      )}
 
       <Sheet
         open={deleteSheet.isOpen}

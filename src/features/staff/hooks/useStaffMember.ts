@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getStaffMember, listDocumentsForStaff, listSalaryPaymentsForStaff } from '../staffRepository';
-import type { HouseholdStaff, StaffDocument, StaffSalaryPayment } from '../types';
+import {
+  getStaffMember,
+  listDocumentsForStaff,
+  listSalaryPaymentsForStaff,
+  listSalarySchedulesForStaff,
+} from '../staffRepository';
+import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../types';
 
 /**
  * `staff` is `undefined` while loading, `null` if not found (or deleted).
@@ -14,6 +19,7 @@ import type { HouseholdStaff, StaffDocument, StaffSalaryPayment } from '../types
 export function useStaffMember(staffId: string | undefined) {
   const [staff, setStaff] = useState<HouseholdStaff | null | undefined>(undefined);
   const [documents, setDocuments] = useState<StaffDocument[]>([]);
+  const [salarySchedules, setSalarySchedules] = useState<StaffSalarySchedule[]>([]);
   const [salaryPayments, setSalaryPayments] = useState<StaffSalaryPayment[]>([]);
   const [error, setError] = useState(false);
   const requestIdRef = useRef(0);
@@ -26,14 +32,16 @@ export function useStaffMember(staffId: string | undefined) {
       return;
     }
     try {
-      const [foundStaff, docs, payments] = await Promise.all([
+      const [foundStaff, docs, schedules, payments] = await Promise.all([
         getStaffMember(staffId),
         listDocumentsForStaff(staffId),
+        listSalarySchedulesForStaff(staffId),
         listSalaryPaymentsForStaff(staffId),
       ]);
       if (requestId !== requestIdRef.current) return; // superseded by a newer request
       setStaff(foundStaff ?? null);
       setDocuments(docs);
+      setSalarySchedules(schedules);
       setSalaryPayments(payments);
       setError(false);
     } catch (err) {
@@ -48,5 +56,5 @@ export function useStaffMember(staffId: string | undefined) {
     void refresh();
   }, [refresh]);
 
-  return { staff, documents, salaryPayments, loading: staff === undefined, error, refresh };
+  return { staff, documents, salarySchedules, salaryPayments, loading: staff === undefined, error, refresh };
 }

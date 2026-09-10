@@ -1,20 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { listAllSalaryPayments, listAllStaffDocuments, listStaff } from '../staffRepository';
-import type { HouseholdStaff, StaffDocument } from '../types';
-
-function currentMonth(): string {
-  return new Date().toISOString().slice(0, 7);
-}
+import { listAllSalaryPayments, listAllSalarySchedules, listAllStaffDocuments, listStaff } from '../staffRepository';
+import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../types';
 
 /**
- * Loads every staff member plus every salary payment and document grouped
- * by staffId in one pass, so each StaffCard's status badge is computed
- * from exactly the same signals as the Profile page's — no per-staff
- * queries, and no risk of the card and profile disagreeing.
+ * Loads every staff member plus every salary schedule/payment and document
+ * grouped by staffId in one pass, so each StaffCard's status badge is
+ * computed from exactly the same signals as the Profile page's — no
+ * per-staff queries, and no risk of the card and profile disagreeing.
  */
 export function useStaffList() {
   const [staff, setStaff] = useState<HouseholdStaff[]>([]);
-  const [currentMonthPaidByStaff, setCurrentMonthPaidByStaff] = useState<Record<string, boolean>>({});
+  const [schedulesByStaff, setSchedulesByStaff] = useState<Record<string, StaffSalarySchedule[]>>({});
+  const [paymentsByStaff, setPaymentsByStaff] = useState<Record<string, StaffSalaryPayment[]>>({});
   const [documentsByStaff, setDocumentsByStaff] = useState<Record<string, StaffDocument[]>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -23,24 +20,27 @@ export function useStaffList() {
     setLoading(true);
     setError(false);
     try {
-      const [staffList, allPayments, allDocuments] = await Promise.all([
+      const [staffList, allSchedules, allPayments, allDocuments] = await Promise.all([
         listStaff(),
+        listAllSalarySchedules(),
         listAllSalaryPayments(),
         listAllStaffDocuments(),
       ]);
-      const thisMonth = currentMonth();
-      const paidMap: Record<string, boolean> = {};
+      const schedulesMap: Record<string, StaffSalarySchedule[]> = {};
+      for (const schedule of allSchedules) {
+        (schedulesMap[schedule.staffId] ??= []).push(schedule);
+      }
+      const paymentsMap: Record<string, StaffSalaryPayment[]> = {};
       for (const payment of allPayments) {
-        if (payment.salaryMonth === thisMonth) {
-          paidMap[payment.staffId] = true;
-        }
+        (paymentsMap[payment.staffId] ??= []).push(payment);
       }
       const docsMap: Record<string, StaffDocument[]> = {};
       for (const doc of allDocuments) {
         (docsMap[doc.staffId] ??= []).push(doc);
       }
       setStaff(staffList);
-      setCurrentMonthPaidByStaff(paidMap);
+      setSchedulesByStaff(schedulesMap);
+      setPaymentsByStaff(paymentsMap);
       setDocumentsByStaff(docsMap);
     } catch (err) {
       console.error('Failed to load staff', err);
@@ -54,5 +54,5 @@ export function useStaffList() {
     void refresh();
   }, [refresh]);
 
-  return { staff, currentMonthPaidByStaff, documentsByStaff, loading, error, refresh };
+  return { staff, schedulesByStaff, paymentsByStaff, documentsByStaff, loading, error, refresh };
 }
