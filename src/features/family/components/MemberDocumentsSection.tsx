@@ -29,12 +29,27 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
   const typeLabel = DOCUMENT_TYPES.find((docType) => docType.id === doc.type)?.title[locale] ?? doc.type;
 
   const handleOpen = () => {
+    let url: string | undefined;
     try {
-      const url = URL.createObjectURL(doc.file);
-      window.open(url, '_blank', 'noopener');
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      url = URL.createObjectURL(doc.file);
+      // Deliberately no 'noopener': with it, window.open() always returns
+      // null even on success (by spec), making the return value useless
+      // for detecting a blocked popup. The opened content is always the
+      // user's own locally-stored blob: URL, never third-party content, so
+      // there is no meaningful reverse-tabnabbing risk here.
+      const opened = window.open(url, '_blank');
+      if (!opened) {
+        // Popup blocked (common on iOS Safari): window.open returns null
+        // rather than throwing, so this must be checked explicitly.
+        URL.revokeObjectURL(url);
+        setError(t('documentOpenError'));
+        return;
+      }
+      setError(null);
+      setTimeout(() => URL.revokeObjectURL(url!), 60_000);
     } catch (err) {
       console.error('Failed to open document', err);
+      if (url) URL.revokeObjectURL(url);
       setError(t('documentOpenError'));
     }
   };

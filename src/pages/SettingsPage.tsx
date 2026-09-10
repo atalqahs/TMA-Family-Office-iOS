@@ -7,7 +7,7 @@ import './SettingsPage.css';
 const LOCALE_OPTIONS: Locale[] = ['ar', 'en'];
 
 export function SettingsPage() {
-  const { t, locale, setLocale } = useLanguage();
+  const { t, locale, setLocale, localeSaveError } = useLanguage();
 
   return (
     <div className="settings-page">
@@ -23,13 +23,14 @@ export function SettingsPage() {
                 'settings-page__language-option' +
                 (locale === option ? ' settings-page__language-option--active' : '')
               }
-              onClick={() => setLocale(option)}
+              onClick={() => void setLocale(option)}
               aria-pressed={locale === option}
             >
               {t(option === 'ar' ? 'languageNameArabic' : 'languageNameEnglish')}
             </button>
           ))}
         </div>
+        {localeSaveError && <p className="settings-page__language-error">{t('formSaveError')}</p>}
       </SectionCard>
 
       <SectionCard title={t('settingsAboutSectionTitle')}>

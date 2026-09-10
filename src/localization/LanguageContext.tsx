@@ -4,10 +4,12 @@ import { LanguageContext, type LanguageContextValue } from './language-context';
 import { DEFAULT_LOCALE, LOCALE_DIR, translations, type Locale, type TranslationKey } from './translations';
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const { value: locale, setValue: setLocale, ready } = usePersistentSetting<Locale>(
-    'locale',
-    DEFAULT_LOCALE,
-  );
+  const {
+    value: locale,
+    setValue: setLocale,
+    ready,
+    saveError: localeSaveError,
+  } = usePersistentSetting<Locale>('locale', DEFAULT_LOCALE);
 
   const dir = LOCALE_DIR[locale];
 
@@ -21,10 +23,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       locale,
       dir,
       setLocale,
-      toggleLocale: () => setLocale(locale === 'ar' ? 'en' : 'ar'),
+      toggleLocale: () => void setLocale(locale === 'ar' ? 'en' : 'ar'),
+      localeSaveError,
       t: (key: TranslationKey) => translations[locale][key],
     }),
-    [locale, dir, setLocale],
+    [locale, dir, setLocale, localeSaveError],
   );
 
   // Wait for the persisted locale to load from IndexedDB before mounting

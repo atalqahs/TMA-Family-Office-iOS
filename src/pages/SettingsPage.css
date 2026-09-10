@@ -29,6 +29,13 @@
   color: var(--color-accent);
 }
 
+.settings-page__language-error {
+  margin: var(--space-2) 0 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
 .settings-page__about-line {
   margin: 0 0 var(--space-1);
   color: var(--color-text-primary);
