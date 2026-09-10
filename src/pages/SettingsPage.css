@@ -1,0 +1,48 @@
+.settings-page {
+  flex: 1;
+  padding-top: var(--space-1);
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.settings-page__language-options {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.settings-page__language-option {
+  flex: 1;
+  min-height: var(--touch-target);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.settings-page__language-option--active {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.settings-page__about-line {
+  margin: 0 0 var(--space-1);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.settings-page__about-line--muted {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.settings-page__disclaimer {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+  line-height: 1.5;
+}

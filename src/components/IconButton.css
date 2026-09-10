@@ -1,0 +1,24 @@
+.icon-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast);
+}
+
+.icon-button:active {
+  background: var(--color-surface-elevated);
+}
+
+.icon-button__badge {
+  position: absolute;
+  top: 4px;
+  inset-inline-end: 4px;
+}

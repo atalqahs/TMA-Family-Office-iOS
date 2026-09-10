@@ -1,15 +1,30 @@
-import { HashRouter, Route, Routes } from 'react-router-dom';
-import { Header } from './components/Header';
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { AppShell } from './components/AppShell';
+import { CATEGORIES } from './features/categories/categories';
 import { LanguageProvider } from './localization/LanguageContext';
+import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { TrashPage } from './pages/TrashPage';
 
 export default function App() {
   return (
     <LanguageProvider>
       <HashRouter>
-        <Header />
         <Routes>
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<AppShell />}>
+            <Route index element={<DashboardPage />} />
+            {CATEGORIES.map((category) => (
+              <Route
+                key={category.id}
+                path={category.path.slice(1)}
+                element={<CategoryPlaceholderPage category={category} />}
+              />
+            ))}
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="trash" element={<TrashPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
         </Routes>
       </HashRouter>
     </LanguageProvider>

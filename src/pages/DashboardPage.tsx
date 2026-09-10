@@ -1,14 +1,36 @@
-import { EmptyState } from '../components/EmptyState';
+import { CategoryCard } from '../components/CategoryCard';
+import { PageHeader } from '../components/PageHeader';
+import { CATEGORIES, type CategoryDefinition } from '../features/categories/categories';
+import { useCategoryCount } from '../hooks/useCategoryCount';
 import { useLanguage } from '../hooks/useLanguage';
 import './DashboardPage.css';
+
+function DashboardCategoryCard({ category }: { category: CategoryDefinition }) {
+  const { locale } = useLanguage();
+  const count = useCategoryCount(category.id);
+
+  return (
+    <CategoryCard
+      variant="grid"
+      path={category.path}
+      icon={category.icon}
+      title={category.title[locale]}
+      meta={`${count} ${category.countUnit[locale]}`}
+    />
+  );
+}
 
 export function DashboardPage() {
   const { t } = useLanguage();
 
   return (
-    <main className="dashboard-page">
-      <h1 className="dashboard-page__title">{t('dashboardTitle')}</h1>
-      <EmptyState title={t('dashboardEmptyTitle')} hint={t('dashboardEmptyHint')} />
-    </main>
+    <div className="dashboard-page">
+      <PageHeader title={t('dashboardTitle')} subtitle={t('dashboardSubtitle')} />
+      <div className="dashboard-page__grid">
+        {CATEGORIES.map((category) => (
+          <DashboardCategoryCard key={category.id} category={category} />
+        ))}
+      </div>
+    </div>
   );
 }

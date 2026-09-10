@@ -1,0 +1,97 @@
+.category-card {
+  display: flex;
+  text-decoration: none;
+  color: inherit;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-card);
+  border-radius: var(--radius-lg);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.category-card:active {
+  background: var(--color-surface-elevated);
+}
+
+.category-card--active {
+  border-color: var(--color-accent-muted);
+  background: var(--color-accent-soft);
+}
+
+.category-card__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.category-card__text {
+  display: flex;
+  min-width: 0;
+}
+
+.category-card__title {
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.category-card__subtitle,
+.category-card__meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* Grid variant: vertical tile used on the Dashboard */
+.category-card--grid {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  min-height: 108px;
+}
+
+.category-card--grid .category-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-accent-soft);
+}
+
+.category-card--grid .category-card__text {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-card--grid .category-card__title {
+  font-size: var(--font-size-body);
+}
+
+/* Row variant: horizontal list row used in the category menu */
+.category-card--row {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  min-height: var(--touch-target);
+}
+
+.category-card--row .category-card__icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-elevated);
+}
+
+.category-card--row .category-card__text {
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+}
+
+.category-card--row .category-card__title {
+  font-size: var(--font-size-body);
+}
