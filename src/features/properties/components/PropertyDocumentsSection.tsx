@@ -9,6 +9,7 @@ import { removePropertyDocument } from '../propertyService';
 import { PROPERTY_DOCUMENT_TYPES } from '../types';
 import type { PropertyDocument } from '../types';
 import { isOfficeDocument } from '../validation';
+import { openStoredDocument } from '../../../utils/documentOpen';
 import './PropertyDocumentsSection.css';
 
 interface PropertyDocumentsSectionProps {
@@ -30,30 +31,9 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
 
   const typeLabel = PROPERTY_DOCUMENT_TYPES.find((docType) => docType.id === doc.type)?.title[locale] ?? doc.type;
 
-  const handleOpen = () => {
-    let url: string | undefined;
-    try {
-      url = URL.createObjectURL(doc.file);
-      // Deliberately no 'noopener': with it, window.open() always returns
-      // null even on success (by spec), making the return value useless
-      // for detecting a blocked popup. The opened content is always the
-      // user's own locally-stored blob: URL, never third-party content, so
-      // there is no meaningful reverse-tabnabbing risk here.
-      const opened = window.open(url, '_blank');
-      if (!opened) {
-        // Popup blocked (common on iOS Safari): window.open returns null
-        // rather than throwing, so this must be checked explicitly.
-        URL.revokeObjectURL(url);
-        setError(t('documentOpenError'));
-        return;
-      }
-      setError(null);
-      setTimeout(() => URL.revokeObjectURL(url!), 60_000);
-    } catch (err) {
-      console.error('Failed to open document', err);
-      if (url) URL.revokeObjectURL(url);
-      setError(t('documentOpenError'));
-    }
+  const handleOpen = async () => {
+    const result = await openStoredDocument({ file: doc.file, fileName: doc.fileName, mimeType: doc.mimeType });
+    setError(result.ok ? null : t(result.errorKey ?? 'documentOpenError'));
   };
 
   const handleRemove = async () => {
