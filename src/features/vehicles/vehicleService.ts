@@ -67,6 +67,28 @@ export async function removeVehicleDocument(id: string): Promise<void> {
   await vehicleRepository.deleteVehicleDocument(id);
 }
 
+/**
+ * Keeps the vehicle's live `currentMileage` synchronized with a
+ * maintenance record's actual odometer reading -- FORWARD ONLY. A
+ * maintenance record always reflects a real point-in-time reading, so if
+ * it's ahead of what the vehicle currently shows, the vehicle's live
+ * mileage was simply stale and gets caught up. A record for a mileage
+ * equal to or lower than the current live mileage (editing an older,
+ * already-superseded cycle; a historical entry entered out of order)
+ * must never decrease or overwrite it.
+ */
+async function syncVehicleMileageForward(vehicleId: string, mileageAtService: number | undefined): Promise<void> {
+  if (mileageAtService === undefined) return;
+  const vehicle = await vehicleRepository.getVehicle(vehicleId);
+  if (!vehicle) return;
+  if (vehicle.currentMileage !== undefined && mileageAtService <= vehicle.currentMileage) return;
+  await vehicleRepository.saveVehicle({
+    ...vehicle,
+    currentMileage: mileageAtService,
+    updatedAt: new Date().toISOString(),
+  });
+}
+
 export async function addMaintenanceRecord(
   vehicleId: string,
   values: VehicleMaintenanceFormValues,
@@ -80,6 +102,7 @@ export async function addMaintenanceRecord(
     updatedAt: now,
   };
   await vehicleRepository.saveMaintenanceRecord(record);
+  await syncVehicleMileageForward(vehicleId, values.mileageAtService);
   return record;
 }
 
@@ -97,6 +120,7 @@ export async function updateMaintenanceRecord(
     updatedAt: new Date().toISOString(),
   };
   await vehicleRepository.saveMaintenanceRecord(updated);
+  await syncVehicleMileageForward(updated.vehicleId, values.mileageAtService);
   return updated;
 }
 
@@ -133,5 +157,6 @@ export async function completeMaintenanceRecord(
     updatedAt: now,
   };
   await vehicleRepository.saveMaintenanceRecord(record);
+  await syncVehicleMileageForward(vehicleId, values.mileageAtService);
   return record;
 }
