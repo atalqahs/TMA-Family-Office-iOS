@@ -7,7 +7,8 @@ import { getLocalToday } from '../../../utils/localDate';
 import { formatMileageNumber } from '../../../utils/mileage';
 import { getServiceIntervalDisplay, getTargetMileage } from '../types';
 import type { VehicleMaintenanceFormValues, VehicleMaintenanceRecord } from '../types';
-import { MAX_SERVICE_INTERVAL_KM } from '../validation';
+import { validateMaintenanceForm } from '../validation';
+import { MaintenanceMileageFields } from './MaintenanceMileageFields';
 import './MaintenanceRecordForm.css';
 
 interface CompleteServiceFormProps {
@@ -23,8 +24,6 @@ interface CompleteServiceFormState {
   nextServiceDate: string;
   notes: string;
 }
-
-const SERVICE_INTERVAL_PRESETS_KM = [1000, 3000, 5000, 10000, 20000, 50000];
 
 /**
  * "Service Completed" — starts a brand-new maintenance cycle for the same
@@ -57,25 +56,29 @@ export function CompleteServiceForm({ sourceRecord, onSubmit, onCancel }: Comple
 
   const mileageAtServiceNum = state.mileageAtService.trim() ? Number(state.mileageAtService) : undefined;
   const serviceIntervalNum = state.serviceIntervalKm.trim() ? Number(state.serviceIntervalKm) : undefined;
-  const targetMileage =
-    mileageAtServiceNum !== undefined && Number.isFinite(mileageAtServiceNum) &&
-    serviceIntervalNum !== undefined && Number.isFinite(serviceIntervalNum)
-      ? mileageAtServiceNum + serviceIntervalNum
-      : undefined;
 
   const previousTargetMileage = getTargetMileage(sourceRecord);
 
+  /**
+   * Service Completed has one rule beyond the shared form validation: the
+   * actual odometer reading is REQUIRED here (unlike add/edit, where
+   * mileage tracking is optional for a record). Everything else -- the
+   * negative/positive/max-200,000 numeric checks -- delegates to the same
+   * `validateMaintenanceForm` the add/edit form uses, so those thresholds
+   * have exactly one source of truth.
+   */
   const validate = (): string | null => {
     if (!state.serviceDate) return t('validationMaintenanceDateRequired');
-    if (mileageAtServiceNum === undefined || !Number.isFinite(mileageAtServiceNum) || mileageAtServiceNum < 0) {
-      return t('validationMileageNegative');
-    }
-    if (serviceIntervalNum === undefined || !Number.isFinite(serviceIntervalNum) || serviceIntervalNum <= 0) {
-      return t('validationServiceIntervalInvalid');
-    }
-    if (serviceIntervalNum > MAX_SERVICE_INTERVAL_KM) {
-      return t('validationServiceIntervalTooLarge');
-    }
+    if (mileageAtServiceNum === undefined) return t('validationMileageNegative');
+    const formErrors = validateMaintenanceForm({
+      type: sourceRecord.type,
+      title: sourceRecord.title,
+      serviceDate: state.serviceDate,
+      mileageAtService: mileageAtServiceNum,
+      serviceIntervalKm: serviceIntervalNum,
+    });
+    if (formErrors.mileageAtService) return t(formErrors.mileageAtService);
+    if (formErrors.serviceIntervalKm) return t(formErrors.serviceIntervalKm);
     return null;
   };
 
@@ -126,59 +129,15 @@ export function CompleteServiceForm({ sourceRecord, onSubmit, onCancel }: Comple
         />
       </FormField>
 
-      <FormField label={t('fieldMileageAtService')} htmlFor={`${formId}-mileageAtService`}>
-        <input
-          id={`${formId}-mileageAtService`}
-          className="form-input"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={state.mileageAtService}
-          onChange={(e) => update('mileageAtService', e.target.value)}
-          required
-          autoFocus
-        />
-      </FormField>
-
-      <FormField label={t('fieldServiceIntervalKm')} htmlFor={`${formId}-serviceIntervalKm`} hint={t('serviceIntervalHint')}>
-        <input
-          id={`${formId}-serviceIntervalKm`}
-          className="form-input"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={MAX_SERVICE_INTERVAL_KM}
-          value={state.serviceIntervalKm}
-          onChange={(e) => update('serviceIntervalKm', e.target.value)}
-        />
-        <div className="maintenance-record-form__presets">
-          {SERVICE_INTERVAL_PRESETS_KM.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              className={
-                'maintenance-record-form__preset' +
-                (Number(state.serviceIntervalKm) === preset ? ' maintenance-record-form__preset--active' : '')
-              }
-              onClick={() => update('serviceIntervalKm', String(preset))}
-            >
-              {formatMileageNumber(preset, locale)}
-            </button>
-          ))}
-        </div>
-      </FormField>
-
-      <FormField label={t('fieldTargetMileage')} htmlFor={`${formId}-targetMileage`}>
-        <div id={`${formId}-targetMileage`} className="maintenance-record-form__computed">
-          {targetMileage !== undefined ? (
-            <>
-              {formatMileageNumber(targetMileage, locale)} {t('mileageUnitLabel')}
-            </>
-          ) : (
-            <span className="maintenance-record-form__computed-empty">{t('targetMileagePlaceholder')}</span>
-          )}
-        </div>
-      </FormField>
+      <MaintenanceMileageFields
+        idPrefix={formId}
+        mileageAtService={state.mileageAtService}
+        onMileageAtServiceChange={(value) => update('mileageAtService', value)}
+        mileageAtServiceRequired
+        mileageAtServiceAutoFocus
+        serviceIntervalKm={state.serviceIntervalKm}
+        onServiceIntervalKmChange={(value) => update('serviceIntervalKm', value)}
+      />
 
       <FormField label={t('fieldNextServiceDate')} htmlFor={`${formId}-nextServiceDate`}>
         <input

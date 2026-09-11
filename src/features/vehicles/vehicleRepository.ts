@@ -67,6 +67,42 @@ export async function saveMaintenanceRecord(record: VehicleMaintenanceRecord): P
   await db.put('vehicleMaintenanceRecords', record);
 }
 
+/**
+ * Saves a maintenance record and, in the SAME IndexedDB transaction,
+ * applies the vehicle's live-mileage forward-sync invariant (see
+ * `vehicleService.ts`) — so the two writes can never partially succeed.
+ * If anything in this transaction fails, IndexedDB rolls back every write
+ * made within it: either the maintenance record AND the (possible)
+ * vehicle mileage bump both land, or neither does.
+ *
+ * `computeVehicleMileageUpdate` is supplied by the caller (the service
+ * layer, which owns the forward-only invariant) and decides, given the
+ * vehicle as read inside this same transaction, what its new
+ * `currentMileage` should be — or `undefined` for "no change needed".
+ * The repository only owns the transaction mechanics; it has no opinion
+ * on when a vehicle's mileage should move.
+ */
+export async function saveMaintenanceRecordAndSyncVehicleMileage(
+  record: VehicleMaintenanceRecord,
+  computeVehicleMileageUpdate: (vehicle: Vehicle) => number | undefined,
+): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(['vehicleMaintenanceRecords', 'vehicles'], 'readwrite');
+  const maintenanceStore = tx.objectStore('vehicleMaintenanceRecords');
+  const vehiclesStore = tx.objectStore('vehicles');
+
+  const [, vehicle] = await Promise.all([maintenanceStore.put(record), vehiclesStore.get(record.vehicleId)]);
+
+  if (vehicle) {
+    const newMileage = computeVehicleMileageUpdate(vehicle);
+    if (newMileage !== undefined) {
+      await vehiclesStore.put({ ...vehicle, currentMileage: newMileage, updatedAt: new Date().toISOString() });
+    }
+  }
+
+  await tx.done;
+}
+
 export async function deleteMaintenanceRecord(id: string): Promise<void> {
   const db = await getDB();
   await db.delete('vehicleMaintenanceRecords', id);

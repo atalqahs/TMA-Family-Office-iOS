@@ -170,7 +170,9 @@ export function getMileageAtService(record: Pick<VehicleMaintenanceRecord, 'mile
  *    never used for this record) — `undefined`, meaning date-based status
  *    is the only available fallback.
  */
-export function getTargetMileage(record: VehicleMaintenanceRecord): number | undefined {
+export function getTargetMileage(
+  record: Pick<VehicleMaintenanceRecord, 'mileageAtService' | 'mileage' | 'serviceIntervalKm' | 'nextServiceMileage'>,
+): number | undefined {
   const mileageAtService = getMileageAtService(record);
   if (mileageAtService !== undefined && record.serviceIntervalKm !== undefined) {
     return mileageAtService + record.serviceIntervalKm;

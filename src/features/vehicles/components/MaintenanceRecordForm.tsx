@@ -3,10 +3,10 @@ import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
-import { formatMileageNumber } from '../../../utils/mileage';
 import { getMileageAtService, getServiceIntervalDisplay, VEHICLE_MAINTENANCE_TYPES } from '../types';
 import type { VehicleMaintenanceFormValues, VehicleMaintenanceRecord, VehicleMaintenanceType } from '../types';
-import { MAX_SERVICE_INTERVAL_KM, validateMaintenanceForm } from '../validation';
+import { validateMaintenanceForm } from '../validation';
+import { MaintenanceMileageFields } from './MaintenanceMileageFields';
 import './MaintenanceRecordForm.css';
 
 interface MaintenanceRecordFormProps {
@@ -24,9 +24,6 @@ interface MaintenanceFormState {
   nextServiceDate: string;
   notes: string;
 }
-
-/** Quick-pick interval presets shown as buttons — a convenience only, never a restriction: any value up to MAX_SERVICE_INTERVAL_KM can still be typed directly. */
-const SERVICE_INTERVAL_PRESETS_KM = [1000, 3000, 5000, 10000, 20000, 50000];
 
 function toFormState(record?: VehicleMaintenanceRecord): MaintenanceFormState {
   const mileageAtService = record ? getMileageAtService(record) : undefined;
@@ -65,14 +62,6 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
   const update = <K extends keyof MaintenanceFormState>(key: K, value: MaintenanceFormState[K]) => {
     setState((prev) => ({ ...prev, [key]: value }));
   };
-
-  const mileageAtServiceNum = state.mileageAtService.trim() ? Number(state.mileageAtService) : undefined;
-  const serviceIntervalNum = state.serviceIntervalKm.trim() ? Number(state.serviceIntervalKm) : undefined;
-  const targetMileage =
-    mileageAtServiceNum !== undefined && Number.isFinite(mileageAtServiceNum) &&
-    serviceIntervalNum !== undefined && Number.isFinite(serviceIntervalNum)
-      ? mileageAtServiceNum + serviceIntervalNum
-      : undefined;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -140,66 +129,15 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
         />
       </FormField>
 
-      <FormField
-        label={t('fieldMileageAtService')}
-        htmlFor={`${formId}-mileageAtService`}
-        error={errors.mileageAtService && t(errors.mileageAtService)}
-      >
-        <input
-          id={`${formId}-mileageAtService`}
-          className="form-input"
-          type="number"
-          inputMode="numeric"
-          min={0}
-          value={state.mileageAtService}
-          onChange={(e) => update('mileageAtService', e.target.value)}
-        />
-      </FormField>
-
-      <FormField
-        label={t('fieldServiceIntervalKm')}
-        htmlFor={`${formId}-serviceIntervalKm`}
-        hint={t('serviceIntervalHint')}
-        error={errors.serviceIntervalKm && t(errors.serviceIntervalKm)}
-      >
-        <input
-          id={`${formId}-serviceIntervalKm`}
-          className="form-input"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={MAX_SERVICE_INTERVAL_KM}
-          value={state.serviceIntervalKm}
-          onChange={(e) => update('serviceIntervalKm', e.target.value)}
-        />
-        <div className="maintenance-record-form__presets">
-          {SERVICE_INTERVAL_PRESETS_KM.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              className={
-                'maintenance-record-form__preset' +
-                (Number(state.serviceIntervalKm) === preset ? ' maintenance-record-form__preset--active' : '')
-              }
-              onClick={() => update('serviceIntervalKm', String(preset))}
-            >
-              {formatMileageNumber(preset, locale)}
-            </button>
-          ))}
-        </div>
-      </FormField>
-
-      <FormField label={t('fieldTargetMileage')} htmlFor={`${formId}-targetMileage`}>
-        <div id={`${formId}-targetMileage`} className="maintenance-record-form__computed">
-          {targetMileage !== undefined ? (
-            <>
-              {formatMileageNumber(targetMileage, locale)} {t('mileageUnitLabel')}
-            </>
-          ) : (
-            <span className="maintenance-record-form__computed-empty">{t('targetMileagePlaceholder')}</span>
-          )}
-        </div>
-      </FormField>
+      <MaintenanceMileageFields
+        idPrefix={formId}
+        mileageAtService={state.mileageAtService}
+        onMileageAtServiceChange={(value) => update('mileageAtService', value)}
+        mileageAtServiceError={errors.mileageAtService && t(errors.mileageAtService)}
+        serviceIntervalKm={state.serviceIntervalKm}
+        onServiceIntervalKmChange={(value) => update('serviceIntervalKm', value)}
+        serviceIntervalKmError={errors.serviceIntervalKm && t(errors.serviceIntervalKm)}
+      />
 
       <FormField label={t('fieldNextServiceDate')} htmlFor={`${formId}-nextServiceDate`}>
         <input

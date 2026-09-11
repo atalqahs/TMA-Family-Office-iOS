@@ -68,25 +68,28 @@ export async function removeVehicleDocument(id: string): Promise<void> {
 }
 
 /**
- * Keeps the vehicle's live `currentMileage` synchronized with a
- * maintenance record's actual odometer reading -- FORWARD ONLY. A
- * maintenance record always reflects a real point-in-time reading, so if
- * it's ahead of what the vehicle currently shows, the vehicle's live
- * mileage was simply stale and gets caught up. A record for a mileage
- * equal to or lower than the current live mileage (editing an older,
- * already-superseded cycle; a historical entry entered out of order)
- * must never decrease or overwrite it.
+ * The vehicle-mileage forward-sync invariant applied whenever a
+ * maintenance record is saved: a maintenance record's actual odometer
+ * reading (`mileageAtService`) always represents a real point-in-time
+ * reading, so if it's ahead of the vehicle's current live mileage, the
+ * vehicle was simply stale and should be caught up. A reading equal to or
+ * behind the vehicle's current live mileage (editing an older,
+ * already-superseded cycle; a historical entry entered out of order) must
+ * never move the vehicle backward, so this returns `undefined` ("no
+ * change") in that case.
+ *
+ * Pure and exported so the invariant itself can be tested directly,
+ * without IndexedDB. The actual persistence -- applying this decision in
+ * the same transaction as the maintenance-record write -- is
+ * `vehicleRepository.saveMaintenanceRecordAndSyncVehicleMileage`.
  */
-async function syncVehicleMileageForward(vehicleId: string, mileageAtService: number | undefined): Promise<void> {
-  if (mileageAtService === undefined) return;
-  const vehicle = await vehicleRepository.getVehicle(vehicleId);
-  if (!vehicle) return;
-  if (vehicle.currentMileage !== undefined && mileageAtService <= vehicle.currentMileage) return;
-  await vehicleRepository.saveVehicle({
-    ...vehicle,
-    currentMileage: mileageAtService,
-    updatedAt: new Date().toISOString(),
-  });
+export function computeForwardMileageSync(
+  vehicle: Pick<Vehicle, 'currentMileage'>,
+  mileageAtService: number | undefined,
+): number | undefined {
+  if (mileageAtService === undefined) return undefined;
+  if (vehicle.currentMileage !== undefined && mileageAtService <= vehicle.currentMileage) return undefined;
+  return mileageAtService;
 }
 
 export async function addMaintenanceRecord(
@@ -101,8 +104,9 @@ export async function addMaintenanceRecord(
     createdAt: now,
     updatedAt: now,
   };
-  await vehicleRepository.saveMaintenanceRecord(record);
-  await syncVehicleMileageForward(vehicleId, values.mileageAtService);
+  await vehicleRepository.saveMaintenanceRecordAndSyncVehicleMileage(record, (vehicle) =>
+    computeForwardMileageSync(vehicle, values.mileageAtService),
+  );
   return record;
 }
 
@@ -119,8 +123,9 @@ export async function updateMaintenanceRecord(
     ...values,
     updatedAt: new Date().toISOString(),
   };
-  await vehicleRepository.saveMaintenanceRecord(updated);
-  await syncVehicleMileageForward(updated.vehicleId, values.mileageAtService);
+  await vehicleRepository.saveMaintenanceRecordAndSyncVehicleMileage(updated, (vehicle) =>
+    computeForwardMileageSync(vehicle, values.mileageAtService),
+  );
   return updated;
 }
 
@@ -156,7 +161,8 @@ export async function completeMaintenanceRecord(
     createdAt: now,
     updatedAt: now,
   };
-  await vehicleRepository.saveMaintenanceRecord(record);
-  await syncVehicleMileageForward(vehicleId, values.mileageAtService);
+  await vehicleRepository.saveMaintenanceRecordAndSyncVehicleMileage(record, (vehicle) =>
+    computeForwardMileageSync(vehicle, values.mileageAtService),
+  );
   return record;
 }
