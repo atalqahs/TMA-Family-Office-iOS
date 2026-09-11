@@ -3,6 +3,7 @@ import { getContractCount } from '../features/contracts/contractRepository';
 import { getActiveFamilyMemberCount } from '../features/family/familyRepository';
 import { getPropertyCount } from '../features/properties/propertyRepository';
 import { getStaffCount } from '../features/staff/staffRepository';
+import { getTaskCount } from '../features/tasks/taskRepository';
 import { getVehicleCount } from '../features/vehicles/vehicleRepository';
 
 const COUNT_LOADERS: Record<string, () => Promise<number>> = {
@@ -11,11 +12,12 @@ const COUNT_LOADERS: Record<string, () => Promise<number>> = {
   vehicles: getVehicleCount,
   staff: getStaffCount,
   contracts: getContractCount,
+  tasks: getTaskCount,
 };
 
 /**
  * Item count for a category. Only `family`, `properties`, `vehicles`,
- * `staff`, and `contracts` have a real store so far — every other category
+ * `staff`, `contracts`, and `tasks` have a real store so far — every other category
  * still returns 0 until its own module is built, at which point it gets
  * the same treatment here without touching any call site.
  */

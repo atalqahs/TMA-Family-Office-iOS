@@ -14,6 +14,9 @@ import { PropertyProfilePage } from './pages/PropertyProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
 import { StaffPage } from './pages/StaffPage';
 import { StaffProfilePage } from './pages/StaffProfilePage';
+import { TaskCalendarPage } from './pages/TaskCalendarPage';
+import { TaskProfilePage } from './pages/TaskProfilePage';
+import { TasksPage } from './pages/TasksPage';
 import { TrashPage } from './pages/TrashPage';
 import { VehicleProfilePage } from './pages/VehicleProfilePage';
 import { VehiclesPage } from './pages/VehiclesPage';
@@ -24,7 +27,8 @@ const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
     category.id !== 'properties' &&
     category.id !== 'vehicles' &&
     category.id !== 'staff' &&
-    category.id !== 'contracts',
+    category.id !== 'contracts' &&
+    category.id !== 'tasks',
 );
 
 export default function App() {
@@ -53,6 +57,9 @@ export default function App() {
               <Route path="staff/:staffId" element={<StaffProfilePage />} />
               <Route path="contracts" element={<ContractsPage />} />
               <Route path="contracts/:contractId" element={<ContractProfilePage />} />
+              <Route path="tasks" element={<TasksPage />} />
+              <Route path="tasks/calendar" element={<TaskCalendarPage />} />
+              <Route path="tasks/:taskId" element={<TaskProfilePage />} />
               {PLACEHOLDER_CATEGORIES.map((category) => (
                 <Route
                   key={category.id}

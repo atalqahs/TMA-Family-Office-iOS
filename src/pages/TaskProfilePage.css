@@ -1,0 +1,201 @@
+.task-profile-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.task-profile-page__topbar {
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+.task-profile-page__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-5) var(--space-5);
+}
+
+.task-profile-page__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  color: var(--color-accent);
+}
+
+.task-profile-page__title {
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.task-profile-page__header-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.task-profile-page__complete-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.task-profile-page__section {
+  margin: 0 var(--space-5) var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.task-profile-page__section-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.task-profile-page__description {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.task-profile-page__info-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.task-profile-page__info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.task-profile-page__info-row dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.task-profile-page__info-row dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  text-align: end;
+  overflow-wrap: anywhere;
+  max-width: 60%;
+}
+
+.task-profile-page__linked-entity {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  overflow-wrap: anywhere;
+}
+
+.task-profile-page__linked-entity-missing {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  font-style: italic;
+}
+
+.task-profile-page__linked-loading {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.task-profile-page__completion-empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.task-profile-page__completion-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.task-profile-page__completion-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.task-profile-page__completion-row:last-child {
+  border-bottom: none;
+}
+
+.task-profile-page__completion-date {
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  font-weight: 600;
+}
+
+.task-profile-page__completion-meta {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.task-profile-page__notes {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.task-profile-page__danger-zone {
+  margin: var(--space-6) var(--space-5) 0;
+}
+
+.task-profile-page__delete-body {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+}
+
+.task-profile-page__delete-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.task-profile-page__delete-actions > * {
+  flex: 1;
+}
+
+.task-profile-page__delete-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.task-profile-page__status {
+  display: block;
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-secondary);
+}

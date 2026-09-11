@@ -3,6 +3,7 @@ import type { Contract, ContractDocument } from '../features/contracts/types';
 import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
 import type { Property, PropertyDocument } from '../features/properties/types';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
+import type { Task, TaskCompletion } from '../features/tasks/types';
 import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../features/vehicles/types';
 
 /**
@@ -16,8 +17,9 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * that survives the v3 -> v4 upgrade that added the vehicle stores in
  * Phase 5, all of that survives the v4 -> v5 upgrade that added the staff
  * stores in Phase 6, all of that survives the v5 -> v6 upgrade that added
- * recurring salary schedules, and all of that survives the v6 -> v7
- * upgrade that added the Contracts stores in Phase 7).
+ * recurring salary schedules, all of that survives the v6 -> v7 upgrade
+ * that added the Contracts stores in Phase 7, and all of that survives
+ * the v7 -> v8 upgrade that added the Tasks stores in Phase 8).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -84,10 +86,19 @@ interface TmaDB extends DBSchema {
     value: ContractDocument;
     indexes: { contractId: string };
   };
+  tasks: {
+    key: string;
+    value: Task;
+  };
+  taskCompletions: {
+    key: string;
+    value: TaskCompletion;
+    indexes: { taskId: string; taskId_occurrenceDate: [string, string] };
+  };
 }
 
 const DB_NAME = 'tma-family-office';
-const DB_VERSION = 7;
+const DB_VERSION = 8;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -211,6 +222,19 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
         if (!db.objectStoreNames.contains('contractDocuments')) {
           const store = db.createObjectStore('contractDocuments', { keyPath: 'id' });
           store.createIndex('contractId', 'contractId');
+        }
+
+        if (!db.objectStoreNames.contains('tasks')) {
+          db.createObjectStore('tasks', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('taskCompletions')) {
+          const store = db.createObjectStore('taskCompletions', { keyPath: 'id' });
+          store.createIndex('taskId', 'taskId');
+          // Enforced at the IndexedDB level (not just app-level pre-checks)
+          // so a duplicate completion for the same occurrence is rejected
+          // atomically, the same pattern already proven for Staff salary
+          // occurrences (scheduleId, dueDate).
+          store.createIndex('taskId_occurrenceDate', ['taskId', 'occurrenceDate'], { unique: true });
         }
       },
       blocked() {

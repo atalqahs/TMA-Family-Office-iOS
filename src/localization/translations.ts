@@ -267,7 +267,46 @@ export type TranslationKey =
   | 'contractDeleteAction'
   | 'contractDeleteConfirmTitle'
   | 'contractDeleteConfirmBody'
-  | 'contractDeleteConfirmAction';
+  | 'contractDeleteConfirmAction'
+  | 'fieldTaskTitle'
+  | 'fieldDescription'
+  | 'fieldDueDate'
+  | 'fieldDueTime'
+  | 'fieldPriority'
+  | 'fieldTaskRepeat'
+  | 'recurrenceNoneLabel'
+  | 'validationTaskTitleRequired'
+  | 'validationTaskDueDateRequired'
+  | 'validationTaskRecurrenceIntervalInvalid'
+  | 'taskFormAddTitle'
+  | 'taskFormEditTitle'
+  | 'taskNotFoundTitle'
+  | 'backToTasksLabel'
+  | 'profileSectionTaskInfo'
+  | 'profileSectionCompletionHistory'
+  | 'taskStateOverdue'
+  | 'taskStateDueToday'
+  | 'taskStateUpcoming'
+  | 'taskStateCompleted'
+  | 'taskFilterAll'
+  | 'taskFilterOverdue'
+  | 'taskFilterToday'
+  | 'taskFilterUpcoming'
+  | 'taskFilterCompleted'
+  | 'taskFilterEmptyMessage'
+  | 'completionHistoryEmpty'
+  | 'taskCompleteAction'
+  | 'taskCompleteOccurrenceAction'
+  | 'taskCompletedOnLabel'
+  | 'duplicateTaskCompletionError'
+  | 'taskDeleteAction'
+  | 'taskDeleteConfirmTitle'
+  | 'taskDeleteConfirmBody'
+  | 'taskDeleteConfirmAction'
+  | 'calendarViewAction'
+  | 'calendarPrevMonthLabel'
+  | 'calendarNextMonthLabel'
+  | 'calendarNoTasksForDate';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -537,6 +576,45 @@ export const translations: Record<Locale, Dictionary> = {
     contractDeleteConfirmTitle: 'هل تريد حذف هذا العقد؟',
     contractDeleteConfirmBody: 'سيتم حذف هذا العقد وجميع مستنداته نهائياً. لا يمكن التراجع عن هذا الإجراء.',
     contractDeleteConfirmAction: 'حذف',
+    fieldTaskTitle: 'عنوان المهمة',
+    fieldDescription: 'الوصف',
+    fieldDueDate: 'تاريخ الاستحقاق',
+    fieldDueTime: 'وقت الاستحقاق',
+    fieldPriority: 'الأولوية',
+    fieldTaskRepeat: 'التكرار',
+    recurrenceNoneLabel: 'لا يتكرر',
+    validationTaskTitleRequired: 'يرجى إدخال عنوان المهمة.',
+    validationTaskDueDateRequired: 'يرجى تحديد تاريخ الاستحقاق.',
+    validationTaskRecurrenceIntervalInvalid: 'يرجى إدخال فترة تكرار صحيحة.',
+    taskFormAddTitle: 'إضافة مهمة',
+    taskFormEditTitle: 'تعديل المهمة',
+    taskNotFoundTitle: 'لم يتم العثور على هذه المهمة.',
+    backToTasksLabel: 'العودة إلى المهام',
+    profileSectionTaskInfo: 'معلومات المهمة',
+    profileSectionCompletionHistory: 'سجل الإنجاز',
+    taskStateOverdue: 'متأخرة',
+    taskStateDueToday: 'مستحقة اليوم',
+    taskStateUpcoming: 'قادمة',
+    taskStateCompleted: 'مكتملة',
+    taskFilterAll: 'الكل',
+    taskFilterOverdue: 'متأخرة',
+    taskFilterToday: 'اليوم',
+    taskFilterUpcoming: 'قادمة',
+    taskFilterCompleted: 'مكتملة',
+    taskFilterEmptyMessage: 'لا توجد مهام ضمن هذا التصنيف.',
+    completionHistoryEmpty: 'لا يوجد سجل إنجاز بعد.',
+    taskCompleteAction: 'إنجاز',
+    taskCompleteOccurrenceAction: 'إنجاز هذه الدورة',
+    taskCompletedOnLabel: 'أُنجزت في',
+    duplicateTaskCompletionError: 'تم إنجاز هذه الدورة مسبقاً.',
+    taskDeleteAction: 'حذف المهمة',
+    taskDeleteConfirmTitle: 'هل تريد حذف هذه المهمة؟',
+    taskDeleteConfirmBody: 'سيتم حذف هذه المهمة وسجل إنجازها بالكامل نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    taskDeleteConfirmAction: 'حذف',
+    calendarViewAction: 'التقويم',
+    calendarPrevMonthLabel: 'الشهر السابق',
+    calendarNextMonthLabel: 'الشهر التالي',
+    calendarNoTasksForDate: 'لا توجد مهام مستحقة في هذا التاريخ.',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -803,6 +881,45 @@ export const translations: Record<Locale, Dictionary> = {
     contractDeleteConfirmTitle: 'Delete this contract?',
     contractDeleteConfirmBody: 'This contract and all of its documents will be permanently deleted. This cannot be undone.',
     contractDeleteConfirmAction: 'Delete',
+    fieldTaskTitle: 'Task Title',
+    fieldDescription: 'Description',
+    fieldDueDate: 'Due Date',
+    fieldDueTime: 'Due Time',
+    fieldPriority: 'Priority',
+    fieldTaskRepeat: 'Repeat',
+    recurrenceNoneLabel: 'Does not repeat',
+    validationTaskTitleRequired: 'Please enter the task title.',
+    validationTaskDueDateRequired: 'Please select a due date.',
+    validationTaskRecurrenceIntervalInvalid: 'Please enter a valid recurrence interval.',
+    taskFormAddTitle: 'Add Task',
+    taskFormEditTitle: 'Edit Task',
+    taskNotFoundTitle: 'This task could not be found.',
+    backToTasksLabel: 'Back to Tasks',
+    profileSectionTaskInfo: 'Task Information',
+    profileSectionCompletionHistory: 'Completion History',
+    taskStateOverdue: 'Overdue',
+    taskStateDueToday: 'Due Today',
+    taskStateUpcoming: 'Upcoming',
+    taskStateCompleted: 'Completed',
+    taskFilterAll: 'All',
+    taskFilterOverdue: 'Overdue',
+    taskFilterToday: 'Today',
+    taskFilterUpcoming: 'Upcoming',
+    taskFilterCompleted: 'Completed',
+    taskFilterEmptyMessage: 'No tasks match this filter.',
+    completionHistoryEmpty: 'No completion history yet.',
+    taskCompleteAction: 'Complete',
+    taskCompleteOccurrenceAction: 'Complete Current Occurrence',
+    taskCompletedOnLabel: 'Completed on',
+    duplicateTaskCompletionError: 'This occurrence has already been completed.',
+    taskDeleteAction: 'Delete Task',
+    taskDeleteConfirmTitle: 'Delete this task?',
+    taskDeleteConfirmBody: 'This task and all of its completion history will be permanently deleted. This cannot be undone.',
+    taskDeleteConfirmAction: 'Delete',
+    calendarViewAction: 'Calendar',
+    calendarPrevMonthLabel: 'Previous month',
+    calendarNextMonthLabel: 'Next month',
+    calendarNoTasksForDate: 'No tasks due on this date.',
   },
 };
 
