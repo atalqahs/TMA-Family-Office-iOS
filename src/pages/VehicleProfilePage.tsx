@@ -9,6 +9,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { StatusBadge } from '../components/StatusBadge';
 import { Sheet } from '../components/Sheet';
+import { CompleteServiceForm } from '../features/vehicles/components/CompleteServiceForm';
 import { MaintenanceRecordForm } from '../features/vehicles/components/MaintenanceRecordForm';
 import { MaintenanceSection } from '../features/vehicles/components/MaintenanceSection';
 import { VehicleDocumentForm } from '../features/vehicles/components/VehicleDocumentForm';
@@ -31,8 +32,10 @@ export function VehicleProfilePage() {
   const editSheet = useDisclosure();
   const addDocSheet = useDisclosure();
   const maintenanceSheet = useDisclosure();
+  const completeServiceSheet = useDisclosure();
   const deleteSheet = useDisclosure();
   const [editingMaintenanceRecord, setEditingMaintenanceRecord] = useState<VehicleMaintenanceRecord | null>(null);
+  const [completingMaintenanceRecord, setCompletingMaintenanceRecord] = useState<VehicleMaintenanceRecord | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -111,6 +114,11 @@ export function VehicleProfilePage() {
     maintenanceSheet.open();
   };
 
+  const openCompleteMaintenance = (record: VehicleMaintenanceRecord) => {
+    setCompletingMaintenanceRecord(record);
+    completeServiceSheet.open();
+  };
+
   return (
     <div className="vehicle-profile-page">
       <div className="vehicle-profile-page__topbar">
@@ -169,6 +177,7 @@ export function VehicleProfilePage() {
           currentMileage={vehicle.currentMileage}
           onAdd={openAddMaintenance}
           onEdit={openEditMaintenance}
+          onComplete={openCompleteMaintenance}
           onRefresh={refresh}
         />
       </section>
@@ -239,6 +248,25 @@ export function VehicleProfilePage() {
             maintenanceSheet.close();
           }}
         />
+      </Sheet>
+
+      <Sheet
+        open={completeServiceSheet.isOpen}
+        onClose={completeServiceSheet.close}
+        title={t('completeServiceFormTitle')}
+        closeLabel={t('menuCloseLabel')}
+      >
+        {completingMaintenanceRecord && (
+          <CompleteServiceForm
+            sourceRecord={completingMaintenanceRecord}
+            onCancel={completeServiceSheet.close}
+            onSubmit={async (values) => {
+              await vehicleService.completeMaintenanceRecord(vehicle.id, completingMaintenanceRecord, values);
+              await refresh();
+              completeServiceSheet.close();
+            }}
+          />
+        )}
       </Sheet>
 
       <Sheet

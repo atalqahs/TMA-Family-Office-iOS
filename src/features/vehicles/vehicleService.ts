@@ -1,5 +1,6 @@
 import { generateId } from '../../utils/id';
 import * as vehicleRepository from './vehicleRepository';
+import { getTargetMileage } from './types';
 import type {
   Vehicle,
   VehicleDocument,
@@ -101,4 +102,36 @@ export async function updateMaintenanceRecord(
 
 export async function removeMaintenanceRecord(id: string): Promise<void> {
   await vehicleRepository.deleteMaintenanceRecord(id);
+}
+
+/**
+ * Starts a new maintenance cycle for the same maintenance item ("Service
+ * Completed"). This ALWAYS creates a brand-new record from the actual
+ * odometer reading supplied in `values.mileageAtService` — it never
+ * continues from `sourceRecord`'s old target mileage — so an early, on-time,
+ * or late completion all correctly produce a new target of `actual mileage +
+ * serviceIntervalKm`, per the mileage-priority maintenance model.
+ *
+ * `sourceRecord` itself is left completely untouched: its own history
+ * (old target, old service date) is preserved exactly as it was. The new
+ * record snapshots `sourceRecord`'s derived target as `previousTargetMileage`
+ * so the early/on-time/late delta for this transition can be computed later
+ * even if `sourceRecord` is subsequently edited or deleted.
+ */
+export async function completeMaintenanceRecord(
+  vehicleId: string,
+  sourceRecord: VehicleMaintenanceRecord,
+  values: VehicleMaintenanceFormValues,
+): Promise<VehicleMaintenanceRecord> {
+  const now = new Date().toISOString();
+  const record: VehicleMaintenanceRecord = {
+    id: generateId(),
+    vehicleId,
+    ...values,
+    previousTargetMileage: getTargetMileage(sourceRecord),
+    createdAt: now,
+    updatedAt: now,
+  };
+  await vehicleRepository.saveMaintenanceRecord(record);
+  return record;
 }

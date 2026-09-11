@@ -3,21 +3,20 @@ import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { getLocalToday } from '../../../utils/localDate';
 import { formatMileageNumber } from '../../../utils/mileage';
-import { getMileageAtService, getServiceIntervalDisplay, VEHICLE_MAINTENANCE_TYPES } from '../types';
-import type { VehicleMaintenanceFormValues, VehicleMaintenanceRecord, VehicleMaintenanceType } from '../types';
-import { MAX_SERVICE_INTERVAL_KM, validateMaintenanceForm } from '../validation';
+import { getServiceIntervalDisplay, getTargetMileage } from '../types';
+import type { VehicleMaintenanceFormValues, VehicleMaintenanceRecord } from '../types';
+import { MAX_SERVICE_INTERVAL_KM } from '../validation';
 import './MaintenanceRecordForm.css';
 
-interface MaintenanceRecordFormProps {
-  initialValue?: VehicleMaintenanceRecord;
+interface CompleteServiceFormProps {
+  sourceRecord: VehicleMaintenanceRecord;
   onSubmit: (values: VehicleMaintenanceFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
-interface MaintenanceFormState {
-  type: VehicleMaintenanceType;
-  title: string;
+interface CompleteServiceFormState {
   serviceDate: string;
   mileageAtService: string;
   serviceIntervalKm: string;
@@ -25,44 +24,34 @@ interface MaintenanceFormState {
   notes: string;
 }
 
-/** Quick-pick interval presets shown as buttons — a convenience only, never a restriction: any value up to MAX_SERVICE_INTERVAL_KM can still be typed directly. */
 const SERVICE_INTERVAL_PRESETS_KM = [1000, 3000, 5000, 10000, 20000, 50000];
 
-function toFormState(record?: VehicleMaintenanceRecord): MaintenanceFormState {
-  const mileageAtService = record ? getMileageAtService(record) : undefined;
-  const serviceIntervalKm = record ? getServiceIntervalDisplay(record) : undefined;
-  return {
-    type: record?.type ?? 'oilChange',
-    title: record?.title ?? '',
-    serviceDate: record?.serviceDate ?? '',
-    mileageAtService: mileageAtService !== undefined ? String(mileageAtService) : '',
-    serviceIntervalKm: serviceIntervalKm !== undefined ? String(serviceIntervalKm) : '',
-    nextServiceDate: record?.nextServiceDate ?? '',
-    notes: record?.notes ?? '',
-  };
-}
-
-function toFormValues(state: MaintenanceFormState): VehicleMaintenanceFormValues {
-  return {
-    type: state.type,
-    title: state.title.trim(),
-    serviceDate: state.serviceDate,
-    mileageAtService: state.mileageAtService.trim() ? Number(state.mileageAtService) : undefined,
-    serviceIntervalKm: state.serviceIntervalKm.trim() ? Number(state.serviceIntervalKm) : undefined,
-    nextServiceDate: state.nextServiceDate || undefined,
-    notes: state.notes.trim() || undefined,
-  };
-}
-
-export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: MaintenanceRecordFormProps) {
+/**
+ * "Service Completed" — starts a brand-new maintenance cycle for the same
+ * item (same type/title), always anchored to the ACTUAL odometer reading
+ * entered here, never to the old target. The previous interval is
+ * prefilled as a convenience only (per the correction spec: "do not
+ * automatically assume the same interval is always correct") — fully
+ * editable before saving.
+ */
+export function CompleteServiceForm({ sourceRecord, onSubmit, onCancel }: CompleteServiceFormProps) {
   const { t, locale } = useLanguage();
   const formId = useId();
-  const [state, setState] = useState<MaintenanceFormState>(() => toFormState(initialValue));
-  const [errors, setErrors] = useState<ReturnType<typeof validateMaintenanceForm>>({});
+  const [state, setState] = useState<CompleteServiceFormState>(() => {
+    const prefillInterval = getServiceIntervalDisplay(sourceRecord);
+    return {
+      serviceDate: getLocalToday(),
+      mileageAtService: '',
+      serviceIntervalKm: prefillInterval !== undefined ? String(prefillInterval) : '',
+      nextServiceDate: '',
+      notes: '',
+    };
+  });
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const update = <K extends keyof MaintenanceFormState>(key: K, value: MaintenanceFormState[K]) => {
+  const update = <K extends keyof CompleteServiceFormState>(key: K, value: CompleteServiceFormState[K]) => {
     setState((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -74,20 +63,44 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
       ? mileageAtServiceNum + serviceIntervalNum
       : undefined;
 
+  const previousTargetMileage = getTargetMileage(sourceRecord);
+
+  const validate = (): string | null => {
+    if (!state.serviceDate) return t('validationMaintenanceDateRequired');
+    if (mileageAtServiceNum === undefined || !Number.isFinite(mileageAtServiceNum) || mileageAtServiceNum < 0) {
+      return t('validationMileageNegative');
+    }
+    if (serviceIntervalNum === undefined || !Number.isFinite(serviceIntervalNum) || serviceIntervalNum <= 0) {
+      return t('validationServiceIntervalInvalid');
+    }
+    if (serviceIntervalNum > MAX_SERVICE_INTERVAL_KM) {
+      return t('validationServiceIntervalTooLarge');
+    }
+    return null;
+  };
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    const values = toFormValues(state);
-    const validationErrors = validateMaintenanceForm(values);
-    setErrors(validationErrors);
-    if (Object.keys(validationErrors).length > 0) {
-      return;
-    }
+    const validationError = validate();
+    setError(validationError);
+    if (validationError) return;
+
+    const values: VehicleMaintenanceFormValues = {
+      type: sourceRecord.type,
+      title: sourceRecord.title,
+      serviceDate: state.serviceDate,
+      mileageAtService: mileageAtServiceNum,
+      serviceIntervalKm: serviceIntervalNum,
+      nextServiceDate: state.nextServiceDate || undefined,
+      notes: state.notes.trim() || undefined,
+    };
+
     setSubmitting(true);
     setSubmitError(null);
     try {
       await onSubmit(values);
     } catch (err) {
-      console.error('Failed to save maintenance record', err);
+      console.error('Failed to complete maintenance record', err);
       setSubmitError(t('formSaveError'));
       setSubmitting(false);
     }
@@ -95,41 +108,14 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
 
   return (
     <form className="maintenance-record-form" onSubmit={handleSubmit} noValidate>
-      <FormField label={t('fieldMaintenanceType')} htmlFor={`${formId}-type`}>
-        <select
-          id={`${formId}-type`}
-          className="form-input"
-          value={state.type}
-          onChange={(e) => update('type', e.target.value as VehicleMaintenanceType)}
-        >
-          {VEHICLE_MAINTENANCE_TYPES.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.title[locale]}
-            </option>
-          ))}
-        </select>
-      </FormField>
+      {previousTargetMileage !== undefined && (
+        <p className="maintenance-record-form__computed-empty">
+          {t('completeServicePreviousTargetLabel')}: {formatMileageNumber(previousTargetMileage, locale)}{' '}
+          {t('mileageUnitLabel')}
+        </p>
+      )}
 
-      <FormField
-        label={t('fieldMaintenanceTitle')}
-        htmlFor={`${formId}-title`}
-        error={errors.title && t(errors.title)}
-      >
-        <input
-          id={`${formId}-title`}
-          className="form-input"
-          type="text"
-          value={state.title}
-          onChange={(e) => update('title', e.target.value)}
-          required
-        />
-      </FormField>
-
-      <FormField
-        label={t('fieldServiceDate')}
-        htmlFor={`${formId}-serviceDate`}
-        error={errors.serviceDate && t(errors.serviceDate)}
-      >
+      <FormField label={t('fieldServiceDate')} htmlFor={`${formId}-serviceDate`}>
         <input
           id={`${formId}-serviceDate`}
           className="form-input"
@@ -140,11 +126,7 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
         />
       </FormField>
 
-      <FormField
-        label={t('fieldMileageAtService')}
-        htmlFor={`${formId}-mileageAtService`}
-        error={errors.mileageAtService && t(errors.mileageAtService)}
-      >
+      <FormField label={t('fieldMileageAtService')} htmlFor={`${formId}-mileageAtService`}>
         <input
           id={`${formId}-mileageAtService`}
           className="form-input"
@@ -153,15 +135,12 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
           min={0}
           value={state.mileageAtService}
           onChange={(e) => update('mileageAtService', e.target.value)}
+          required
+          autoFocus
         />
       </FormField>
 
-      <FormField
-        label={t('fieldServiceIntervalKm')}
-        htmlFor={`${formId}-serviceIntervalKm`}
-        hint={t('serviceIntervalHint')}
-        error={errors.serviceIntervalKm && t(errors.serviceIntervalKm)}
-      >
+      <FormField label={t('fieldServiceIntervalKm')} htmlFor={`${formId}-serviceIntervalKm`} hint={t('serviceIntervalHint')}>
         <input
           id={`${formId}-serviceIntervalKm`}
           className="form-input"
@@ -217,10 +196,15 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
           className="form-input"
           value={state.notes}
           onChange={(e) => update('notes', e.target.value)}
-          rows={4}
+          rows={3}
         />
       </FormField>
 
+      {error && (
+        <p className="maintenance-record-form__error" role="alert">
+          {error}
+        </p>
+      )}
       {submitError && (
         <p className="maintenance-record-form__error" role="alert">
           {submitError}
@@ -232,7 +216,7 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
           {t('actionCancel')}
         </SecondaryButton>
         <PrimaryButton type="submit" disabled={submitting}>
-          {submitting ? t('formSaving') : t('actionSave')}
+          {submitting ? t('formSaving') : t('completeServiceSubmitAction')}
         </PrimaryButton>
       </div>
     </form>

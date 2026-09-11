@@ -6,6 +6,9 @@ export { validateDocumentFile };
 
 const MIN_YEAR = 1900;
 
+/** Cap on `serviceIntervalKm` — a service interval far beyond this is almost certainly a data-entry mistake. Deliberately does NOT apply to the vehicle's own `currentMileage` or to `mileageAtService`, which have no artificial upper bound. */
+export const MAX_SERVICE_INTERVAL_KM = 200_000;
+
 export interface VehicleFormErrors {
   name?: TranslationKey;
   year?: TranslationKey;
@@ -38,6 +41,8 @@ export interface MaintenanceFormErrors {
   serviceDate?: TranslationKey;
   mileage?: TranslationKey;
   nextServiceMileage?: TranslationKey;
+  mileageAtService?: TranslationKey;
+  serviceIntervalKm?: TranslationKey;
 }
 
 export function validateMaintenanceForm(values: VehicleMaintenanceFormValues): MaintenanceFormErrors {
@@ -57,6 +62,19 @@ export function validateMaintenanceForm(values: VehicleMaintenanceFormValues): M
     (!Number.isFinite(values.nextServiceMileage) || values.nextServiceMileage < 0)
   ) {
     errors.nextServiceMileage = 'validationMileageNegative';
+  }
+  if (
+    values.mileageAtService !== undefined &&
+    (!Number.isFinite(values.mileageAtService) || values.mileageAtService < 0)
+  ) {
+    errors.mileageAtService = 'validationMileageNegative';
+  }
+  if (values.serviceIntervalKm !== undefined) {
+    if (!Number.isFinite(values.serviceIntervalKm) || values.serviceIntervalKm <= 0) {
+      errors.serviceIntervalKm = 'validationServiceIntervalInvalid';
+    } else if (values.serviceIntervalKm > MAX_SERVICE_INTERVAL_KM) {
+      errors.serviceIntervalKm = 'validationServiceIntervalTooLarge';
+    }
   }
 
   return errors;

@@ -152,6 +152,20 @@ export type TranslationKey =
   | 'fieldNextServiceDate'
   | 'fieldNextServiceMileage'
   | 'nextServiceLabel'
+  | 'fieldMileageAtService'
+  | 'fieldServiceIntervalKm'
+  | 'fieldTargetMileage'
+  | 'serviceIntervalHint'
+  | 'targetMileagePlaceholder'
+  | 'validationServiceIntervalInvalid'
+  | 'validationServiceIntervalTooLarge'
+  | 'maintenanceRemainingKm'
+  | 'maintenanceServiceDue'
+  | 'maintenanceOverdueByKm'
+  | 'completeServiceAction'
+  | 'completeServiceFormTitle'
+  | 'completeServiceSubmitAction'
+  | 'completeServicePreviousTargetLabel'
   | 'fieldRole'
   | 'fieldPassportNumber'
   | 'fieldEmploymentStartDate'
@@ -347,7 +361,7 @@ export const translations: Record<Locale, Dictionary> = {
     fieldPlateNumber: 'رقم اللوحة',
     fieldVin: 'رقم الهيكل (VIN)',
     fieldColor: 'اللون',
-    fieldCurrentMileage: 'قراءة العداد الحالية',
+    fieldCurrentMileage: 'العداد الحالي',
     fieldRegistrationExpiry: 'انتهاء استمارة التسجيل',
     fieldInsuranceExpiry: 'انتهاء التأمين',
     mileageUnitLabel: 'كم',
@@ -375,6 +389,20 @@ export const translations: Record<Locale, Dictionary> = {
     fieldNextServiceDate: 'تاريخ الصيانة القادمة',
     fieldNextServiceMileage: 'عداد الصيانة القادمة',
     nextServiceLabel: 'الصيانة القادمة',
+    fieldMileageAtService: 'العداد وقت الصيانة',
+    fieldServiceIntervalKm: 'الصيانة بعد',
+    fieldTargetMileage: 'العداد المستهدف',
+    serviceIntervalHint: 'أدخل أي قيمة حتى 200,000 كم، أو اختر من الاقتراحات.',
+    targetMileagePlaceholder: 'يُحسب تلقائياً',
+    validationServiceIntervalInvalid: 'يجب أن تكون قيمة "الصيانة بعد" رقماً موجباً.',
+    validationServiceIntervalTooLarge: 'الحد الأقصى لـ "الصيانة بعد" هو 200,000 كم.',
+    maintenanceRemainingKm: 'متبقي {km} كم',
+    maintenanceServiceDue: 'الصيانة مستحقة الآن',
+    maintenanceOverdueByKm: 'متأخر بمقدار {km} كم',
+    completeServiceAction: 'تمت الصيانة',
+    completeServiceFormTitle: 'تسجيل إتمام الصيانة',
+    completeServiceSubmitAction: 'بدء الدورة القادمة',
+    completeServicePreviousTargetLabel: 'الهدف السابق كان',
     fieldRole: 'الوظيفة',
     fieldPassportNumber: 'رقم جواز السفر',
     fieldEmploymentStartDate: 'تاريخ بدء العمل',
@@ -596,6 +624,20 @@ export const translations: Record<Locale, Dictionary> = {
     fieldNextServiceDate: 'Next Service Date',
     fieldNextServiceMileage: 'Next Service Mileage',
     nextServiceLabel: 'Next service',
+    fieldMileageAtService: 'Mileage at Service',
+    fieldServiceIntervalKm: 'Service After',
+    fieldTargetMileage: 'Target Mileage',
+    serviceIntervalHint: 'Enter any value up to 200,000 km, or pick a suggestion.',
+    targetMileagePlaceholder: 'Calculated automatically',
+    validationServiceIntervalInvalid: '"Service After" must be a positive number.',
+    validationServiceIntervalTooLarge: '"Service After" cannot exceed 200,000 km.',
+    maintenanceRemainingKm: '{km} km remaining',
+    maintenanceServiceDue: 'Service due',
+    maintenanceOverdueByKm: 'Overdue by {km} km',
+    completeServiceAction: 'Service Completed',
+    completeServiceFormTitle: 'Record Service Completed',
+    completeServiceSubmitAction: 'Start Next Cycle',
+    completeServicePreviousTargetLabel: 'Previous target was',
     fieldRole: 'Role',
     fieldPassportNumber: 'Passport Number',
     fieldEmploymentStartDate: 'Employment Start Date',
