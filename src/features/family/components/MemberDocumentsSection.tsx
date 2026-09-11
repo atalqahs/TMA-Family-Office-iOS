@@ -7,6 +7,7 @@ import { useLanguage } from '../../../hooks/useLanguage';
 import { removeFamilyMemberDocument } from '../familyService';
 import { DOCUMENT_TYPES } from '../types';
 import type { FamilyMemberDocument } from '../types';
+import { isOfficeDocument } from '../validation';
 import './MemberDocumentsSection.css';
 
 interface MemberDocumentsSectionProps {
@@ -81,6 +82,9 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
           <span className="member-document-row__expiry">
             {t('documentExpiryPrefixLabel')} {new Intl.DateTimeFormat(locale).format(new Date(doc.expiryDate))}
           </span>
+        )}
+        {isOfficeDocument(doc.mimeType, doc.fileName) && (
+          <span className="member-document-row__hint">{t('documentExternalAppHint')}</span>
         )}
         {error && <span className="member-document-row__error">{error}</span>}
       </span>

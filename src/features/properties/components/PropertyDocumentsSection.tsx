@@ -8,6 +8,7 @@ import { formatFileSize } from '../../../utils/fileSize';
 import { removePropertyDocument } from '../propertyService';
 import { PROPERTY_DOCUMENT_TYPES } from '../types';
 import type { PropertyDocument } from '../types';
+import { isOfficeDocument } from '../validation';
 import './PropertyDocumentsSection.css';
 
 interface PropertyDocumentsSectionProps {
@@ -82,6 +83,9 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
           <span className="property-document-row__expiry">
             {t('documentExpiryPrefixLabel')} {new Intl.DateTimeFormat(locale).format(new Date(doc.expiryDate))}
           </span>
+        )}
+        {isOfficeDocument(doc.mimeType, doc.fileName) && (
+          <span className="property-document-row__hint">{t('documentExternalAppHint')}</span>
         )}
         {error && <span className="property-document-row__error">{error}</span>}
       </span>

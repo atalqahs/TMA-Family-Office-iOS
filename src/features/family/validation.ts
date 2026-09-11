@@ -1,8 +1,8 @@
 import type { TranslationKey } from '../../localization/translations';
-import { validateDocumentFile } from '../../utils/fileValidation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, isOfficeDocument, validateDocumentFile } from '../../utils/fileValidation';
 import type { FamilyMemberFormValues } from './types';
 
-export { validateDocumentFile };
+export { DOCUMENT_FILE_INPUT_ACCEPT, isOfficeDocument, validateDocumentFile };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_AGE_YEARS = 130;

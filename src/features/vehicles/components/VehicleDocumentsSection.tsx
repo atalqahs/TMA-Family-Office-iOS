@@ -8,6 +8,7 @@ import { formatFileSize } from '../../../utils/fileSize';
 import { removeVehicleDocument } from '../vehicleService';
 import { VEHICLE_DOCUMENT_TYPES } from '../types';
 import type { VehicleDocument } from '../types';
+import { isOfficeDocument } from '../validation';
 import './VehicleDocumentsSection.css';
 
 interface VehicleDocumentsSectionProps {
@@ -82,6 +83,9 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
           <span className="vehicle-document-row__expiry">
             {t('documentExpiryPrefixLabel')} {new Intl.DateTimeFormat(locale).format(new Date(doc.expiryDate))}
           </span>
+        )}
+        {isOfficeDocument(doc.mimeType, doc.fileName) && (
+          <span className="vehicle-document-row__hint">{t('documentExternalAppHint')}</span>
         )}
         {error && <span className="vehicle-document-row__error">{error}</span>}
       </span>

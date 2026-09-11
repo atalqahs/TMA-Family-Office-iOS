@@ -86,6 +86,7 @@ export type TranslationKey =
   | 'documentChooseFileLabel'
   | 'documentOpenAction'
   | 'documentOpenError'
+  | 'documentExternalAppHint'
   | 'documentDeleteAction'
   | 'documentExpiryPrefixLabel'
   | 'validationPropertyNameRequired'
@@ -352,6 +353,7 @@ export const translations: Record<Locale, Dictionary> = {
     documentChooseFileLabel: 'اختيار ملف',
     documentOpenAction: 'فتح',
     documentOpenError: 'تعذر فتح هذا المستند.',
+    documentExternalAppHint: 'قد يُفتح هذا المستند بتطبيق آخر على جهازك.',
     documentDeleteAction: 'إزالة',
     documentExpiryPrefixLabel: 'ينتهي في',
     validationPropertyNameRequired: 'اسم العقار مطلوب.',
@@ -617,6 +619,7 @@ export const translations: Record<Locale, Dictionary> = {
     documentChooseFileLabel: 'Choose File',
     documentOpenAction: 'Open',
     documentOpenError: 'Could not open this document.',
+    documentExternalAppHint: 'This document may open in another app on your device.',
     documentDeleteAction: 'Remove',
     documentExpiryPrefixLabel: 'Expires',
     validationPropertyNameRequired: 'Property name is required.',

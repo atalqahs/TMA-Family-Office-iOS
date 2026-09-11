@@ -5,7 +5,7 @@ import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { VEHICLE_DOCUMENT_TYPES } from '../types';
 import type { VehicleDocumentFormValues, VehicleDocumentType } from '../types';
-import { validateDocumentFile } from '../validation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, validateDocumentFile } from '../validation';
 import './VehicleDocumentForm.css';
 
 interface VehicleDocumentFormProps {
@@ -108,7 +108,7 @@ export function VehicleDocumentForm({ onSubmit, onCancel }: VehicleDocumentFormP
           id={`${formId}-file`}
           className="vehicle-document-form__file-input"
           type="file"
-          accept="application/pdf,image/*"
+          accept={DOCUMENT_FILE_INPUT_ACCEPT}
           onChange={handleFileChange}
         />
       </FormField>

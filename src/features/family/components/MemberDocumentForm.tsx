@@ -5,7 +5,7 @@ import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { DOCUMENT_TYPES } from '../types';
 import type { FamilyMemberDocumentFormValues, FamilyMemberDocumentType } from '../types';
-import { validateDocumentFile } from '../validation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, validateDocumentFile } from '../validation';
 import './MemberDocumentForm.css';
 
 interface MemberDocumentFormProps {
@@ -108,7 +108,7 @@ export function MemberDocumentForm({ onSubmit, onCancel }: MemberDocumentFormPro
           id={`${formId}-file`}
           className="member-document-form__file-input"
           type="file"
-          accept="application/pdf,image/*"
+          accept={DOCUMENT_FILE_INPUT_ACCEPT}
           onChange={handleFileChange}
         />
       </FormField>

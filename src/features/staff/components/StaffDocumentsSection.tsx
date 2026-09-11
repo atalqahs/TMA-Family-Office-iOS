@@ -8,6 +8,7 @@ import { formatFileSize } from '../../../utils/fileSize';
 import { removeStaffDocument } from '../staffService';
 import { STAFF_DOCUMENT_TYPES } from '../types';
 import type { StaffDocument } from '../types';
+import { isOfficeDocument } from '../validation';
 import './StaffDocumentsSection.css';
 
 interface StaffDocumentsSectionProps {
@@ -82,6 +83,9 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
           <span className="staff-document-row__expiry">
             {t('documentExpiryPrefixLabel')} {new Intl.DateTimeFormat(locale).format(new Date(doc.expiryDate))}
           </span>
+        )}
+        {isOfficeDocument(doc.mimeType, doc.fileName) && (
+          <span className="staff-document-row__hint">{t('documentExternalAppHint')}</span>
         )}
         {error && <span className="staff-document-row__error">{error}</span>}
       </span>

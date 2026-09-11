@@ -5,7 +5,7 @@ import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { PROPERTY_DOCUMENT_TYPES } from '../types';
 import type { PropertyDocumentFormValues, PropertyDocumentType } from '../types';
-import { validateDocumentFile } from '../validation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, validateDocumentFile } from '../validation';
 import './PropertyDocumentForm.css';
 
 interface PropertyDocumentFormProps {
@@ -108,7 +108,7 @@ export function PropertyDocumentForm({ onSubmit, onCancel }: PropertyDocumentFor
           id={`${formId}-file`}
           className="property-document-form__file-input"
           type="file"
-          accept="application/pdf,image/*"
+          accept={DOCUMENT_FILE_INPUT_ACCEPT}
           onChange={handleFileChange}
         />
       </FormField>

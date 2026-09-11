@@ -5,7 +5,7 @@ import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { CONTRACT_DOCUMENT_TYPES } from '../types';
 import type { ContractDocumentFormValues, ContractDocumentType } from '../types';
-import { validateDocumentFile } from '../validation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, validateDocumentFile } from '../validation';
 import './ContractDocumentForm.css';
 
 interface ContractDocumentFormProps {
@@ -97,7 +97,7 @@ export function ContractDocumentForm({ onSubmit, onCancel }: ContractDocumentFor
           id={`${formId}-file`}
           className="contract-document-form__file-input"
           type="file"
-          accept="application/pdf,image/*"
+          accept={DOCUMENT_FILE_INPUT_ACCEPT}
           onChange={handleFileChange}
         />
       </FormField>

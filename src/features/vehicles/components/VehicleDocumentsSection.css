@@ -61,6 +61,11 @@
   color: var(--color-text-muted);
 }
 
+.vehicle-document-row__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+}
+
 .vehicle-document-row__error {
   font-size: var(--font-size-xs);
   color: var(--color-danger);

@@ -1,8 +1,8 @@
 import type { TranslationKey } from '../../localization/translations';
-import { validateDocumentFile } from '../../utils/fileValidation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, isOfficeDocument, validateDocumentFile } from '../../utils/fileValidation';
 import type { StaffFormValues, StaffSalaryPaymentFormValues, StaffSalaryScheduleFormValues } from './types';
 
-export { validateDocumentFile };
+export { DOCUMENT_FILE_INPUT_ACCEPT, isOfficeDocument, validateDocumentFile };
 
 const MAX_AGE_YEARS = 130;
 

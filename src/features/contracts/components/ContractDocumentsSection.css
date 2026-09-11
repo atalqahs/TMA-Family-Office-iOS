@@ -56,6 +56,12 @@
   overflow-wrap: anywhere;
 }
 
+.contract-document-row__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
 .contract-document-row__error {
   font-size: var(--font-size-xs);
   color: var(--color-danger);

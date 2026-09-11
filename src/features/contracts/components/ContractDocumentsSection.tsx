@@ -8,6 +8,7 @@ import { formatFileSize } from '../../../utils/fileSize';
 import { removeContractDocument } from '../contractService';
 import { CONTRACT_DOCUMENT_TYPES } from '../types';
 import type { ContractDocument } from '../types';
+import { isOfficeDocument } from '../validation';
 import './ContractDocumentsSection.css';
 
 interface ContractDocumentsSectionProps {
@@ -78,6 +79,9 @@ function DocumentRow({ doc, onRemoved }: DocumentRowProps) {
         <span className="contract-document-row__meta">
           {typeLabel} · {doc.fileName} · {formatFileSize(doc.fileSize)}
         </span>
+        {isOfficeDocument(doc.mimeType, doc.fileName) && (
+          <span className="contract-document-row__hint">{t('documentExternalAppHint')}</span>
+        )}
         {error && <span className="contract-document-row__error">{error}</span>}
       </span>
       <span className="contract-document-row__actions">

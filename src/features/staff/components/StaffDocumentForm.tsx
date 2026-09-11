@@ -5,7 +5,7 @@ import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { STAFF_DOCUMENT_TYPES } from '../types';
 import type { StaffDocumentFormValues, StaffDocumentType } from '../types';
-import { validateDocumentFile } from '../validation';
+import { DOCUMENT_FILE_INPUT_ACCEPT, validateDocumentFile } from '../validation';
 import './StaffDocumentForm.css';
 
 interface StaffDocumentFormProps {
@@ -108,7 +108,7 @@ export function StaffDocumentForm({ onSubmit, onCancel }: StaffDocumentFormProps
           id={`${formId}-file`}
           className="staff-document-form__file-input"
           type="file"
-          accept="application/pdf,image/*"
+          accept={DOCUMENT_FILE_INPUT_ACCEPT}
           onChange={handleFileChange}
         />
       </FormField>
