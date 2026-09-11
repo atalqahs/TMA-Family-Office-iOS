@@ -8,10 +8,11 @@ import './CoverPhotoPicker.css';
 interface CoverPhotoPickerProps {
   photo?: Blob;
   onChange: (photo: Blob | undefined) => void;
+  variant?: 'property' | 'vehicle';
 }
 
 /** Shared cover-photo picker for any entity with a rectangular cover photo (Properties, Vehicles, ...). */
-export function CoverPhotoPicker({ photo, onChange }: CoverPhotoPickerProps) {
+export function CoverPhotoPicker({ photo, onChange, variant = 'property' }: CoverPhotoPickerProps) {
   const { t } = useLanguage();
   const inputRef = useRef<HTMLInputElement>(null);
   const { error, processing, handleFile } = usePhotoPicker(onChange);
@@ -24,7 +25,7 @@ export function CoverPhotoPicker({ photo, onChange }: CoverPhotoPickerProps) {
 
   return (
     <div className="cover-photo-picker">
-      <CoverPhoto photo={photo} size="lg" />
+      <CoverPhoto photo={photo} size="lg" variant={variant} />
       <div className="cover-photo-picker__actions">
         <SecondaryButton type="button" onClick={() => inputRef.current?.click()} disabled={processing}>
           {photo ? t('photoChangeLabel') : t('photoChooseLabel')}

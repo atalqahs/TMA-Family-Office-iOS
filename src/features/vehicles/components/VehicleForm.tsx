@@ -100,7 +100,7 @@ export function VehicleForm({ initialValue, onSubmit, onCancel }: VehicleFormPro
 
   return (
     <form className="vehicle-form" onSubmit={handleSubmit} noValidate>
-      <CoverPhotoPicker photo={state.coverPhoto} onChange={(photo) => update('coverPhoto', photo)} />
+      <CoverPhotoPicker photo={state.coverPhoto} onChange={(photo) => update('coverPhoto', photo)} variant="vehicle" />
 
       <FormField label={t('fieldVehicleName')} htmlFor={`${formId}-name`} error={errors.name && t(errors.name)}>
         <input

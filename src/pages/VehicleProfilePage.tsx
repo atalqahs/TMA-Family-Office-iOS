@@ -130,7 +130,7 @@ export function VehicleProfilePage() {
       </div>
 
       <div className="vehicle-profile-page__cover">
-        <CoverPhoto photo={vehicle.coverPhoto} size="lg" />
+        <CoverPhoto photo={vehicle.coverPhoto} size="lg" variant="vehicle" />
       </div>
 
       <div className="vehicle-profile-page__header">

@@ -28,7 +28,7 @@ export function VehicleCard({ vehicle, maintenanceRecords, onClick }: VehicleCar
 
   return (
     <button type="button" className="vehicle-card" onClick={onClick}>
-      <CoverPhoto photo={vehicle.coverPhoto} size="card" />
+      <CoverPhoto photo={vehicle.coverPhoto} size="card" variant="vehicle" />
       <div className="vehicle-card__body">
         <span className="vehicle-card__name">{vehicle.name}</span>
         {metaParts && <span className="vehicle-card__meta">{metaParts}</span>}
