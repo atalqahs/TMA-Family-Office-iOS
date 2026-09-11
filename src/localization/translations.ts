@@ -236,7 +236,37 @@ export type TranslationKey =
   | 'salaryConfirmPaymentAction'
   | 'salaryConfirmPaymentTitle'
   | 'salaryOccurrenceDueLabel'
-  | 'salaryPaidOnLabel';
+  | 'salaryPaidOnLabel'
+  | 'fieldContractTitle'
+  | 'fieldContractType'
+  | 'fieldContractNumber'
+  | 'fieldPartyName'
+  | 'fieldEndDate'
+  | 'fieldCurrency'
+  | 'currencyUnspecifiedLabel'
+  | 'fieldLinkedTo'
+  | 'linkedToNoneLabel'
+  | 'linkedEntityEmptyState'
+  | 'linkedEntitySelectPlaceholder'
+  | 'linkedEntityUnavailableLabel'
+  | 'validationContractTitleRequired'
+  | 'validationContractPartyRequired'
+  | 'validationContractStartDateRequired'
+  | 'validationContractEndDateBeforeStart'
+  | 'validationContractAmountNegative'
+  | 'validationLinkedEntityRequired'
+  | 'contractStatusActive'
+  | 'contractStatusExpiringSoon'
+  | 'contractStatusExpired'
+  | 'contractFormAddTitle'
+  | 'contractFormEditTitle'
+  | 'contractNotFoundTitle'
+  | 'backToContractsLabel'
+  | 'profileSectionContractInfo'
+  | 'contractDeleteAction'
+  | 'contractDeleteConfirmTitle'
+  | 'contractDeleteConfirmBody'
+  | 'contractDeleteConfirmAction';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -475,6 +505,36 @@ export const translations: Record<Locale, Dictionary> = {
     salaryConfirmPaymentTitle: 'تأكيد دفع الراتب',
     salaryOccurrenceDueLabel: 'تاريخ الاستحقاق',
     salaryPaidOnLabel: 'دُفع في',
+    fieldContractTitle: 'عنوان العقد',
+    fieldContractType: 'نوع العقد',
+    fieldContractNumber: 'رقم العقد',
+    fieldPartyName: 'الطرف الآخر',
+    fieldEndDate: 'تاريخ الانتهاء',
+    fieldCurrency: 'العملة',
+    currencyUnspecifiedLabel: 'غير محدد',
+    fieldLinkedTo: 'مرتبط بـ',
+    linkedToNoneLabel: 'بدون ارتباط',
+    linkedEntityEmptyState: 'لا توجد عناصر في هذه الفئة بعد.',
+    linkedEntitySelectPlaceholder: 'اختر...',
+    linkedEntityUnavailableLabel: 'العنصر المرتبط لم يعد متاحاً.',
+    validationContractTitleRequired: 'عنوان العقد مطلوب.',
+    validationContractPartyRequired: 'اسم الطرف الآخر مطلوب.',
+    validationContractStartDateRequired: 'تاريخ بدء العقد مطلوب.',
+    validationContractEndDateBeforeStart: 'لا يمكن أن يكون تاريخ الانتهاء قبل تاريخ البدء.',
+    validationContractAmountNegative: 'لا يمكن أن يكون المبلغ رقماً سالباً.',
+    validationLinkedEntityRequired: 'يرجى اختيار العنصر المرتبط.',
+    contractStatusActive: 'ساري',
+    contractStatusExpiringSoon: 'يقترب الانتهاء',
+    contractStatusExpired: 'منتهٍ',
+    contractFormAddTitle: 'إضافة عقد',
+    contractFormEditTitle: 'تعديل العقد',
+    contractNotFoundTitle: 'لم يتم العثور على هذا العقد.',
+    backToContractsLabel: 'العودة إلى العقود',
+    profileSectionContractInfo: 'معلومات العقد',
+    contractDeleteAction: 'حذف العقد',
+    contractDeleteConfirmTitle: 'هل تريد حذف هذا العقد؟',
+    contractDeleteConfirmBody: 'سيتم حذف هذا العقد وجميع مستنداته نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    contractDeleteConfirmAction: 'حذف',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -710,6 +770,36 @@ export const translations: Record<Locale, Dictionary> = {
     salaryConfirmPaymentTitle: 'Confirm Salary Payment',
     salaryOccurrenceDueLabel: 'Due date',
     salaryPaidOnLabel: 'Paid on',
+    fieldContractTitle: 'Contract Title',
+    fieldContractType: 'Contract Type',
+    fieldContractNumber: 'Contract Number',
+    fieldPartyName: 'Party Name',
+    fieldEndDate: 'End Date',
+    fieldCurrency: 'Currency',
+    currencyUnspecifiedLabel: 'Unspecified',
+    fieldLinkedTo: 'Linked To',
+    linkedToNoneLabel: 'None',
+    linkedEntityEmptyState: 'No entries in this category yet.',
+    linkedEntitySelectPlaceholder: 'Select...',
+    linkedEntityUnavailableLabel: 'The linked entity is no longer available.',
+    validationContractTitleRequired: 'Contract title is required.',
+    validationContractPartyRequired: 'Party name is required.',
+    validationContractStartDateRequired: 'Contract start date is required.',
+    validationContractEndDateBeforeStart: 'End date cannot be earlier than the start date.',
+    validationContractAmountNegative: 'Amount cannot be negative.',
+    validationLinkedEntityRequired: 'Please select the linked entity.',
+    contractStatusActive: 'Active',
+    contractStatusExpiringSoon: 'Expiring Soon',
+    contractStatusExpired: 'Expired',
+    contractFormAddTitle: 'Add Contract',
+    contractFormEditTitle: 'Edit Contract',
+    contractNotFoundTitle: 'This contract could not be found.',
+    backToContractsLabel: 'Back to Contracts',
+    profileSectionContractInfo: 'Contract Information',
+    contractDeleteAction: 'Delete Contract',
+    contractDeleteConfirmTitle: 'Delete this contract?',
+    contractDeleteConfirmBody: 'This contract and all of its documents will be permanently deleted. This cannot be undone.',
+    contractDeleteConfirmAction: 'Delete',
   },
 };
 

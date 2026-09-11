@@ -1,4 +1,5 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { Contract, ContractDocument } from '../features/contracts/types';
 import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
 import type { Property, PropertyDocument } from '../features/properties/types';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
@@ -14,8 +15,9 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * the v2 -> v3 upgrade that added the property stores in Phase 4, all of
  * that survives the v3 -> v4 upgrade that added the vehicle stores in
  * Phase 5, all of that survives the v4 -> v5 upgrade that added the staff
- * stores in Phase 6, and all of that survives the v5 -> v6 upgrade that
- * added recurring salary schedules).
+ * stores in Phase 6, all of that survives the v5 -> v6 upgrade that added
+ * recurring salary schedules, and all of that survives the v6 -> v7
+ * upgrade that added the Contracts stores in Phase 7).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -73,10 +75,19 @@ interface TmaDB extends DBSchema {
     value: StaffSalaryPayment;
     indexes: { staffId: string; scheduleId_dueDate: [string, string] };
   };
+  contracts: {
+    key: string;
+    value: Contract;
+  };
+  contractDocuments: {
+    key: string;
+    value: ContractDocument;
+    indexes: { contractId: string };
+  };
 }
 
 const DB_NAME = 'tma-family-office';
-const DB_VERSION = 6;
+const DB_VERSION = 7;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -192,6 +203,14 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
         }
         if (!paymentsStore.indexNames.contains('scheduleId_dueDate')) {
           paymentsStore.createIndex('scheduleId_dueDate', ['salaryScheduleId', 'dueDate'], { unique: true });
+        }
+
+        if (!db.objectStoreNames.contains('contracts')) {
+          db.createObjectStore('contracts', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('contractDocuments')) {
+          const store = db.createObjectStore('contractDocuments', { keyPath: 'id' });
+          store.createIndex('contractId', 'contractId');
         }
       },
       blocked() {

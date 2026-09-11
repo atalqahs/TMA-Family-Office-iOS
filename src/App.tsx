@@ -4,6 +4,8 @@ import { DbLifecycleNotice } from './components/DbLifecycleNotice';
 import { CATEGORIES } from './features/categories/categories';
 import { LanguageProvider } from './localization/LanguageContext';
 import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
+import { ContractProfilePage } from './pages/ContractProfilePage';
+import { ContractsPage } from './pages/ContractsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { FamilyMemberProfilePage } from './pages/FamilyMemberProfilePage';
 import { FamilyPage } from './pages/FamilyPage';
@@ -21,7 +23,8 @@ const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
     category.id !== 'family' &&
     category.id !== 'properties' &&
     category.id !== 'vehicles' &&
-    category.id !== 'staff',
+    category.id !== 'staff' &&
+    category.id !== 'contracts',
 );
 
 export default function App() {
@@ -48,6 +51,8 @@ export default function App() {
               <Route path="vehicles/:vehicleId" element={<VehicleProfilePage />} />
               <Route path="staff" element={<StaffPage />} />
               <Route path="staff/:staffId" element={<StaffProfilePage />} />
+              <Route path="contracts" element={<ContractsPage />} />
+              <Route path="contracts/:contractId" element={<ContractProfilePage />} />
               {PLACEHOLDER_CATEGORIES.map((category) => (
                 <Route
                   key={category.id}
