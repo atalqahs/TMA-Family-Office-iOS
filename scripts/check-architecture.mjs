@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Permanent architecture quality gate (Phase 9A, Section M).
+ * Permanent architecture quality gate (Phase 9A Section M; extended in
+ * Phase 9B Section V for the Notifications aggregator's boundaries).
  *
  * A small AST/import-graph implementation (using the TypeScript compiler
  * API already in this project's own devDependencies) rather than fragile
@@ -279,6 +280,60 @@ function relPath(file) {
 }
 
 // ---------------------------------------------------------------------------
+// 9. Notifications is a derived aggregator, never a domain owner (Phase
+//    9B): every domain module (family/properties/vehicles/staff/
+//    contracts/tasks) must NOT import from features/notifications --
+//    source adapters may import domain utilities/types, never the other
+//    way around.
+// ---------------------------------------------------------------------------
+{
+  const domainFeatures = [...CROSS_MODULE_FEATURES, 'tasks'];
+  const notificationsDir = join(SRC, 'features', 'notifications') + '/';
+  for (const feature of domainFeatures) {
+    const featureDir = join(SRC, 'features', feature) + '/';
+    for (const file of allFiles) {
+      if (!file.startsWith(featureDir)) continue;
+      for (const target of importGraph.get(file) ?? []) {
+        if (target.startsWith(notificationsDir)) {
+          violations.push(`Domain module imports Notifications (inverted dependency): ${relPath(file)} imports ${relPath(target)}`);
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 10. No explicit `any` type anywhere in application source.
+// ---------------------------------------------------------------------------
+{
+  for (const file of allFiles) {
+    const sf = sourceFiles.get(file);
+    ts.forEachChild(sf, function visit(node) {
+      if (node.kind === ts.SyntaxKind.AnyKeyword) {
+        violations.push(`Explicit 'any' type: ${relPath(file)}`);
+      }
+      ts.forEachChild(node, visit);
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 11. No Notification persistence store, and DB_VERSION stays 10 (Phase
+//     9B is a derived-only aggregation layer -- no schema change).
+// ---------------------------------------------------------------------------
+{
+  const dbFile = join(SRC, 'storage', 'db.ts');
+  const dbSource = readFileSync(dbFile, 'utf-8');
+  if (/\bnotification/i.test(dbSource)) {
+    violations.push(`storage/db.ts appears to reference a notification store -- Notifications must never be persisted (Phase 9B Section B)`);
+  }
+  const versionMatch = dbSource.match(/DB_VERSION\s*=\s*(\d+)/);
+  if (!versionMatch || versionMatch[1] !== '10') {
+    violations.push(`DB_VERSION must remain 10 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 
 if (violations.length > 0) {
   console.error(`\nArchitecture check FAILED with ${violations.length} violation(s):\n`);
@@ -286,5 +341,5 @@ if (violations.length > 0) {
   console.error('');
   process.exit(1);
 } else {
-  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 8 rule categories).`);
+  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 11 rule categories).`);
 }

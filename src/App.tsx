@@ -9,6 +9,7 @@ import { ContractsPage } from './pages/ContractsPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { FamilyMemberProfilePage } from './pages/FamilyMemberProfilePage';
 import { FamilyPage } from './pages/FamilyPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { PropertyProfilePage } from './pages/PropertyProfilePage';
 import { SettingsPage } from './pages/SettingsPage';
@@ -29,7 +30,8 @@ const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
     category.id !== 'vehicles' &&
     category.id !== 'staff' &&
     category.id !== 'contracts' &&
-    category.id !== 'tasks',
+    category.id !== 'tasks' &&
+    category.id !== 'notifications',
 );
 
 export default function App() {
@@ -62,6 +64,7 @@ export default function App() {
               <Route path="tasks/calendar" element={<TaskCalendarPage />} />
               <Route path="tasks/group/:groupId" element={<TaskGroupDetailPage />} />
               <Route path="tasks/task/:taskId" element={<TaskProfilePage />} />
+              <Route path="notifications" element={<NotificationsPage />} />
               {PLACEHOLDER_CATEGORIES.map((category) => (
                 <Route
                   key={category.id}

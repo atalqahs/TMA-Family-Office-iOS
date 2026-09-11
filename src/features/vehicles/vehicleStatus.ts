@@ -100,8 +100,14 @@ export function computeVehicleStatus(
  * one (by `serviceDate`, tie-broken by `createdAt`). Every maintenance
  * type is tracked independently, so a vehicle with both oil and tires
  * records keeps one active cycle per type simultaneously.
+ *
+ * Exported so the Notifications aggregator (Phase 9B) can reuse this exact
+ * "one active cycle per type" selection instead of re-deriving it -- a
+ * maintenance item's notification is tied to its active record's own id,
+ * so a warning-to-overdue transition on the same item naturally becomes
+ * the current notification rather than coexisting as a duplicate.
  */
-function getActiveMaintenanceRecords(records: VehicleMaintenanceRecord[]): VehicleMaintenanceRecord[] {
+export function getActiveMaintenanceRecords(records: VehicleMaintenanceRecord[]): VehicleMaintenanceRecord[] {
   const latestByType = new Map<string, VehicleMaintenanceRecord>();
   for (const record of records) {
     const current = latestByType.get(record.type);

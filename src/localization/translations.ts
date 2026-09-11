@@ -329,7 +329,38 @@ export type TranslationKey =
   | 'fieldAssignedToName'
   | 'validationDueTimeRequiresDueDate'
   | 'taskStateNoDueDate'
-  | 'taskFilterNoDueDate';
+  | 'taskFilterNoDueDate'
+  | 'notificationsEmptyStateTitle'
+  | 'notificationSeverityCriticalLabel'
+  | 'notificationSeverityWarningLabel'
+  | 'notificationSeverityInfoLabel'
+  | 'notificationSourceVehicleLabel'
+  | 'notificationSourceContractLabel'
+  | 'notificationSourceStaffLabel'
+  | 'notificationSourceTaskLabel'
+  | 'notificationTitleVehicleRegistrationExpired'
+  | 'notificationTitleVehicleRegistrationExpiringSoon'
+  | 'notificationTitleVehicleInsuranceExpired'
+  | 'notificationTitleVehicleInsuranceExpiringSoon'
+  | 'notificationTitleVehicleMaintenanceOverdue'
+  | 'notificationTitleVehicleMaintenanceApproaching'
+  | 'notificationTitleContractExpired'
+  | 'notificationTitleContractExpiringSoon'
+  | 'notificationTitleStaffResidencyExpired'
+  | 'notificationTitleStaffResidencyExpiringSoon'
+  | 'notificationTitleStaffPassportExpired'
+  | 'notificationTitleStaffPassportExpiringSoon'
+  | 'notificationTitleStaffSalaryOverdue'
+  | 'notificationTitleStaffSalaryDue'
+  | 'notificationTitleTaskOverdue'
+  | 'notificationTitleTaskDueToday'
+  | 'notificationMsgExpiredOn'
+  | 'notificationMsgExpiringOn'
+  | 'notificationMsgOverdueByKm'
+  | 'notificationMsgApproachingKm'
+  | 'notificationMsgDueToday'
+  | 'notificationMsgOverdueSince'
+  | 'notificationMsgSalaryAmountDue';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -661,6 +692,37 @@ export const translations: Record<Locale, Dictionary> = {
     validationDueTimeRequiresDueDate: 'لا يمكن تحديد وقت بدون تاريخ استحقاق.',
     taskStateNoDueDate: 'بدون موعد',
     taskFilterNoDueDate: 'بدون موعد',
+    notificationsEmptyStateTitle: 'لا توجد تنبيهات حالياً',
+    notificationSeverityCriticalLabel: 'عاجل',
+    notificationSeverityWarningLabel: 'تنبيه',
+    notificationSeverityInfoLabel: 'معلومة',
+    notificationSourceVehicleLabel: 'المركبات',
+    notificationSourceContractLabel: 'العقود',
+    notificationSourceStaffLabel: 'العمالة',
+    notificationSourceTaskLabel: 'المهام',
+    notificationTitleVehicleRegistrationExpired: 'استمارة {name} منتهية',
+    notificationTitleVehicleRegistrationExpiringSoon: 'استمارة {name} ستنتهي قريباً',
+    notificationTitleVehicleInsuranceExpired: 'تأمين {name} منتهي',
+    notificationTitleVehicleInsuranceExpiringSoon: 'تأمين {name} سينتهي قريباً',
+    notificationTitleVehicleMaintenanceOverdue: '{name} — صيانة {maintenanceTitle} متأخرة',
+    notificationTitleVehicleMaintenanceApproaching: '{name} — صيانة {maintenanceTitle} قريبة',
+    notificationTitleContractExpired: '{title} منتهي',
+    notificationTitleContractExpiringSoon: '{title} سينتهي قريباً',
+    notificationTitleStaffResidencyExpired: 'إقامة {name} منتهية',
+    notificationTitleStaffResidencyExpiringSoon: 'إقامة {name} ستنتهي قريباً',
+    notificationTitleStaffPassportExpired: 'جواز سفر {name} منتهي',
+    notificationTitleStaffPassportExpiringSoon: 'جواز سفر {name} سينتهي قريباً',
+    notificationTitleStaffSalaryOverdue: 'راتب {name} متأخر',
+    notificationTitleStaffSalaryDue: 'راتب {name} مستحق',
+    notificationTitleTaskOverdue: '{title} متأخرة',
+    notificationTitleTaskDueToday: '{title} مستحقة اليوم',
+    notificationMsgExpiredOn: 'انتهى بتاريخ {date}',
+    notificationMsgExpiringOn: 'سينتهي بتاريخ {date}',
+    notificationMsgOverdueByKm: 'متأخر بمقدار {km} كم',
+    notificationMsgApproachingKm: 'متبقي {km} كم',
+    notificationMsgDueToday: 'مستحقة اليوم',
+    notificationMsgOverdueSince: 'متأخرة منذ {date}',
+    notificationMsgSalaryAmountDue: '{amount} د.ك مستحقة بتاريخ {date}',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -989,6 +1051,37 @@ export const translations: Record<Locale, Dictionary> = {
     validationDueTimeRequiresDueDate: 'A due time requires a due date.',
     taskStateNoDueDate: 'No due date',
     taskFilterNoDueDate: 'No due date',
+    notificationsEmptyStateTitle: 'No notifications right now',
+    notificationSeverityCriticalLabel: 'Critical',
+    notificationSeverityWarningLabel: 'Warning',
+    notificationSeverityInfoLabel: 'Info',
+    notificationSourceVehicleLabel: 'Vehicles',
+    notificationSourceContractLabel: 'Contracts',
+    notificationSourceStaffLabel: 'Staff',
+    notificationSourceTaskLabel: 'Tasks',
+    notificationTitleVehicleRegistrationExpired: '{name} registration has expired',
+    notificationTitleVehicleRegistrationExpiringSoon: '{name} registration is expiring soon',
+    notificationTitleVehicleInsuranceExpired: '{name} insurance has expired',
+    notificationTitleVehicleInsuranceExpiringSoon: '{name} insurance is expiring soon',
+    notificationTitleVehicleMaintenanceOverdue: '{name} — {maintenanceTitle} is overdue',
+    notificationTitleVehicleMaintenanceApproaching: '{name} — {maintenanceTitle} is due soon',
+    notificationTitleContractExpired: '{title} has expired',
+    notificationTitleContractExpiringSoon: '{title} is expiring soon',
+    notificationTitleStaffResidencyExpired: "{name}'s residency has expired",
+    notificationTitleStaffResidencyExpiringSoon: "{name}'s residency is expiring soon",
+    notificationTitleStaffPassportExpired: "{name}'s passport has expired",
+    notificationTitleStaffPassportExpiringSoon: "{name}'s passport is expiring soon",
+    notificationTitleStaffSalaryOverdue: "{name}'s salary payment is overdue",
+    notificationTitleStaffSalaryDue: "{name}'s salary payment is due",
+    notificationTitleTaskOverdue: '{title} is overdue',
+    notificationTitleTaskDueToday: '{title} is due today',
+    notificationMsgExpiredOn: 'Expired on {date}',
+    notificationMsgExpiringOn: 'Expiring on {date}',
+    notificationMsgOverdueByKm: 'Overdue by {km} km',
+    notificationMsgApproachingKm: '{km} km remaining',
+    notificationMsgDueToday: 'Due today',
+    notificationMsgOverdueSince: 'Overdue since {date}',
+    notificationMsgSalaryAmountDue: '{amount} KWD due {date}',
   },
 };
 
