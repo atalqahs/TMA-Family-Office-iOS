@@ -20,9 +20,14 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * stores in Phase 6, all of that survives the v5 -> v6 upgrade that added
  * recurring salary schedules, all of that survives the v6 -> v7 upgrade
  * that added the Contracts stores in Phase 7, all of that survives
- * the v7 -> v8 upgrade that added the Tasks stores in Phase 8, and all of that survives the v8 -> v9
+ * the v7 -> v8 upgrade that added the Tasks stores in Phase 8, all of that survives the v8 -> v9
  * upgrade that added the TaskGroups store for the Phase 8 groups correction (every pre-existing Task is
- * assigned to a deterministic, automatically-created "General" group so no Task is ever left ungrouped).
+ * assigned to a deterministic, automatically-created "General" group so no Task is ever left ungrouped),
+ * and all of that survives the v9 -> v10 upgrade for the Phase 8 independence correction, which strips
+ * the obsolete cross-module `linkedEntityType`/`linkedEntityId` fields from every Task (Tasks & Reminders
+ * no longer has any relationship to other modules) and renames TaskCompletion's `occurrenceDate` field/
+ * index to `occurrenceKey` (which also holds the `UNSCHEDULED_OCCURRENCE_KEY` sentinel for an undated
+ * one-time Task's single occurrence, now that a Task's `dueDate` is optional).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -97,7 +102,7 @@ interface TmaDB extends DBSchema {
   taskCompletions: {
     key: string;
     value: TaskCompletion;
-    indexes: { taskId: string; taskId_occurrenceDate: [string, string] };
+    indexes: { taskId: string; taskId_occurrenceKey: [string, string] };
   };
   taskGroups: {
     key: string;
@@ -106,7 +111,7 @@ interface TmaDB extends DBSchema {
 }
 
 const DB_NAME = 'tma-family-office';
-const DB_VERSION = 9;
+const DB_VERSION = 10;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -242,7 +247,7 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
           // so a duplicate completion for the same occurrence is rejected
           // atomically, the same pattern already proven for Staff salary
           // occurrences (scheduleId, dueDate).
-          store.createIndex('taskId_occurrenceDate', ['taskId', 'occurrenceDate'], { unique: true });
+          store.createIndex('taskId_occurrenceKey', ['taskId', 'occurrenceKey'], { unique: true });
         }
 
         // Phase 8 groups correction: every Task now belongs to exactly one
@@ -278,6 +283,59 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
               createdAt: now,
               updatedAt: now,
             });
+          }
+        }
+
+        // Phase 8 independence correction: Tasks & Reminders no longer has
+        // any relationship to other modules, and a Task's `dueDate` is now
+        // optional. This whole block only ever runs ONCE, the first time a
+        // database crosses into this version (guarded on the NEW
+        // `taskId_occurrenceKey` index not existing yet).
+        const taskCompletionsStore = transaction.objectStore('taskCompletions');
+        if (!taskCompletionsStore.indexNames.contains('taskId_occurrenceKey')) {
+          // Rename every existing completion's `occurrenceDate` field to
+          // `occurrenceKey` (same string value -- a real date always was,
+          // and still is, a perfectly valid occurrence key; only undated
+          // one-time Tasks going forward use the new sentinel instead).
+          let completionCursor = await taskCompletionsStore.openCursor();
+          while (completionCursor) {
+            const legacyValue = completionCursor.value as unknown as { occurrenceDate?: string } & Record<string, unknown>;
+            if (legacyValue.occurrenceDate !== undefined) {
+              const { occurrenceDate, ...rest } = legacyValue;
+              await completionCursor.update({ ...rest, occurrenceKey: occurrenceDate } as unknown as TaskCompletion);
+            }
+            completionCursor = await completionCursor.continue();
+          }
+          // `idb`'s typed `deleteIndex` only accepts index names from the
+          // CURRENT schema, but this index only ever existed under the
+          // pre-correction schema -- cast to the underlying native
+          // IDBObjectStore for this one legacy-cleanup call (same pattern
+          // already used above for staffSalaryPayments).
+          const legacyCompletionsStore = taskCompletionsStore as unknown as IDBObjectStore;
+          if (legacyCompletionsStore.indexNames.contains('taskId_occurrenceDate')) {
+            legacyCompletionsStore.deleteIndex('taskId_occurrenceDate');
+          }
+          taskCompletionsStore.createIndex('taskId_occurrenceKey', ['taskId', 'occurrenceKey'], { unique: true });
+
+          // Strip the obsolete cross-module link fields from every Task --
+          // Tasks & Reminders must have zero relationship to other
+          // modules. Every other field (groupId, title, dueDate/dueTime,
+          // priority, recurrence, notes, timestamps) is left completely
+          // untouched, so every existing Task remains fully valid (it
+          // already has a real dueDate, so none of them become "undated"
+          // as a side effect of this migration).
+          const tasksStoreForCleanup = transaction.objectStore('tasks');
+          let taskCursor = await tasksStoreForCleanup.openCursor();
+          while (taskCursor) {
+            const legacyTask = taskCursor.value as unknown as { linkedEntityType?: unknown; linkedEntityId?: unknown } & Record<
+              string,
+              unknown
+            >;
+            if ('linkedEntityType' in legacyTask || 'linkedEntityId' in legacyTask) {
+              const { linkedEntityType: _linkedEntityType, linkedEntityId: _linkedEntityId, ...rest } = legacyTask;
+              await taskCursor.update(rest as unknown as Task);
+            }
+            taskCursor = await taskCursor.continue();
           }
         }
       },

@@ -5,11 +5,9 @@ import { EmptyState } from '../components/EmptyState';
 import { IconButton } from '../components/IconButton';
 import { PageHeader } from '../components/PageHeader';
 import { StatusBadge } from '../components/StatusBadge';
-import { useLinkableEntities } from '../features/tasks/hooks/useLinkableEntities';
 import { useTaskGroups } from '../features/tasks/hooks/useTaskGroups';
 import { useTasks } from '../features/tasks/hooks/useTasks';
 import { buildCalendarDayMap, getTasksForDate } from '../features/tasks/taskCalendar';
-import { findLinkedEntity, getLinkedEntityLabel } from '../features/tasks/linkedEntity';
 import { getTaskGroupDisplayName } from '../features/tasks/taskGroupDisplay';
 import { buildMonthGrid, getMonthRange, shiftYearMonth } from '../features/tasks/monthGrid';
 import { TASK_STATE_LABEL_KEY, TASK_STATE_VARIANT } from '../features/tasks/taskStatus';
@@ -24,7 +22,6 @@ export function TaskCalendarPage() {
   const { t, locale, dir } = useLanguage();
   const navigate = useNavigate();
   const { tasks, completions, loading } = useTasks();
-  const { entities: linkableEntities } = useLinkableEntities();
   const { groups } = useTaskGroups();
   const today = getLocalToday();
   const [yearMonth, setYearMonth] = useState(() => getLocalYearMonth());
@@ -133,10 +130,6 @@ export function TaskCalendarPage() {
             ) : (
               <ul className="task-calendar-page__list">
                 {selectedDateEntries.map(({ task, state }) => {
-                  const linkedEntity =
-                    task.linkedEntityType && task.linkedEntityId
-                      ? findLinkedEntity(linkableEntities, task.linkedEntityType, task.linkedEntityId)
-                      : undefined;
                   const group = groups.find((g) => g.id === task.groupId);
                   return (
                     <li key={task.id}>
@@ -147,11 +140,7 @@ export function TaskCalendarPage() {
                       >
                         <span className="task-calendar-page__list-title">{task.title}</span>
                         {group && <span className="task-calendar-page__list-meta">{getTaskGroupDisplayName(group, t)}</span>}
-                        {task.linkedEntityType && (
-                          <span className="task-calendar-page__list-meta">
-                            {linkedEntity ? getLinkedEntityLabel(task.linkedEntityType, linkedEntity) : t('linkedEntityUnavailableLabel')}
-                          </span>
-                        )}
+                        {task.assignedToName && <span className="task-calendar-page__list-meta">{task.assignedToName}</span>}
                         <StatusBadge variant={TASK_STATE_VARIANT[state]}>{t(TASK_STATE_LABEL_KEY[state])}</StatusBadge>
                       </button>
                     </li>

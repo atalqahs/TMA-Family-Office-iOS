@@ -29,7 +29,7 @@ export function computeTaskGroupStats(
     const { occurrenceDate, state } = computeTaskOccurrenceStatus(task, completionsByTask.get(task.id) ?? [], now);
     if (state === 'overdue') {
       overdueCount += 1;
-    } else if (state === 'upcoming' && (!nearestUpcomingDate || occurrenceDate < nearestUpcomingDate)) {
+    } else if (state === 'upcoming' && occurrenceDate !== undefined && (!nearestUpcomingDate || occurrenceDate < nearestUpcomingDate)) {
       nearestUpcomingDate = occurrenceDate;
     }
   }

@@ -94,7 +94,7 @@ export async function deleteTaskGroupIfEmpty(id: string): Promise<void> {
 export async function listCompletionsForTask(taskId: string): Promise<TaskCompletion[]> {
   const db = await getDB();
   const completions = await db.getAllFromIndex('taskCompletions', 'taskId', taskId);
-  return completions.sort((a, b) => b.occurrenceDate.localeCompare(a.occurrenceDate));
+  return completions.sort((a, b) => b.occurrenceKey.localeCompare(a.occurrenceKey));
 }
 
 /** Every completion across all tasks, for computing card-level/derived status without an N+1 query per task. */
@@ -113,7 +113,7 @@ export async function listAllCompletions(): Promise<TaskCompletion[]> {
  * never end up orphaned from a concurrently-deleted task.
  *
  * The completion is added (never `put`) so the unique
- * `taskId_occurrenceDate` index rejects a second completion for the same
+ * `taskId_occurrenceKey` index rejects a second completion for the same
  * occurrence atomically at the IndexedDB level; callers translate that
  * failure into `DuplicateTaskOccurrenceError` (see taskService.ts).
  */

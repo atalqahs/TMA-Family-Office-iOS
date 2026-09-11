@@ -12,7 +12,6 @@ import { CATEGORIES } from '../features/categories/categories';
 import { TaskCard } from '../features/tasks/components/TaskCard';
 import { TaskForm } from '../features/tasks/components/TaskForm';
 import { TaskGroupForm } from '../features/tasks/components/TaskGroupForm';
-import { useLinkableEntities } from '../features/tasks/hooks/useLinkableEntities';
 import { useTaskGroups } from '../features/tasks/hooks/useTaskGroups';
 import { useTasks } from '../features/tasks/hooks/useTasks';
 import * as taskService from '../features/tasks/taskService';
@@ -32,19 +31,21 @@ import './TaskGroupDetailPage.css';
 
 const TASKS_CATEGORY = CATEGORIES.find((category) => category.id === 'tasks')!;
 
-const FILTERS: TaskListFilter[] = ['all', 'overdue', 'dueToday', 'upcoming', 'completed'];
+const FILTERS: TaskListFilter[] = ['all', 'overdue', 'dueToday', 'upcoming', 'noDueDate', 'completed'];
 const FILTER_LABEL_KEY: Record<TaskListFilter, TranslationKey> = {
   all: 'taskFilterAll',
   overdue: 'taskFilterOverdue',
   dueToday: 'taskFilterToday',
   upcoming: 'taskFilterUpcoming',
+  noDueDate: 'taskFilterNoDueDate',
   completed: 'taskFilterCompleted',
 };
-const GROUP_ORDER: Exclude<TaskListFilter, 'all'>[] = ['overdue', 'dueToday', 'upcoming', 'completed'];
+const GROUP_ORDER: Exclude<TaskListFilter, 'all'>[] = ['overdue', 'dueToday', 'upcoming', 'noDueDate', 'completed'];
 const GROUP_LABEL_KEY: Record<Exclude<TaskListFilter, 'all'>, TranslationKey> = {
   overdue: 'taskStateOverdue',
   dueToday: 'taskStateDueToday',
   upcoming: 'taskStateUpcoming',
+  noDueDate: 'taskStateNoDueDate',
   completed: 'taskStateCompleted',
 };
 
@@ -60,7 +61,6 @@ export function TaskGroupDetailPage() {
   const navigate = useNavigate();
   const { tasks, completions, loading, error, refresh } = useTasks();
   const { groups, loading: groupsLoading, refresh: refreshGroups } = useTaskGroups();
-  const { entities: linkableEntities } = useLinkableEntities();
   const addSheet = useDisclosure();
   const editGroupSheet = useDisclosure();
   const deleteGroupSheet = useDisclosure();
@@ -87,8 +87,8 @@ export function TaskGroupDetailPage() {
   );
   const visibleEntries = useMemo(() => filterTaskListEntries(sortedEntries, filter), [sortedEntries, filter]);
 
-  const handleComplete = async (taskId: string, occurrenceDate: string) => {
-    await taskService.completeTaskOccurrence(taskId, occurrenceDate);
+  const handleComplete = async (taskId: string, occurrenceKey: string) => {
+    await taskService.completeTaskOccurrence(taskId, occurrenceKey);
     await refresh();
   };
 
@@ -179,10 +179,9 @@ export function TaskGroupDetailPage() {
                           key={entry.task.id}
                           task={entry.task}
                           completions={completions.filter((c) => c.taskId === entry.task.id)}
-                          linkableEntities={linkableEntities}
                           onOpen={() => navigate(`/tasks/task/${entry.task.id}`)}
                           onEdit={() => setEditingTask(entry.task)}
-                          onComplete={(occurrenceDate) => handleComplete(entry.task.id, occurrenceDate)}
+                          onComplete={(occurrenceKey) => handleComplete(entry.task.id, occurrenceKey)}
                         />
                       ))}
                     </div>
@@ -197,10 +196,9 @@ export function TaskGroupDetailPage() {
                   key={entry.task.id}
                   task={entry.task}
                   completions={completions.filter((c) => c.taskId === entry.task.id)}
-                  linkableEntities={linkableEntities}
                   onOpen={() => navigate(`/tasks/task/${entry.task.id}`)}
                   onEdit={() => setEditingTask(entry.task)}
-                  onComplete={(occurrenceDate) => handleComplete(entry.task.id, occurrenceDate)}
+                  onComplete={(occurrenceKey) => handleComplete(entry.task.id, occurrenceKey)}
                 />
               ))}
             </div>

@@ -10,13 +10,11 @@ import { StatusBadge } from '../components/StatusBadge';
 import { Sheet } from '../components/Sheet';
 import { TaskForm } from '../features/tasks/components/TaskForm';
 import { useTask } from '../features/tasks/hooks/useTask';
-import { useLinkableEntities } from '../features/tasks/hooks/useLinkableEntities';
 import { useTaskGroups } from '../features/tasks/hooks/useTaskGroups';
 import * as taskService from '../features/tasks/taskService';
-import { findLinkedEntity, getLinkedEntityLabel } from '../features/tasks/linkedEntity';
 import { getTaskGroupDisplayName } from '../features/tasks/taskGroupDisplay';
 import { computeTaskOccurrenceStatus, TASK_STATE_LABEL_KEY, TASK_STATE_VARIANT } from '../features/tasks/taskStatus';
-import { TASK_LINKED_ENTITY_TYPES, TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../features/tasks/types';
+import { UNSCHEDULED_OCCURRENCE_KEY, TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../features/tasks/types';
 import { useDisclosure } from '../hooks/useDisclosure';
 import { useLanguage } from '../hooks/useLanguage';
 import { parseLocalDate } from '../utils/localDate';
@@ -30,7 +28,6 @@ export function TaskProfilePage() {
   const navigate = useNavigate();
   const { t, locale, dir } = useLanguage();
   const { task, completions, loading, refresh } = useTask(taskId);
-  const { entities: linkableEntities, loading: linkableEntitiesLoading } = useLinkableEntities();
   const { groups } = useTaskGroups();
   const editSheet = useDisclosure();
   const deleteSheet = useDisclosure();
@@ -57,7 +54,7 @@ export function TaskProfilePage() {
     );
   }
 
-  const { occurrenceDate, state } = computeTaskOccurrenceStatus(task, completions);
+  const { occurrenceKey, occurrenceDate, state } = computeTaskOccurrenceStatus(task, completions);
   const group = groups.find((g) => g.id === task.groupId);
   const groupBackPath = `/tasks/group/${task.groupId}`;
   const priorityLabel = TASK_PRIORITIES.find((option) => option.id === task.priority)?.title[locale];
@@ -68,21 +65,14 @@ export function TaskProfilePage() {
           TASK_RECURRENCE_UNITS.find((option) => option.id === task.recurrenceUnit)?.title[locale]
         }`;
 
-  const linkedEntity =
-    task.linkedEntityType && task.linkedEntityId
-      ? findLinkedEntity(linkableEntities, task.linkedEntityType, task.linkedEntityId)
-      : undefined;
-  const linkedTypeLabel = task.linkedEntityType
-    ? TASK_LINKED_ENTITY_TYPES.find((option) => option.id === task.linkedEntityType)?.title[locale]
-    : undefined;
-
   const taskInfoRows: Array<[string, string]> = (
     [
       [t('fieldTaskGroup'), group && getTaskGroupDisplayName(group, t)],
-      [t('fieldDueDate'), new Intl.DateTimeFormat(locale).format(parseLocalDate(occurrenceDate))],
+      [t('fieldDueDate'), occurrenceDate ? new Intl.DateTimeFormat(locale).format(parseLocalDate(occurrenceDate)) : t('taskStateNoDueDate')],
       [t('fieldDueTime'), task.dueTime ? formatLocalTime(task.dueTime, locale) : undefined],
       [t('fieldPriority'), priorityLabel],
       [t('fieldTaskRepeat'), recurrenceLabel],
+      [t('fieldAssignedToName'), task.assignedToName],
     ] as Array<[string, string | undefined]>
   ).filter((row): row is [string, string] => Boolean(row[1]));
 
@@ -92,7 +82,7 @@ export function TaskProfilePage() {
     setCompleting(true);
     setCompleteError(null);
     try {
-      await taskService.completeTaskOccurrence(task.id, occurrenceDate);
+      await taskService.completeTaskOccurrence(task.id, occurrenceKey);
       await refresh();
       setConfirmingComplete(false);
     } catch (err) {
@@ -174,24 +164,6 @@ export function TaskProfilePage() {
         </section>
       )}
 
-      {task.linkedEntityType && (
-        <section className="task-profile-page__section">
-          <h2 className="task-profile-page__section-title">{t('fieldLinkedTo')}</h2>
-          {linkableEntitiesLoading ? (
-            <p className="task-profile-page__linked-loading">{t('loadingLabel')}</p>
-          ) : linkedEntity ? (
-            <p className="task-profile-page__linked-entity">
-              {linkedTypeLabel}: {getLinkedEntityLabel(task.linkedEntityType, linkedEntity)}
-            </p>
-          ) : (
-            // The linked entity was deleted on its own side -- the Task
-            // stays fully readable and is NEVER auto-deleted or given
-            // fabricated stand-in data; this is the only acknowledgment shown.
-            <p className="task-profile-page__linked-entity-missing">{t('linkedEntityUnavailableLabel')}</p>
-          )}
-        </section>
-      )}
-
       <section className="task-profile-page__section">
         <h2 className="task-profile-page__section-title">{t('profileSectionCompletionHistory')}</h2>
         {recentCompletions.length === 0 ? (
@@ -201,7 +173,9 @@ export function TaskProfilePage() {
             {recentCompletions.map((completion) => (
               <li key={completion.id} className="task-profile-page__completion-row">
                 <span className="task-profile-page__completion-date">
-                  {new Intl.DateTimeFormat(locale).format(parseLocalDate(completion.occurrenceDate))}
+                  {completion.occurrenceKey === UNSCHEDULED_OCCURRENCE_KEY
+                    ? t('taskStateNoDueDate')
+                    : new Intl.DateTimeFormat(locale).format(parseLocalDate(completion.occurrenceKey))}
                 </span>
                 <span className="task-profile-page__completion-meta">
                   {t('taskCompletedOnLabel')} {new Intl.DateTimeFormat(locale).format(new Date(completion.completedAt))}

@@ -28,7 +28,7 @@ export function buildCalendarDayMap(
 
   for (const task of tasks) {
     const completedDates = new Set(
-      (completionsByTask.get(task.id) ?? []).map((completion) => completion.occurrenceDate),
+      (completionsByTask.get(task.id) ?? []).map((completion) => completion.occurrenceKey),
     );
     for (const occurrenceDate of getOccurrenceDatesInRange(task, monthStart, monthEnd)) {
       const state = computeOccurrenceDateState(occurrenceDate, completedDates.has(occurrenceDate), today);
@@ -58,7 +58,7 @@ export function getTasksForDate(tasks: Task[], completions: TaskCompletion[], da
   for (const task of tasks) {
     if (getOccurrenceDatesInRange(task, date, date).length === 0) continue;
     const completedDates = new Set(
-      (completionsByTask.get(task.id) ?? []).map((completion) => completion.occurrenceDate),
+      (completionsByTask.get(task.id) ?? []).map((completion) => completion.occurrenceKey),
     );
     entries.push({ task, state: computeOccurrenceDateState(date, completedDates.has(date), today) });
   }

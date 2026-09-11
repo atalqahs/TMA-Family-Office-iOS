@@ -7,28 +7,26 @@ import { StatusBadge } from '../../../components/StatusBadge';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { parseLocalDate } from '../../../utils/localDate';
 import { formatLocalTime } from '../../../utils/time';
-import { findLinkedEntity, getLinkedEntityLabel, type LinkableEntities } from '../linkedEntity';
 import { computeTaskOccurrenceStatus, TASK_STATE_LABEL_KEY, TASK_STATE_VARIANT } from '../taskStatus';
-import { TASK_LINKED_ENTITY_TYPES, TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../types';
+import { TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../types';
 import type { Task, TaskCompletion } from '../types';
 import './TaskCard.css';
 
 interface TaskCardProps {
   task: Task;
   completions: TaskCompletion[];
-  linkableEntities: LinkableEntities;
   onOpen: () => void;
   onEdit: () => void;
-  onComplete: (occurrenceDate: string) => Promise<void>;
+  onComplete: (occurrenceKey: string) => Promise<void>;
 }
 
-export function TaskCard({ task, completions, linkableEntities, onOpen, onEdit, onComplete }: TaskCardProps) {
+export function TaskCard({ task, completions, onOpen, onEdit, onComplete }: TaskCardProps) {
   const { t, locale } = useLanguage();
   const [confirming, setConfirming] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { occurrenceDate, state } = computeTaskOccurrenceStatus(task, completions);
+  const { occurrenceKey, occurrenceDate, state } = computeTaskOccurrenceStatus(task, completions);
   const priorityLabel = TASK_PRIORITIES.find((option) => option.id === task.priority)?.title[locale];
   const recurrenceLabel =
     task.recurrenceUnit !== 'none'
@@ -37,24 +35,11 @@ export function TaskCard({ task, completions, linkableEntities, onOpen, onEdit, 
         }`
       : undefined;
 
-  const linkedEntity =
-    task.linkedEntityType && task.linkedEntityId
-      ? findLinkedEntity(linkableEntities, task.linkedEntityType, task.linkedEntityId)
-      : undefined;
-  const linkedTypeLabel = task.linkedEntityType
-    ? TASK_LINKED_ENTITY_TYPES.find((option) => option.id === task.linkedEntityType)?.title[locale]
-    : undefined;
-  const linkedLabel = task.linkedEntityType
-    ? linkedEntity
-      ? getLinkedEntityLabel(task.linkedEntityType, linkedEntity)
-      : t('linkedEntityUnavailableLabel')
-    : undefined;
-
   const handleComplete = async () => {
     setCompleting(true);
     setError(null);
     try {
-      await onComplete(occurrenceDate);
+      await onComplete(occurrenceKey);
       setConfirming(false);
     } catch (err) {
       console.error('Failed to complete task occurrence', err);
@@ -73,16 +58,14 @@ export function TaskCard({ task, completions, linkableEntities, onOpen, onEdit, 
         <div className="task-card__body">
           <span className="task-card__title">{task.title}</span>
           <span className="task-card__meta">
-            {new Intl.DateTimeFormat(locale).format(parseLocalDate(occurrenceDate))}
+            {occurrenceDate
+              ? new Intl.DateTimeFormat(locale).format(parseLocalDate(occurrenceDate))
+              : t('taskStateNoDueDate')}
             {task.dueTime && ` · ${formatLocalTime(task.dueTime, locale)}`}
             {priorityLabel && ` · ${priorityLabel}`}
           </span>
           {recurrenceLabel && <span className="task-card__meta">{recurrenceLabel}</span>}
-          {linkedLabel && (
-            <span className="task-card__meta">
-              {linkedTypeLabel}: {linkedLabel}
-            </span>
-          )}
+          {task.assignedToName && <span className="task-card__meta">{task.assignedToName}</span>}
           <StatusBadge variant={TASK_STATE_VARIANT[state]}>{t(TASK_STATE_LABEL_KEY[state])}</StatusBadge>
         </div>
       </button>

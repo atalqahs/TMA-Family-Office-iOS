@@ -4,13 +4,11 @@ import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
-import { useLinkableEntities } from '../hooks/useLinkableEntities';
 import { useTaskGroups } from '../hooks/useTaskGroups';
 import { getTaskGroupDisplayName } from '../taskGroupDisplay';
 import { TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../types';
-import type { Task, TaskFormValues, TaskLinkedEntityType, TaskPriority, TaskRecurrenceUnit } from '../types';
+import type { Task, TaskFormValues, TaskPriority, TaskRecurrenceUnit } from '../types';
 import { validateTaskForm } from '../validation';
-import { LinkedEntityFields } from './LinkedEntityFields';
 import './TaskForm.css';
 
 interface TaskFormProps {
@@ -31,8 +29,7 @@ interface TaskFormState {
   priority: TaskPriority;
   recurrenceUnit: TaskRecurrenceUnit;
   recurrenceInterval: string;
-  linkedEntityType: TaskLinkedEntityType | '';
-  linkedEntityId: string;
+  assignedToName: string;
   notes: string;
 }
 
@@ -46,8 +43,7 @@ function toFormState(task: Task | undefined, initialGroupId: string | undefined)
     priority: task?.priority ?? 'normal',
     recurrenceUnit: task?.recurrenceUnit ?? 'none',
     recurrenceInterval: task?.recurrenceInterval !== undefined ? String(task.recurrenceInterval) : '1',
-    linkedEntityType: task?.linkedEntityType ?? '',
-    linkedEntityId: task?.linkedEntityId ?? '',
+    assignedToName: task?.assignedToName ?? '',
     notes: task?.notes ?? '',
   };
 }
@@ -57,7 +53,7 @@ function toFormValues(state: TaskFormState): TaskFormValues {
     groupId: state.groupId,
     title: state.title.trim(),
     description: state.description.trim() || undefined,
-    dueDate: state.dueDate,
+    dueDate: state.dueDate || undefined,
     dueTime: state.dueTime || undefined,
     priority: state.priority,
     recurrenceUnit: state.recurrenceUnit,
@@ -65,8 +61,7 @@ function toFormValues(state: TaskFormState): TaskFormValues {
       state.recurrenceUnit !== 'none' && state.recurrenceInterval.trim()
         ? Number(state.recurrenceInterval)
         : undefined,
-    linkedEntityType: state.linkedEntityType || undefined,
-    linkedEntityId: state.linkedEntityType ? state.linkedEntityId || undefined : undefined,
+    assignedToName: state.assignedToName.trim() || undefined,
     notes: state.notes.trim() || undefined,
   };
 }
@@ -74,7 +69,6 @@ function toFormValues(state: TaskFormState): TaskFormValues {
 export function TaskForm({ initialValue, initialGroupId, onSubmit, onCancel }: TaskFormProps) {
   const { t, locale } = useLanguage();
   const formId = useId();
-  const { entities, loading: entitiesLoading } = useLinkableEntities();
   const { groups, loading: groupsLoading } = useTaskGroups();
   const [state, setState] = useState<TaskFormState>(() => toFormState(initialValue, initialGroupId));
   const [errors, setErrors] = useState<ReturnType<typeof validateTaskForm>>({});
@@ -167,11 +161,10 @@ export function TaskForm({ initialValue, initialGroupId, onSubmit, onCancel }: T
           type="date"
           value={state.dueDate}
           onChange={(e) => update('dueDate', e.target.value)}
-          required
         />
       </FormField>
 
-      <FormField label={t('fieldDueTime')} htmlFor={`${formId}-dueTime`}>
+      <FormField label={t('fieldDueTime')} htmlFor={`${formId}-dueTime`} error={errors.dueTime && t(errors.dueTime)}>
         <input
           id={`${formId}-dueTime`}
           className="form-input"
@@ -232,16 +225,15 @@ export function TaskForm({ initialValue, initialGroupId, onSubmit, onCancel }: T
         </FormField>
       )}
 
-      <LinkedEntityFields
-        idPrefix={formId}
-        entities={entities}
-        entitiesLoading={entitiesLoading}
-        linkedEntityType={state.linkedEntityType}
-        onLinkedEntityTypeChange={(type) => update('linkedEntityType', type)}
-        linkedEntityId={state.linkedEntityId}
-        onLinkedEntityIdChange={(id) => update('linkedEntityId', id)}
-        linkedEntityIdError={errors.linkedEntityId && t(errors.linkedEntityId)}
-      />
+      <FormField label={t('fieldAssignedToName')} htmlFor={`${formId}-assignedToName`}>
+        <input
+          id={`${formId}-assignedToName`}
+          className="form-input"
+          type="text"
+          value={state.assignedToName}
+          onChange={(e) => update('assignedToName', e.target.value)}
+        />
+      </FormField>
 
       <FormField label={t('fieldNotes')} htmlFor={`${formId}-notes`}>
         <textarea

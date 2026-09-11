@@ -24,15 +24,19 @@ export function buildTaskListEntries(tasks: Task[], completions: TaskCompletion[
 
 /**
  * Overdue first (oldest obligation first), then due today, then upcoming
- * (nearest first), then completed last. Within the same occurrence date,
- * higher priority sorts first.
+ * (nearest first), then No Due Date, then completed last. Within the
+ * same occurrence date (or within No Due Date, where there is no date to
+ * compare), higher priority sorts first, then the original (stable,
+ * creation-order) array order.
  */
 export function sortTaskListEntries(entries: TaskListEntry[]): TaskListEntry[] {
   return [...entries].sort((a, b) => {
     const stateDiff = TASK_STATE_URGENCY_RANK[a.state] - TASK_STATE_URGENCY_RANK[b.state];
     if (stateDiff !== 0) return stateDiff;
-    const dateDiff = a.occurrenceDate.localeCompare(b.occurrenceDate);
-    if (dateDiff !== 0) return dateDiff;
+    if (a.occurrenceDate !== undefined && b.occurrenceDate !== undefined) {
+      const dateDiff = a.occurrenceDate.localeCompare(b.occurrenceDate);
+      if (dateDiff !== 0) return dateDiff;
+    }
     return PRIORITY_RANK[a.task.priority] - PRIORITY_RANK[b.task.priority];
   });
 }

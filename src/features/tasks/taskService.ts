@@ -95,7 +95,7 @@ export async function getOverdueTaskCount(): Promise<number> {
   return overdueCount;
 }
 
-/** Thrown when a completion would create a second record for the same (taskId, occurrenceDate) occurrence — callers show a specific, localized message for this rather than the generic save-failure one. */
+/** Thrown when a completion would create a second record for the same (taskId, occurrenceKey) occurrence — callers show a specific, localized message for this rather than the generic save-failure one. */
 export class DuplicateTaskOccurrenceError extends Error {
   constructor() {
     super('This task occurrence has already been completed');
@@ -108,22 +108,24 @@ function isConstraintError(error: unknown): boolean {
 }
 
 /**
- * Completes exactly one occurrence of a task. Duplicate completion of the
- * same occurrence is rejected atomically by the unique
- * `taskId_occurrenceDate` IndexedDB index (see taskRepository.ts) rather
- * than by a separate read-then-write existence check, so a race between
- * two concurrent completions of the same occurrence can never both
- * succeed.
+ * Completes exactly one occurrence of a task, identified by its stable
+ * `occurrenceKey` (a real 'YYYY-MM-DD' date for a dated occurrence, or
+ * `UNSCHEDULED_OCCURRENCE_KEY` for an undated one-time task's single
+ * occurrence -- see types.ts). Duplicate completion of the same
+ * occurrence is rejected atomically by the unique `taskId_occurrenceKey`
+ * IndexedDB index (see taskRepository.ts) rather than by a separate
+ * read-then-write existence check, so a race between two concurrent
+ * completions of the same occurrence can never both succeed.
  */
 export async function completeTaskOccurrence(
   taskId: string,
-  occurrenceDate: string,
+  occurrenceKey: string,
   notes?: string,
 ): Promise<TaskCompletion> {
   const completion: TaskCompletion = {
     id: generateId(),
     taskId,
-    occurrenceDate,
+    occurrenceKey,
     completedAt: new Date().toISOString(),
     notes,
   };

@@ -325,7 +325,11 @@ export type TranslationKey =
   | 'taskGroupGeneralName'
   | 'taskGroupTaskCountUnit'
   | 'taskGroupNextLabel'
-  | 'taskGroupNotFoundTitle';
+  | 'taskGroupNotFoundTitle'
+  | 'fieldAssignedToName'
+  | 'validationDueTimeRequiresDueDate'
+  | 'taskStateNoDueDate'
+  | 'taskFilterNoDueDate';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -653,6 +657,10 @@ export const translations: Record<Locale, Dictionary> = {
     taskGroupTaskCountUnit: 'مهام',
     taskGroupNextLabel: 'القادم',
     taskGroupNotFoundTitle: 'لم يتم العثور على هذه المجموعة.',
+    fieldAssignedToName: 'المسؤول',
+    validationDueTimeRequiresDueDate: 'لا يمكن تحديد وقت بدون تاريخ استحقاق.',
+    taskStateNoDueDate: 'بدون موعد',
+    taskFilterNoDueDate: 'بدون موعد',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -977,6 +985,10 @@ export const translations: Record<Locale, Dictionary> = {
     taskGroupTaskCountUnit: 'tasks',
     taskGroupNextLabel: 'Next',
     taskGroupNotFoundTitle: 'This group could not be found.',
+    fieldAssignedToName: 'Responsible person',
+    validationDueTimeRequiresDueDate: 'A due time requires a due date.',
+    taskStateNoDueDate: 'No due date',
+    taskFilterNoDueDate: 'No due date',
   },
 };
 
