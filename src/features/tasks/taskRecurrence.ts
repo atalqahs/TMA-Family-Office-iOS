@@ -33,23 +33,6 @@ function computeDatedOccurrence(dueDate: string, recurrenceUnit: TaskRecurrenceU
   }
 }
 
-/**
- * The Nth occurrence date of a task's schedule. Returns `undefined` when
- * the task has no `dueDate` at all (an undated task) -- validation.ts
- * guarantees such a task is never recurring, so this only ever happens
- * for `n === 0` in practice, but the type stays honest regardless of
- * caller.
- */
-export function getOccurrenceDate(
-  task: Pick<Task, 'dueDate' | 'recurrenceUnit' | 'recurrenceInterval'>,
-  n: number,
-): string | undefined {
-  if (!task.dueDate) {
-    return undefined;
-  }
-  return computeDatedOccurrence(task.dueDate, task.recurrenceUnit, task.recurrenceInterval, n);
-}
-
 export interface TaskOccurrence {
   /** Stable identity for completion lookups: the occurrence's own date when the task is dated, or `UNSCHEDULED_OCCURRENCE_KEY` for an undated one-time task's single occurrence. */
   occurrenceKey: string;

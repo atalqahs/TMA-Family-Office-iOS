@@ -139,10 +139,8 @@ export async function completeTaskOccurrence(completion: TaskCompletion): Promis
  * Deletes the task and every completion record that belongs to it in a
  * single IndexedDB transaction spanning both stores, so the operation
  * either fully commits or fully rolls back — never leaving orphaned
- * completion history.
- *
- * This only removes the Task's own records. It never touches the linked
- * Family/Property/Vehicle/Staff/Contract entity (if any).
+ * completion history. Tasks & Reminders has no relationship to any other
+ * module, so this only ever removes the Task's own records.
  */
 export async function deleteTaskWithCompletions(id: string): Promise<void> {
   const db = await getDB();

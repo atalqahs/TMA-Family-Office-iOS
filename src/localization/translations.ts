@@ -355,7 +355,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'معلومات التطبيق',
-    settingsVersionValue: 'نسخة تجريبية — المرحلة 6',
+    settingsVersionValue: 'نسخة تجريبية',
     settingsDisclaimer:
       'هذه نسخة تجريبية لتجربة الفكرة والتصميم على آيفون. النسخة النهائية ستكون تطبيق ويندوز مستقل.',
     trashTitle: 'سلة المحذوفات',
@@ -683,7 +683,7 @@ export const translations: Record<Locale, Dictionary> = {
     languageNameArabic: 'العربية',
     languageNameEnglish: 'English',
     settingsAboutSectionTitle: 'App Information',
-    settingsVersionValue: 'Prototype — Phase 6',
+    settingsVersionValue: 'Experimental Prototype',
     settingsDisclaimer:
       'This is an experimental prototype for testing the idea and design on iPhone. The final version will be a standalone Windows application.',
     trashTitle: 'Trash',

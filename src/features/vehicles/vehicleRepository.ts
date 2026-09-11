@@ -62,11 +62,6 @@ export async function listAllMaintenanceRecords(): Promise<VehicleMaintenanceRec
   return db.getAll('vehicleMaintenanceRecords');
 }
 
-export async function saveMaintenanceRecord(record: VehicleMaintenanceRecord): Promise<void> {
-  const db = await getDB();
-  await db.put('vehicleMaintenanceRecords', record);
-}
-
 /**
  * Saves a maintenance record and, in the SAME IndexedDB transaction,
  * applies the vehicle's live-mileage forward-sync invariant (see

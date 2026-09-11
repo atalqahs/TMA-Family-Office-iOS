@@ -41,7 +41,7 @@ export async function updateTask(id: string, values: TaskFormValues): Promise<Ta
   return updated;
 }
 
-/** Direct, permanent delete of the task and all of its completion history (see taskRepository for the transactional cascade). Never touches the linked entity, if any. */
+/** Direct, permanent delete of the task and all of its completion history (see taskRepository for the transactional cascade). */
 export async function removeTask(id: string): Promise<void> {
   await taskRepository.deleteTaskWithCompletions(id);
 }
