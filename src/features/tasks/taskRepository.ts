@@ -130,8 +130,18 @@ export async function completeTaskOccurrence(completion: TaskCompletion): Promis
     throw new Error(`Task ${completion.taskId} not found`);
   }
 
-  await completionsStore.add(completion);
-  await tx.done;
+  try {
+    await completionsStore.add(completion);
+    await tx.done;
+  } catch (error) {
+    // The unique `taskId_occurrenceKey` index rejects a duplicate `.add()`
+    // (see DuplicateTaskOccurrenceError in taskService.ts), which also
+    // aborts this transaction — drain `tx.done`'s own rejection here too,
+    // the same way the explicit `tx.abort()` branch above already does,
+    // so it can never surface as a second, unhandled promise rejection.
+    await tx.done.catch(() => {});
+    throw error;
+  }
 }
 
 /**

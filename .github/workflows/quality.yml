@@ -1,0 +1,56 @@
+name: Quality Gate
+
+# Permanent Phase 9A CI quality gate: typecheck + lint + the permanent
+# regression suite + architecture checks + both production builds, on
+# every push and pull request. Deliberately separate from
+# deploy-pages.yml (which only builds+deploys) — this workflow never
+# deploys anything, so it can safely run on pull requests (including from
+# forks) without any risk of an accidental PR deployment. Both workflows
+# may run side by side on the same push with no conflict.
+on:
+  push:
+    branches:
+      - claude/tma-family-office-prototype-1szgbc
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies (from lockfile)
+        run: npm ci
+
+      - name: Typecheck (app + permanent test suite)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Permanent regression suite
+        run: npm run test:run
+
+      - name: Architecture quality gate
+        run: npm run test:architecture
+
+      - name: Production build (root path)
+        run: npm run build
+
+      - name: Production build (GitHub Pages sub-path)
+        run: npm run build:pages

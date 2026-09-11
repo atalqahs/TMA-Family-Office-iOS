@@ -1,6 +1,8 @@
 import { generateId } from '../../utils/id';
 import * as taskRepository from './taskRepository';
+import { getOccurrenceDatesInRange } from './taskRecurrence';
 import { computeTaskOccurrenceStatus, groupCompletionsByTaskId } from './taskStatus';
+import { UNSCHEDULED_OCCURRENCE_KEY } from './types';
 import type { Task, TaskCompletion, TaskFormValues, TaskGroup, TaskGroupFormValues } from './types';
 
 export { GroupNotEmptyError } from './taskRepository';
@@ -107,12 +109,52 @@ function isConstraintError(error: unknown): boolean {
   return error instanceof DOMException && error.name === 'ConstraintError';
 }
 
+/** Thrown when `occurrenceKey` does not correspond to any actionable occurrence of the given task's own schedule (Section I hardening — see `isValidOccurrenceKey` below). */
+export class InvalidTaskOccurrenceError extends Error {
+  constructor() {
+    super('This is not a valid occurrence of this task');
+    this.name = 'InvalidTaskOccurrenceError';
+  }
+}
+
+/**
+ * Whether `occurrenceKey` is actually a legitimate occurrence of `task`'s
+ * own dueDate/recurrence schedule -- closing the gap where
+ * `completeTaskOccurrence` used to accept ANY string as long as it hadn't
+ * been completed yet (only the unique `(taskId, occurrenceKey)` DB index
+ * stopped a second completion of the SAME key; nothing stopped completing
+ * a nonsense key in the first place, e.g. an arbitrary date never produced
+ * by the task's own schedule, the `UNSCHEDULED_OCCURRENCE_KEY` sentinel on
+ * a dated task, or a real date on an undated one-time task).
+ *
+ * Deliberately reuses `getOccurrenceDatesInRange` (taskRecurrence.ts)
+ * rather than re-deriving any recurrence math here, so this schedule logic
+ * continues to exist in exactly one place.
+ */
+function isValidOccurrenceKey(
+  task: Pick<Task, 'dueDate' | 'recurrenceUnit' | 'recurrenceInterval'>,
+  occurrenceKey: string,
+): boolean {
+  if (!task.dueDate) {
+    return occurrenceKey === UNSCHEDULED_OCCURRENCE_KEY;
+  }
+  if (occurrenceKey === UNSCHEDULED_OCCURRENCE_KEY) {
+    return false;
+  }
+  if (task.recurrenceUnit === 'none') {
+    return occurrenceKey === task.dueDate;
+  }
+  return getOccurrenceDatesInRange(task, task.dueDate, occurrenceKey).includes(occurrenceKey);
+}
+
 /**
  * Completes exactly one occurrence of a task, identified by its stable
  * `occurrenceKey` (a real 'YYYY-MM-DD' date for a dated occurrence, or
  * `UNSCHEDULED_OCCURRENCE_KEY` for an undated one-time task's single
- * occurrence -- see types.ts). Duplicate completion of the same
- * occurrence is rejected atomically by the unique `taskId_occurrenceKey`
+ * occurrence -- see types.ts). `occurrenceKey` is validated against the
+ * task's own schedule (see `isValidOccurrenceKey`) before anything is
+ * written. Duplicate completion of the same, already-valid occurrence is
+ * additionally rejected atomically by the unique `taskId_occurrenceKey`
  * IndexedDB index (see taskRepository.ts) rather than by a separate
  * read-then-write existence check, so a race between two concurrent
  * completions of the same occurrence can never both succeed.
@@ -122,6 +164,14 @@ export async function completeTaskOccurrence(
   occurrenceKey: string,
   notes?: string,
 ): Promise<TaskCompletion> {
+  const task = await taskRepository.getTask(taskId);
+  if (!task) {
+    throw new Error(`Task ${taskId} not found`);
+  }
+  if (!isValidOccurrenceKey(task, occurrenceKey)) {
+    throw new InvalidTaskOccurrenceError();
+  }
+
   const completion: TaskCompletion = {
     id: generateId(),
     taskId,

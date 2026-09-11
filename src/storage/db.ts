@@ -110,8 +110,11 @@ interface TmaDB extends DBSchema {
   };
 }
 
-const DB_NAME = 'tma-family-office';
-const DB_VERSION = 10;
+// Exported so the permanent migration regression suite (tests/migrations)
+// can open the exact same database by name/version without duplicating
+// these constants — never referenced by application code.
+export const DB_NAME = 'tma-family-office';
+export const DB_VERSION = 10;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -376,6 +379,18 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
       });
   }
   return dbPromise;
+}
+
+/**
+ * Test-only: drops the cached connection/promise and resets lifecycle
+ * state, so the next `getDB()` call opens a fresh connection against
+ * whatever `indexedDB` global is currently installed (the permanent test
+ * suite swaps in a brand-new fake-indexeddb factory between tests for
+ * isolation — see tests/setup.ts). Never called from application code.
+ */
+export function __resetDbConnectionForTests(): void {
+  dbPromise = null;
+  lifecycleState = { status: 'ok' };
 }
 
 export async function getSetting<T>(key: string, fallback: T): Promise<T> {
