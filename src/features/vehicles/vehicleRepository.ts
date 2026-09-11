@@ -75,6 +75,12 @@ export async function saveMaintenanceRecord(record: VehicleMaintenanceRecord): P
  * made within it: either the maintenance record AND the (possible)
  * vehicle mileage bump both land, or neither does.
  *
+ * The referenced vehicle is read and verified INSIDE this same
+ * transaction before the maintenance record is ever written. If it
+ * doesn't exist (e.g. deleted concurrently), the transaction is aborted
+ * and rejects — the maintenance record is never saved, so a maintenance
+ * record can never end up orphaned from its vehicle.
+ *
  * `computeVehicleMileageUpdate` is supplied by the caller (the service
  * layer, which owns the forward-only invariant) and decides, given the
  * vehicle as read inside this same transaction, what its new
@@ -91,13 +97,18 @@ export async function saveMaintenanceRecordAndSyncVehicleMileage(
   const maintenanceStore = tx.objectStore('vehicleMaintenanceRecords');
   const vehiclesStore = tx.objectStore('vehicles');
 
-  const [, vehicle] = await Promise.all([maintenanceStore.put(record), vehiclesStore.get(record.vehicleId)]);
+  const vehicle = await vehiclesStore.get(record.vehicleId);
+  if (!vehicle) {
+    tx.abort();
+    await tx.done.catch(() => {});
+    throw new Error(`Vehicle ${record.vehicleId} not found`);
+  }
 
-  if (vehicle) {
-    const newMileage = computeVehicleMileageUpdate(vehicle);
-    if (newMileage !== undefined) {
-      await vehiclesStore.put({ ...vehicle, currentMileage: newMileage, updatedAt: new Date().toISOString() });
-    }
+  await maintenanceStore.put(record);
+
+  const newMileage = computeVehicleMileageUpdate(vehicle);
+  if (newMileage !== undefined) {
+    await vehiclesStore.put({ ...vehicle, currentMileage: newMileage, updatedAt: new Date().toISOString() });
   }
 
   await tx.done;
