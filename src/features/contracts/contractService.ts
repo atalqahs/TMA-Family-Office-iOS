@@ -33,6 +33,20 @@ export async function removeContract(id: string): Promise<void> {
   await contractRepository.deleteContractWithChildren(id);
 }
 
+/** Archives the contract (Phase 10): a display/organization change only -- see features/archive/. */
+export async function archiveContract(id: string): Promise<void> {
+  await contractRepository.archiveContract(id);
+}
+
+export async function unarchiveContract(id: string): Promise<void> {
+  await contractRepository.unarchiveContract(id);
+}
+
+/** "Delete Card" from within Archive: a forward-compatible soft-delete for the later Trash phase -- distinct from `removeContract`'s existing hard cascade delete, which is unrelated and untouched. */
+export async function deleteContractCard(id: string): Promise<void> {
+  await contractRepository.softDeleteContract(id);
+}
+
 export async function addContractDocument(
   contractId: string,
   values: ContractDocumentFormValues,

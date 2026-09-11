@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { listAllSalaryPayments, listAllSalarySchedules, listAllStaffDocuments, listStaff } from '../staffRepository';
+import { listActiveStaff, listAllSalaryPayments, listAllSalarySchedules, listAllStaffDocuments } from '../staffRepository';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../types';
 
 /**
@@ -21,7 +21,7 @@ export function useStaffList() {
     setError(false);
     try {
       const [staffList, allSchedules, allPayments, allDocuments] = await Promise.all([
-        listStaff(),
+        listActiveStaff(),
         listAllSalarySchedules(),
         listAllSalaryPayments(),
         listAllStaffDocuments(),

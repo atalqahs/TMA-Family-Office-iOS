@@ -30,10 +30,17 @@ export const PROPERTY_STATUSES: Array<{ id: PropertyStatus; title: LocalizedText
  * mortgage, expenses, profit/loss) — finance was explicitly excluded from
  * this project.
  *
- * Deletion is direct/permanent for this experimental prototype (unlike
- * Family's soft-delete, which exists specifically to stay compatible with
- * a future Trash phase) — Properties has no such requirement, so no
- * `deletedAt` field here.
+ * Deletion outside Archive is still direct/permanent for this experimental
+ * prototype. `deletedAt` (Phase 10) is set ONLY by the "Delete Card" action
+ * inside Archive -- a forward-compatible soft-delete for the later Trash
+ * phase, never a second permanent-delete path; it hides the record from
+ * both the active list and Archive while preserving all data.
+ *
+ * `archivedAt` (Phase 10) is a display/organization state, NOT deletion: an
+ * archived property is the exact same record, with all of its data/
+ * documents fully intact -- it is simply hidden from the normal active
+ * Properties list and shown through Archive instead. Archiving never
+ * disables business logic (see features/archive/).
  */
 export interface Property {
   id: string;
@@ -52,6 +59,8 @@ export interface Property {
   coverPhoto?: Blob;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string;
+  deletedAt?: string;
 }
 
 export type PropertyFormValues = Omit<Property, 'id' | 'createdAt' | 'updatedAt'>;

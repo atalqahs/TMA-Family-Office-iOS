@@ -102,10 +102,12 @@ export const CATEGORIES: CategoryDefinition[] = [
     path: '/archive',
     icon: Archive,
     title: { ar: 'الأرشيف', en: 'Archive' },
-    subtitle: { ar: 'المستندات والسجلات المؤرشفة.', en: 'Archived documents and records.' },
-    emptyMessage: { ar: 'الأرشيف فارغ حالياً.', en: 'The archive is currently empty.' },
-    addLabel: { ar: '+ إضافة إلى الأرشيف', en: '+ Add to Archive' },
-    countUnit: { ar: 'عناصر', en: 'items' },
+    subtitle: {
+      ar: 'البطاقات التي تمت أرشفتها من التصنيفات الأخرى.',
+      en: 'Cards archived from other categories.',
+    },
+    emptyMessage: { ar: 'لا توجد بطاقات مؤرشفة.', en: 'No archived cards.' },
+    countUnit: { ar: 'بطاقات', en: 'cards' },
   },
   {
     id: 'education',

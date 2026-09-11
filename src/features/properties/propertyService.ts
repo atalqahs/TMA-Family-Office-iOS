@@ -33,6 +33,20 @@ export async function removeProperty(id: string): Promise<void> {
   await propertyRepository.deletePropertyWithDocuments(id);
 }
 
+/** Archives the property (Phase 10): a display/organization change only -- see features/archive/. */
+export async function archiveProperty(id: string): Promise<void> {
+  await propertyRepository.archiveProperty(id);
+}
+
+export async function unarchiveProperty(id: string): Promise<void> {
+  await propertyRepository.unarchiveProperty(id);
+}
+
+/** "Delete Card" from within Archive: a forward-compatible soft-delete for the later Trash phase -- distinct from `removeProperty`'s existing hard cascade delete, which is unrelated and untouched. */
+export async function deletePropertyCard(id: string): Promise<void> {
+  await propertyRepository.softDeleteProperty(id);
+}
+
 export async function addPropertyDocument(
   propertyId: string,
   values: PropertyDocumentFormValues,

@@ -27,7 +27,12 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * the obsolete cross-module `linkedEntityType`/`linkedEntityId` fields from every Task (Tasks & Reminders
  * no longer has any relationship to other modules) and renames TaskCompletion's `occurrenceDate` field/
  * index to `occurrenceKey` (which also holds the `UNSCHEDULED_OCCURRENCE_KEY` sentinel for an undated
- * one-time Task's single occurrence, now that a Task's `dueDate` is optional).
+ * one-time Task's single occurrence, now that a Task's `dueDate` is optional), and all of that survives
+ * the v10 -> v11 upgrade for Phase 10 (Archive): `archivedAt`/`deletedAt` are new OPTIONAL fields added to
+ * familyMembers/householdStaff/properties/vehicles/contracts/taskGroups, so every pre-existing record
+ * simply lacks them -- which already IS the correct "active" state (see each type's own doc comment) --
+ * with no data to rewrite and no new store/index required. The version is still bumped (rather than
+ * silently reusing v10) purely to mark the schema-meaning change and keep the migration chain testable.
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -114,7 +119,7 @@ interface TmaDB extends DBSchema {
 // can open the exact same database by name/version without duplicating
 // these constants — never referenced by application code.
 export const DB_NAME = 'tma-family-office';
-export const DB_VERSION = 10;
+export const DB_VERSION = 11;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -341,6 +346,14 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
             taskCursor = await taskCursor.continue();
           }
         }
+
+        // Phase 10 (Archive), v10 -> v11: intentionally no code here. The
+        // new `archivedAt`/`deletedAt` fields are optional additions to
+        // familyMembers/householdStaff/properties/vehicles/contracts/
+        // taskGroups; a record that predates this version simply lacks
+        // them, which already means "active" (see each type's own doc
+        // comment) -- there is nothing to backfill, no store, and no index
+        // to add.
       },
       blocked() {
         // Another tab/window/app-instance still holds an older-version

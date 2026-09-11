@@ -1,0 +1,20 @@
+.archive-category-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.archive-category-page__topbar {
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+.archive-category-page__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.archive-category-page__status {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}

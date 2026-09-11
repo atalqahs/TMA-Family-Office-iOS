@@ -3,6 +3,8 @@ import { AppShell } from './components/AppShell';
 import { DbLifecycleNotice } from './components/DbLifecycleNotice';
 import { CATEGORIES } from './features/categories/categories';
 import { LanguageProvider } from './localization/LanguageContext';
+import { ArchiveCategoryPage } from './pages/ArchiveCategoryPage';
+import { ArchivePage } from './pages/ArchivePage';
 import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
 import { ContractProfilePage } from './pages/ContractProfilePage';
 import { ContractsPage } from './pages/ContractsPage';
@@ -31,7 +33,8 @@ const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
     category.id !== 'staff' &&
     category.id !== 'contracts' &&
     category.id !== 'tasks' &&
-    category.id !== 'notifications',
+    category.id !== 'notifications' &&
+    category.id !== 'archive',
 );
 
 export default function App() {
@@ -65,6 +68,8 @@ export default function App() {
               <Route path="tasks/group/:groupId" element={<TaskGroupDetailPage />} />
               <Route path="tasks/task/:taskId" element={<TaskProfilePage />} />
               <Route path="notifications" element={<NotificationsPage />} />
+              <Route path="archive" element={<ArchivePage />} />
+              <Route path="archive/:categoryId" element={<ArchiveCategoryPage />} />
               {PLACEHOLDER_CATEGORIES.map((category) => (
                 <Route
                   key={category.id}

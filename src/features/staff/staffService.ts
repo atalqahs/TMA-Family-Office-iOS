@@ -42,6 +42,20 @@ export async function removeStaffMember(id: string): Promise<void> {
   await staffRepository.deleteStaffWithChildren(id);
 }
 
+/** Archives the staff member (Phase 10): a display/organization change only -- see features/archive/. */
+export async function archiveStaffMember(id: string): Promise<void> {
+  await staffRepository.archiveStaffMember(id);
+}
+
+export async function unarchiveStaffMember(id: string): Promise<void> {
+  await staffRepository.unarchiveStaffMember(id);
+}
+
+/** "Delete Card" from within Archive: a forward-compatible soft-delete for the later Trash phase -- distinct from `removeStaffMember`'s existing hard cascade delete, which is unrelated and untouched. */
+export async function deleteStaffMemberCard(id: string): Promise<void> {
+  await staffRepository.softDeleteStaffMember(id);
+}
+
 export async function addStaffDocument(staffId: string, values: StaffDocumentFormValues): Promise<StaffDocument> {
   const now = new Date().toISOString();
   const document: StaffDocument = {

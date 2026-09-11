@@ -9,10 +9,14 @@ import { DB_VERSION } from '../../src/storage/db';
  * gate (`npm run test:architecture`, also exercised by
  * tests/architecture/architecture.test.ts) — nothing in this phase
  * touched or weakened any existing Phase 9A test or rule. Item 47 (no
- * DB_VERSION bump) is asserted directly here.
+ * DB_VERSION bump from Notifications specifically) is asserted directly
+ * here. Phase 10 (Archive) subsequently bumped DB_VERSION 10 -> 11 for its
+ * own schema change (see storage/db.ts's v10->v11 doc comment) -- this gate
+ * is updated to that new baseline rather than pinned to a stale value, same
+ * as every future phase that legitimately changes the schema will do.
  */
 describe('Phase 9B regression gates', () => {
-  it('47. DB_VERSION remains unchanged at 10 -- Notifications introduced no schema change', () => {
-    expect(DB_VERSION).toBe(10);
+  it('47. DB_VERSION reflects only intentional schema changes -- Notifications itself introduced none', () => {
+    expect(DB_VERSION).toBe(11);
   });
 });

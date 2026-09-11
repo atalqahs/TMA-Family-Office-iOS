@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Permanent architecture quality gate (Phase 9A Section M; extended in
- * Phase 9B Section V for the Notifications aggregator's boundaries).
+ * Phase 9B Section V for the Notifications aggregator's boundaries; and in
+ * Phase 10 Section AD for the Archive aggregator's boundaries).
  *
  * A small AST/import-graph implementation (using the TypeScript compiler
  * API already in this project's own devDependencies) rather than fragile
@@ -318,8 +319,10 @@ function relPath(file) {
 }
 
 // ---------------------------------------------------------------------------
-// 11. No Notification persistence store, and DB_VERSION stays 10 (Phase
-//     9B is a derived-only aggregation layer -- no schema change).
+// 11. No Notification persistence store (Phase 9B is a derived-only
+//     aggregation layer -- no schema change), and DB_VERSION is exactly 11
+//     (Phase 10 Archive's only schema change: two new optional fields,
+//     bumped from 10 -- see storage/db.ts's own v10->v11 doc comment).
 // ---------------------------------------------------------------------------
 {
   const dbFile = join(SRC, 'storage', 'db.ts');
@@ -328,8 +331,116 @@ function relPath(file) {
     violations.push(`storage/db.ts appears to reference a notification store -- Notifications must never be persisted (Phase 9B Section B)`);
   }
   const versionMatch = dbSource.match(/DB_VERSION\s*=\s*(\d+)/);
-  if (!versionMatch || versionMatch[1] !== '10') {
-    violations.push(`DB_VERSION must remain 10 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
+  if (!versionMatch || versionMatch[1] !== '11') {
+    violations.push(`DB_VERSION must be 11 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 12. Phase 10 (Archive): no Archive persistence store -- Archive is a
+//     display/organization state of an existing card (`archivedAt` on the
+//     entity itself), never a second database or a copied-record store.
+//     Checked precisely against actual `createObjectStore(...)` call
+//     arguments (not a blunt whole-file text scan) since db.ts's own doc
+//     comments legitimately mention "Archive" by name.
+// ---------------------------------------------------------------------------
+{
+  const dbFile = join(SRC, 'storage', 'db.ts');
+  const dbSf = sourceFiles.get(dbFile);
+  if (dbSf) {
+    ts.forEachChild(dbSf, function visit(node) {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === 'createObjectStore' &&
+        node.arguments[0] &&
+        ts.isStringLiteral(node.arguments[0]) &&
+        /archiv/i.test(node.arguments[0].text)
+      ) {
+        violations.push(`storage/db.ts creates an Archive-named object store ('${node.arguments[0].text}') -- Archive must never be its own store (Phase 10 Section B/C)`);
+      }
+      ts.forEachChild(node, visit);
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 13. Archive is a derived aggregator, never a domain owner (Phase 10,
+//     mirrors rule 9 for Notifications): every domain module (family/
+//     properties/vehicles/staff/contracts/tasks) must NOT import from
+//     features/archive -- source adapters may import domain
+//     utilities/types, never the other way around.
+// ---------------------------------------------------------------------------
+{
+  const domainFeatures = [...CROSS_MODULE_FEATURES, 'tasks'];
+  const archiveDir = join(SRC, 'features', 'archive') + '/';
+  for (const feature of domainFeatures) {
+    const featureDir = join(SRC, 'features', feature) + '/';
+    for (const file of allFiles) {
+      if (!file.startsWith(featureDir)) continue;
+      for (const target of importGraph.get(file) ?? []) {
+        if (target.startsWith(archiveDir)) {
+          violations.push(`Domain module imports Archive (inverted dependency): ${relPath(file)} imports ${relPath(target)}`);
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 14. No permanent-deletion path from Archive: features/archive must never
+//     import a domain's hard-delete function (remove*/deleteTaskGroupIfEmpty)
+//     -- only the soft-delete `delete*Card`/`softDelete*`/`archive*`/
+//     `unarchive*` functions, since Archive's "Delete Card" action is
+//     explicitly a future-Trash soft delete, never permanent erasure
+//     (Phase 10 Section Q).
+// ---------------------------------------------------------------------------
+{
+  const archiveDir = join(SRC, 'features', 'archive') + '/';
+  const HARD_DELETE_NAMES = new Set([
+    'removeFamilyMember',
+    'removeProperty',
+    'removeVehicle',
+    'removeStaffMember',
+    'removeContract',
+    'removeTaskGroup',
+    'removeTask',
+    'deleteTaskGroupIfEmpty',
+  ]);
+  for (const file of allFiles) {
+    if (!file.startsWith(archiveDir)) continue;
+    const sf = sourceFiles.get(file);
+    ts.forEachChild(sf, function visit(node) {
+      if ((ts.isImportSpecifier(node) || ts.isBindingElement(node)) && ts.isIdentifier(node.name) && HARD_DELETE_NAMES.has(node.name.text)) {
+        violations.push(`Archive imports a permanent-deletion function '${node.name.text}': ${relPath(file)}`);
+      }
+      ts.forEachChild(node, visit);
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 15. Notifications must keep seeing archived entities (Phase 10 Section
+//     K, critical regression): features/notifications must never import
+//     any active-only `listActiveX`/(active-only `listTaskGroups`)
+//     repository function -- only the excludes-deleted-only variant, so
+//     normal active-list filtering can never silently leak into a
+//     Notification loader.
+// ---------------------------------------------------------------------------
+{
+  const notificationsDir = join(SRC, 'features', 'notifications') + '/';
+  for (const file of allFiles) {
+    if (!file.startsWith(notificationsDir)) continue;
+    const sf = sourceFiles.get(file);
+    ts.forEachChild(sf, function visit(node) {
+      if ((ts.isImportSpecifier(node) || ts.isBindingElement(node)) && ts.isIdentifier(node.name)) {
+        const name = node.name.text;
+        if (name.startsWith('listActive') || name === 'listTaskGroups') {
+          violations.push(`Notifications imports an active-only list function '${name}' -- archived entities must still produce Notifications: ${relPath(file)}`);
+        }
+      }
+      ts.forEachChild(node, visit);
+    });
   }
 }
 
@@ -341,5 +452,5 @@ if (violations.length > 0) {
   console.error('');
   process.exit(1);
 } else {
-  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 11 rule categories).`);
+  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 15 rule categories).`);
 }

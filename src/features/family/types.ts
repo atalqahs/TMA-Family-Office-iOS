@@ -14,6 +14,15 @@ export const BLOOD_TYPES: BloodType[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '
  * system yet, so a "deleted" member is simply hidden from every list
  * instead of being destroyed — this keeps the data available for the
  * future Trash phase without inventing an incompatible deletion model now.
+ *
+ * `archivedAt` (Phase 10) is a display/organization state, NOT a second
+ * deletion flag: an archived member is the exact same record, with all of
+ * its data/documents/relationships/derived state fully intact -- it is
+ * simply hidden from the normal active Family list and shown through
+ * Archive instead. Archiving never disables business logic (see
+ * features/archive/). `deletedAt` and `archivedAt` are independent and
+ * mutually exclusive in practice: a member moves through
+ * active -> archived -> deleted, never occupying two states at once.
  */
 export interface FamilyMember {
   id: string;
@@ -30,6 +39,7 @@ export interface FamilyMember {
   createdAt: string;
   updatedAt: string;
   deletedAt?: string;
+  archivedAt?: string;
 }
 
 export type FamilyMemberFormValues = Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;

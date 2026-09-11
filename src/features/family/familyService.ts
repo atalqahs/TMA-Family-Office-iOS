@@ -35,6 +35,20 @@ export async function removeFamilyMember(id: string): Promise<void> {
   await familyRepository.softDeleteFamilyMember(id);
 }
 
+/** Archives the member (Phase 10): a display/organization change only -- see features/archive/. */
+export async function archiveFamilyMember(id: string): Promise<void> {
+  await familyRepository.archiveFamilyMember(id);
+}
+
+export async function unarchiveFamilyMember(id: string): Promise<void> {
+  await familyRepository.unarchiveFamilyMember(id);
+}
+
+/** "Delete Card" from within Archive -- the same forward-compatible soft-delete as `removeFamilyMember`, exposed under its own name for that specific entry point. */
+export async function deleteFamilyMemberCard(id: string): Promise<void> {
+  await familyRepository.softDeleteFamilyMember(id);
+}
+
 export async function addFamilyMemberDocument(
   familyMemberId: string,
   values: FamilyMemberDocumentFormValues,

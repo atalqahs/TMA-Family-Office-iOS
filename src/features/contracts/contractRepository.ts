@@ -8,10 +8,17 @@ import type { Contract, ContractDocument } from './types';
  * on it) instead.
  */
 
+/** Every non-deleted contract, ARCHIVED ONES INCLUDED -- the read path for Notifications/Archive, which must see archived records too (see features/archive/, features/notifications/). */
 export async function listContracts(): Promise<Contract[]> {
   const db = await getDB();
   const all = await db.getAll('contracts');
-  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return all.filter((contract) => !contract.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Non-deleted AND non-archived -- the normal active Contracts list. Centralized here so no component ever filters `archivedAt`/`deletedAt` itself. */
+export async function listActiveContracts(): Promise<Contract[]> {
+  const all = await listContracts();
+  return all.filter((contract) => !contract.archivedAt);
 }
 
 export async function getContract(id: string): Promise<Contract | undefined> {
@@ -24,9 +31,34 @@ export async function saveContract(contract: Contract): Promise<void> {
   await db.put('contracts', contract);
 }
 
-export async function getContractCount(): Promise<number> {
+export async function getActiveContractCount(): Promise<number> {
+  const all = await listActiveContracts();
+  return all.length;
+}
+
+/** Sets `archivedAt` -- a display/organization change only, never touching any other field. */
+export async function archiveContract(id: string): Promise<void> {
   const db = await getDB();
-  return db.count('contracts');
+  const existing = await db.get('contracts', id);
+  if (!existing) return;
+  await db.put('contracts', { ...existing, archivedAt: new Date().toISOString() });
+}
+
+/** Clears `archivedAt`, returning the contract to the active list exactly as it was -- never recreates/copies the record. */
+export async function unarchiveContract(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('contracts', id);
+  if (!existing) return;
+  const { archivedAt: _archivedAt, ...rest } = existing;
+  await db.put('contracts', rest);
+}
+
+/** Sets `deletedAt` (the "Delete Card" action from within Archive) -- a forward-compatible soft-delete for the later Trash phase, never a permanent-delete path. Hides the record from both the active list and Archive while preserving all data/documents/linked relationship. */
+export async function softDeleteContract(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('contracts', id);
+  if (!existing) return;
+  await db.put('contracts', { ...existing, deletedAt: new Date().toISOString() });
 }
 
 export async function listDocumentsForContract(contractId: string): Promise<ContractDocument[]> {

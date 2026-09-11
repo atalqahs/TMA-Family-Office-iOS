@@ -8,10 +8,17 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from './types
  * on it) instead.
  */
 
+/** Every non-deleted vehicle, ARCHIVED ONES INCLUDED -- the read path for Notifications/Archive, which must see archived records too (see features/archive/, features/notifications/). */
 export async function listVehicles(): Promise<Vehicle[]> {
   const db = await getDB();
   const all = await db.getAll('vehicles');
-  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return all.filter((vehicle) => !vehicle.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Non-deleted AND non-archived -- the normal active Vehicles list. Centralized here so no component ever filters `archivedAt`/`deletedAt` itself. */
+export async function listActiveVehicles(): Promise<Vehicle[]> {
+  const all = await listVehicles();
+  return all.filter((vehicle) => !vehicle.archivedAt);
 }
 
 export async function getVehicle(id: string): Promise<Vehicle | undefined> {
@@ -24,9 +31,34 @@ export async function saveVehicle(vehicle: Vehicle): Promise<void> {
   await db.put('vehicles', vehicle);
 }
 
-export async function getVehicleCount(): Promise<number> {
+export async function getActiveVehicleCount(): Promise<number> {
+  const all = await listActiveVehicles();
+  return all.length;
+}
+
+/** Sets `archivedAt` -- a display/organization change only, never touching any other field. */
+export async function archiveVehicle(id: string): Promise<void> {
   const db = await getDB();
-  return db.count('vehicles');
+  const existing = await db.get('vehicles', id);
+  if (!existing) return;
+  await db.put('vehicles', { ...existing, archivedAt: new Date().toISOString() });
+}
+
+/** Clears `archivedAt`, returning the vehicle to the active list exactly as it was -- never recreates/copies the record. */
+export async function unarchiveVehicle(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('vehicles', id);
+  if (!existing) return;
+  const { archivedAt: _archivedAt, ...rest } = existing;
+  await db.put('vehicles', rest);
+}
+
+/** Sets `deletedAt` (the "Delete Card" action from within Archive) -- a forward-compatible soft-delete for the later Trash phase, never a permanent-delete path. Hides the record from both the active list and Archive while preserving all data/documents/maintenance history. */
+export async function softDeleteVehicle(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('vehicles', id);
+  if (!existing) return;
+  await db.put('vehicles', { ...existing, deletedAt: new Date().toISOString() });
 }
 
 export async function listDocumentsForVehicle(vehicleId: string): Promise<VehicleDocument[]> {

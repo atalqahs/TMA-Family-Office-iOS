@@ -17,7 +17,7 @@ import type { Vehicle } from '../../src/features/vehicles/types';
  * structural gap exists identically in every other list hook named above.
  */
 vi.mock('../../src/features/vehicles/vehicleRepository', () => ({
-  listVehicles: vi.fn(),
+  listActiveVehicles: vi.fn(),
   listAllMaintenanceRecords: vi.fn(),
 }));
 
@@ -42,7 +42,7 @@ describe('useVehicles: no stale-request guard (unlike the detail hooks)', () => 
     const first = deferred<Vehicle[]>();
     const second = deferred<Vehicle[]>();
 
-    const listVehiclesMock = vi.mocked(vehicleRepository.listVehicles);
+    const listVehiclesMock = vi.mocked(vehicleRepository.listActiveVehicles);
     listVehiclesMock.mockReturnValueOnce(first.promise);
     listVehiclesMock.mockReturnValueOnce(second.promise);
 

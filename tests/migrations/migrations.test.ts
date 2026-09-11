@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { getDB } from '../../src/storage/db';
 import * as taskRepository from '../../src/features/tasks/taskRepository';
 import * as familyRepository from '../../src/features/family/familyRepository';
+import * as staffRepository from '../../src/features/staff/staffRepository';
+import * as propertyRepository from '../../src/features/properties/propertyRepository';
 import * as vehicleRepository from '../../src/features/vehicles/vehicleRepository';
 import * as contractRepository from '../../src/features/contracts/contractRepository';
 import { MIGRATION_GENERAL_GROUP_ID } from '../../src/features/tasks/types';
@@ -248,5 +250,128 @@ describe('Migration idempotency: opening an already-v10 database never destructi
     expect(groups[0].id).toBe('custom-group');
     const reloadedTask = await taskRepository.getTask('t1');
     expect(reloadedTask?.groupId).toBe('custom-group');
+  });
+});
+
+/**
+ * Permanent Phase 10 (Archive) migration suite -- Section AC: the v10 -> v11
+ * upgrade is intentionally a no-op in code (no new store/index -- see
+ * storage/db.ts's own doc comment), since `archivedAt`/`deletedAt` are new
+ * OPTIONAL fields whose absence already means "active". These tests build
+ * a REALISTIC pre-v11 database (the full v10 schema, with real data that
+ * has never heard of `archivedAt`/`deletedAt`) and verify the real
+ * `getDB()` upgrade path preserves every record untouched AND that those
+ * pre-existing records are correctly treated as "active" by every new
+ * Phase 10 repository function.
+ */
+function buildV10Stores(db: IDBDatabase): void {
+  // The REAL v10 shape (after the v9 -> v10 independence correction), built
+  // directly rather than via buildV9Stores -- that legacy helper still has
+  // the pre-correction `taskId_occurrenceDate` index, which a genuine v10
+  // database no longer has (renamed to `taskId_occurrenceKey`, unique).
+  buildV7Stores(db);
+  const tasks = db.createObjectStore('tasks', { keyPath: 'id' });
+  tasks.createIndex('groupId', 'groupId');
+  const completions = db.createObjectStore('taskCompletions', { keyPath: 'id' });
+  completions.createIndex('taskId', 'taskId');
+  completions.createIndex('taskId_occurrenceKey', ['taskId', 'occurrenceKey'], { unique: true });
+  db.createObjectStore('taskGroups', { keyPath: 'id' });
+}
+
+describe('Migration v10 -> v11: pre-Archive database (Phase 10)', () => {
+  it('preserves every pre-existing record across all six archive-capable modules untouched, and every one is correctly treated as ACTIVE (no archivedAt/deletedAt yet)', async () => {
+    await seedRawVersionedDb(10, (db, tx) => {
+      buildV10Stores(db);
+      seedV7Data(tx); // familyMembers/vehicles/contracts, no archivedAt/deletedAt fields at all
+      tx.objectStore('householdStaff').add({
+        id: 'staff1',
+        fullName: 'Driver Ali',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('properties').add({
+        id: 'prop1',
+        name: 'Villa 1',
+        type: 'house',
+        status: 'owned',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('taskGroups').add({
+        id: 'group1',
+        name: 'Vehicle Reminders',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB(); // runs the real v10 -> v11 upgrade (a no-op in code)
+
+    // Every pre-existing record survives, completely untouched.
+    expect(await familyRepository.getFamilyMember('fm1')).toMatchObject({ fullName: 'Fatima' });
+    expect(await vehicleRepository.getVehicle('v1')).toMatchObject({ currentMileage: 42_000 });
+    expect(await contractRepository.getContract('c1')).toMatchObject({ title: 'Villa Rental' });
+    expect(await staffRepository.getStaffMember('staff1')).toMatchObject({ fullName: 'Driver Ali' });
+    expect(await propertyRepository.getProperty('prop1')).toMatchObject({ name: 'Villa 1' });
+    expect(await taskRepository.getTaskGroup('group1')).toMatchObject({ name: 'Vehicle Reminders' });
+
+    // None of them ever gained an archivedAt/deletedAt key -- absence IS
+    // the active state, no backfill/rewrite was needed or performed.
+    expect(await familyRepository.getFamilyMember('fm1')).not.toHaveProperty('archivedAt');
+    expect(await vehicleRepository.getVehicle('v1')).not.toHaveProperty('archivedAt');
+
+    // Every pre-existing record is correctly picked up by the new
+    // Phase 10 active-list functions -- a pre-v11 record is active by
+    // construction, with nothing to migrate for that to be true.
+    expect((await familyRepository.listActiveFamilyMembers()).map((m) => m.id)).toContain('fm1');
+    expect((await vehicleRepository.listActiveVehicles()).map((v) => v.id)).toContain('v1');
+    expect((await contractRepository.listActiveContracts()).map((c) => c.id)).toContain('c1');
+    expect((await staffRepository.listActiveStaff()).map((s) => s.id)).toContain('staff1');
+    expect((await propertyRepository.listActiveProperties()).map((p) => p.id)).toContain('prop1');
+    expect((await taskRepository.listTaskGroups()).map((g) => g.id)).toContain('group1');
+  });
+
+  it('a pre-v11 record can immediately be archived/unarchived after the upgrade, exactly like a record created post-v11', async () => {
+    await seedRawVersionedDb(10, (db, tx) => {
+      buildV10Stores(db);
+      tx.objectStore('vehicles').add({
+        id: 'v1',
+        name: 'Family SUV',
+        currentMileage: 42_000,
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    await vehicleRepository.archiveVehicle('v1');
+    expect((await vehicleRepository.listActiveVehicles()).map((v) => v.id)).not.toContain('v1');
+    expect((await vehicleRepository.listVehicles()).map((v) => v.id)).toContain('v1');
+
+    await vehicleRepository.unarchiveVehicle('v1');
+    expect((await vehicleRepository.listActiveVehicles()).map((v) => v.id)).toContain('v1');
+  });
+});
+
+describe('Migration idempotency: opening an already-v11 database never destructively re-runs migrations', () => {
+  it('a second getDB() call against the same (already-current) database preserves an archived record exactly as it was', async () => {
+    await getDB();
+    await vehicleRepository.saveVehicle({
+      id: 'v1',
+      name: 'Family SUV',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    await vehicleRepository.archiveVehicle('v1');
+
+    const { __resetDbConnectionForTests } = await import('../../src/storage/db');
+    __resetDbConnectionForTests();
+
+    await getDB();
+
+    const reloaded = await vehicleRepository.getVehicle('v1');
+    expect(reloaded?.archivedAt).toBeDefined();
+    expect((await vehicleRepository.listActiveVehicles()).map((v) => v.id)).not.toContain('v1');
   });
 });

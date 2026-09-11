@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArchivedNotice } from '../components/ArchivedNotice';
 import { CoverPhoto } from '../components/CoverPhoto';
 import { DangerButton } from '../components/DangerButton';
 import { EmptyState } from '../components/EmptyState';
@@ -34,6 +35,8 @@ export function VehicleProfilePage() {
   const maintenanceSheet = useDisclosure();
   const completeServiceSheet = useDisclosure();
   const deleteSheet = useDisclosure();
+  const archiveSheet = useDisclosure();
+  const [archiving, setArchiving] = useState(false);
   const [editingMaintenanceRecord, setEditingMaintenanceRecord] = useState<VehicleMaintenanceRecord | null>(null);
   const [completingMaintenanceRecord, setCompletingMaintenanceRecord] = useState<VehicleMaintenanceRecord | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -51,6 +54,28 @@ export function VehicleProfilePage() {
         <EmptyState
           title={t('vehicleNotFoundTitle')}
           action={<PrimaryButton onClick={() => navigate('/vehicles')}>{t('backToVehiclesLabel')}</PrimaryButton>}
+        />
+      </div>
+    );
+  }
+
+  // Hard Phase 10 rule: an archived card is never opened for viewing/
+  // editing directly -- Unarchive is the only way back to the full profile.
+  if (vehicle.archivedAt) {
+    return (
+      <div className="vehicle-profile-page">
+        <div className="vehicle-profile-page__topbar">
+          <IconButton
+            icon={<BackIcon size={22} strokeWidth={1.75} />}
+            label={t('backToVehiclesLabel')}
+            onClick={() => navigate('/vehicles')}
+          />
+        </div>
+        <ArchivedNotice
+          onUnarchive={async () => {
+            await vehicleService.unarchiveVehicle(vehicle.id);
+            await refresh();
+          }}
         />
       </div>
     );
@@ -139,6 +164,7 @@ export function VehicleProfilePage() {
         <StatusBadge variant={VEHICLE_STATUS_VARIANT[status]}>{t(VEHICLE_STATUS_LABEL_KEY[status])}</StatusBadge>
         <div className="vehicle-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
+          <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>
         </div>
       </div>
 
@@ -284,6 +310,34 @@ export function VehicleProfilePage() {
           <DangerButton onClick={handleDelete} disabled={deleting}>
             {deleting ? t('formSaving') : t('vehicleDeleteConfirmAction')}
           </DangerButton>
+        </div>
+      </Sheet>
+      <Sheet
+        open={archiveSheet.isOpen}
+        onClose={archiveSheet.close}
+        title={t('archiveConfirmTitle')}
+        closeLabel={t('menuCloseLabel')}
+      >
+        <p className="vehicle-profile-page__delete-body">{t('archiveConfirmBody')}</p>
+        <div className="vehicle-profile-page__delete-actions">
+          <SecondaryButton onClick={archiveSheet.close} disabled={archiving}>
+            {t('actionCancel')}
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              setArchiving(true);
+              try {
+                await vehicleService.archiveVehicle(vehicle.id);
+                navigate('/vehicles');
+              } catch (err) {
+                console.error('Failed to archive vehicle', err);
+                setArchiving(false);
+              }
+            }}
+            disabled={archiving}
+          >
+            {archiving ? t('formSaving') : t('archiveConfirmAction')}
+          </PrimaryButton>
         </div>
       </Sheet>
     </div>

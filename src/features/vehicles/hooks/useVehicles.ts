@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { listAllMaintenanceRecords, listVehicles } from '../vehicleRepository';
+import { listActiveVehicles, listAllMaintenanceRecords } from '../vehicleRepository';
 import type { Vehicle, VehicleMaintenanceRecord } from '../types';
 
 /**
@@ -17,7 +17,7 @@ export function useVehicles() {
     setLoading(true);
     setError(false);
     try {
-      const [vehicleList, allMaintenance] = await Promise.all([listVehicles(), listAllMaintenanceRecords()]);
+      const [vehicleList, allMaintenance] = await Promise.all([listActiveVehicles(), listAllMaintenanceRecords()]);
       const grouped: Record<string, VehicleMaintenanceRecord[]> = {};
       for (const record of allMaintenance) {
         (grouped[record.vehicleId] ??= []).push(record);

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { ArchivedNotice } from '../components/ArchivedNotice';
 import { DangerButton } from '../components/DangerButton';
 import { EmptyState } from '../components/EmptyState';
 import { IconButton } from '../components/IconButton';
@@ -31,8 +32,10 @@ export function ContractProfilePage() {
   const editSheet = useDisclosure();
   const addDocSheet = useDisclosure();
   const deleteSheet = useDisclosure();
+  const archiveSheet = useDisclosure();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   const BackIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
 
@@ -46,6 +49,28 @@ export function ContractProfilePage() {
         <EmptyState
           title={t('contractNotFoundTitle')}
           action={<PrimaryButton onClick={() => navigate('/contracts')}>{t('backToContractsLabel')}</PrimaryButton>}
+        />
+      </div>
+    );
+  }
+
+  // Hard Phase 10 rule: an archived card is never opened for viewing/
+  // editing directly -- Unarchive is the only way back to the full profile.
+  if (contract.archivedAt) {
+    return (
+      <div className="contract-profile-page">
+        <div className="contract-profile-page__topbar">
+          <IconButton
+            icon={<BackIcon size={22} strokeWidth={1.75} />}
+            label={t('backToContractsLabel')}
+            onClick={() => navigate('/contracts')}
+          />
+        </div>
+        <ArchivedNotice
+          onUnarchive={async () => {
+            await contractService.unarchiveContract(contract.id);
+            await refresh();
+          }}
         />
       </div>
     );
@@ -111,6 +136,7 @@ export function ContractProfilePage() {
         <StatusBadge variant={CONTRACT_STATUS_VARIANT[status]}>{t(CONTRACT_STATUS_LABEL_KEY[status])}</StatusBadge>
         <div className="contract-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
+          <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>
         </div>
       </div>
 
@@ -210,6 +236,34 @@ export function ContractProfilePage() {
           <DangerButton onClick={handleDelete} disabled={deleting}>
             {deleting ? t('formSaving') : t('contractDeleteConfirmAction')}
           </DangerButton>
+        </div>
+      </Sheet>
+      <Sheet
+        open={archiveSheet.isOpen}
+        onClose={archiveSheet.close}
+        title={t('archiveConfirmTitle')}
+        closeLabel={t('menuCloseLabel')}
+      >
+        <p className="contract-profile-page__delete-body">{t('archiveConfirmBody')}</p>
+        <div className="contract-profile-page__delete-actions">
+          <SecondaryButton onClick={archiveSheet.close} disabled={archiving}>
+            {t('actionCancel')}
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              setArchiving(true);
+              try {
+                await contractService.archiveContract(contract.id);
+                navigate('/contracts');
+              } catch (err) {
+                console.error('Failed to archive contract', err);
+                setArchiving(false);
+              }
+            }}
+            disabled={archiving}
+          >
+            {archiving ? t('formSaving') : t('archiveConfirmAction')}
+          </PrimaryButton>
         </div>
       </Sheet>
     </div>

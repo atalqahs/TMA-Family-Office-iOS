@@ -360,7 +360,23 @@ export type TranslationKey =
   | 'notificationMsgApproachingKm'
   | 'notificationMsgDueToday'
   | 'notificationMsgOverdueSince'
-  | 'notificationMsgSalaryAmountDue';
+  | 'notificationMsgSalaryAmountDue'
+  | 'archiveAction'
+  | 'archiveGroupAction'
+  | 'archiveConfirmTitle'
+  | 'archiveConfirmBody'
+  | 'archiveConfirmAction'
+  | 'archiveGroupConfirmTitle'
+  | 'archiveGroupConfirmBody'
+  | 'archivedNoticeTitle'
+  | 'archivedNoticeHint'
+  | 'unarchiveAction'
+  | 'deleteCardAction'
+  | 'deleteCardConfirmTitle'
+  | 'deleteCardConfirmBody'
+  | 'archiveEmptyStateTitle'
+  | 'archivedOnLabel'
+  | 'backToArchiveLabel';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -723,6 +739,22 @@ export const translations: Record<Locale, Dictionary> = {
     notificationMsgDueToday: 'مستحقة اليوم',
     notificationMsgOverdueSince: 'متأخرة منذ {date}',
     notificationMsgSalaryAmountDue: '{amount} د.ك مستحقة بتاريخ {date}',
+    archiveAction: 'أرشفة',
+    archiveGroupAction: 'أرشفة المجموعة',
+    archiveConfirmTitle: 'أرشفة البطاقة؟',
+    archiveConfirmBody: 'ستختفي البطاقة من القائمة الرئيسية وستبقى محفوظة بالكامل في الأرشيف.',
+    archiveConfirmAction: 'أرشفة',
+    archiveGroupConfirmTitle: 'أرشفة المجموعة؟',
+    archiveGroupConfirmBody: 'ستختفي المجموعة من قائمة المهام الرئيسية، وتبقى جميع مهامها وسجل إنجازها محفوظاً بالكامل.',
+    archivedNoticeTitle: 'هذه البطاقة مؤرشفة',
+    archivedNoticeHint: 'قم بإلغاء الأرشفة لعرض المحتوى الكامل وتعديله.',
+    unarchiveAction: 'إلغاء الأرشفة',
+    deleteCardAction: 'حذف البطاقة',
+    deleteCardConfirmTitle: 'حذف البطاقة؟',
+    deleteCardConfirmBody: 'ستختفي البطاقة من الأرشيف. لن يتم حذف بياناتها نهائياً الآن -- هذا تمهيد لخاصية سلة المحذوفات القادمة.',
+    archiveEmptyStateTitle: 'لا توجد بطاقات مؤرشفة',
+    archivedOnLabel: 'أُرشفت بتاريخ {date}',
+    backToArchiveLabel: 'العودة إلى الأرشيف',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -1082,6 +1114,22 @@ export const translations: Record<Locale, Dictionary> = {
     notificationMsgDueToday: 'Due today',
     notificationMsgOverdueSince: 'Overdue since {date}',
     notificationMsgSalaryAmountDue: '{amount} KWD due {date}',
+    archiveAction: 'Archive',
+    archiveGroupAction: 'Archive Group',
+    archiveConfirmTitle: 'Archive Card?',
+    archiveConfirmBody: 'The card will be removed from the main list and remain fully preserved in Archive.',
+    archiveConfirmAction: 'Archive',
+    archiveGroupConfirmTitle: 'Archive Group?',
+    archiveGroupConfirmBody: 'The group will be removed from the main Tasks list, and all of its Tasks and completion history remain fully preserved.',
+    archivedNoticeTitle: 'This card is archived',
+    archivedNoticeHint: 'Unarchive to view and edit the full content.',
+    unarchiveAction: 'Unarchive',
+    deleteCardAction: 'Delete Card',
+    deleteCardConfirmTitle: 'Delete Card?',
+    deleteCardConfirmBody: 'The card will be removed from Archive. Nothing is permanently deleted yet -- this prepares for the future Trash feature.',
+    archiveEmptyStateTitle: 'No archived cards',
+    archivedOnLabel: 'Archived on {date}',
+    backToArchiveLabel: 'Back to Archive',
   },
 };
 

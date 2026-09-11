@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArchivedNotice } from '../components/ArchivedNotice';
 import { DangerButton } from '../components/DangerButton';
 import { EmptyState } from '../components/EmptyState';
 import { IconButton } from '../components/IconButton';
@@ -12,7 +13,7 @@ import { CATEGORIES } from '../features/categories/categories';
 import { TaskCard } from '../features/tasks/components/TaskCard';
 import { TaskForm } from '../features/tasks/components/TaskForm';
 import { TaskGroupForm } from '../features/tasks/components/TaskGroupForm';
-import { useTaskGroups } from '../features/tasks/hooks/useTaskGroups';
+import { useTaskGroup } from '../features/tasks/hooks/useTaskGroup';
 import { useTasks } from '../features/tasks/hooks/useTasks';
 import * as taskService from '../features/tasks/taskService';
 import { getTaskGroupDisplayName } from '../features/tasks/taskGroupDisplay';
@@ -60,20 +61,21 @@ export function TaskGroupDetailPage() {
   const { t, dir } = useLanguage();
   const navigate = useNavigate();
   const { tasks, completions, loading, error, refresh } = useTasks();
-  const { groups, loading: groupsLoading, refresh: refreshGroups } = useTaskGroups();
+  const { group, loading: groupLoading, refresh: refreshGroup } = useTaskGroup(groupId);
   const addSheet = useDisclosure();
   const editGroupSheet = useDisclosure();
   const deleteGroupSheet = useDisclosure();
+  const archiveGroupSheet = useDisclosure();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [filter, setFilter] = useState<TaskListFilter>('all');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   const BackIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
   const addLabel = useLocalizedText(TASKS_CATEGORY.addLabel);
   const emptyMessage = useLocalizedText(TASKS_CATEGORY.emptyMessage);
 
-  const group = groups.find((g) => g.id === groupId);
   const groupTasks = useMemo(() => tasks.filter((task) => task.groupId === groupId), [tasks, groupId]);
   const groupTaskIds = useMemo(() => new Set(groupTasks.map((task) => task.id)), [groupTasks]);
   const groupCompletions = useMemo(
@@ -110,7 +112,7 @@ export function TaskGroupDetailPage() {
     }
   };
 
-  if (loading || groupsLoading) {
+  if (loading || groupLoading) {
     return <p className="task-group-detail-page__status">{t('loadingLabel')}</p>;
   }
 
@@ -120,6 +122,30 @@ export function TaskGroupDetailPage() {
         <EmptyState
           title={t('taskGroupNotFoundTitle')}
           action={<PrimaryButton onClick={() => navigate('/tasks')}>{t('backToTasksLabel')}</PrimaryButton>}
+        />
+      </div>
+    );
+  }
+
+  // Hard Phase 10 rule: an archived card is never opened for viewing/
+  // editing directly -- Unarchive is the only way back to the full group
+  // (its Tasks/TaskCompletion history/recurrence/Notifications are all
+  // completely unaffected by the group's own archived state either way).
+  if (group.archivedAt) {
+    return (
+      <div className="task-group-detail-page">
+        <div className="task-group-detail-page__topbar">
+          <IconButton
+            icon={<BackIcon size={22} strokeWidth={1.75} />}
+            label={t('backToTasksLabel')}
+            onClick={() => navigate('/tasks')}
+          />
+        </div>
+        <ArchivedNotice
+          onUnarchive={async () => {
+            await taskService.unarchiveTaskGroup(group.id);
+            await refreshGroup();
+          }}
         />
       </div>
     );
@@ -139,6 +165,7 @@ export function TaskGroupDetailPage() {
         <PageHeader title={getTaskGroupDisplayName(group, t)} />
         <div className="task-group-detail-page__header-actions">
           <SecondaryButton onClick={editGroupSheet.open}>{t('profileEditAction')}</SecondaryButton>
+          <SecondaryButton onClick={archiveGroupSheet.open}>{t('archiveGroupAction')}</SecondaryButton>
         </div>
       </div>
 
@@ -256,7 +283,7 @@ export function TaskGroupDetailPage() {
           onCancel={editGroupSheet.close}
           onSubmit={async (values) => {
             await taskService.updateTaskGroup(group.id, values);
-            await refreshGroups();
+            await refreshGroup();
             editGroupSheet.close();
           }}
         />
@@ -277,6 +304,35 @@ export function TaskGroupDetailPage() {
           <DangerButton onClick={handleDeleteGroup} disabled={deleting}>
             {deleting ? t('formSaving') : t('taskGroupDeleteConfirmAction')}
           </DangerButton>
+        </div>
+      </Sheet>
+
+      <Sheet
+        open={archiveGroupSheet.isOpen}
+        onClose={archiveGroupSheet.close}
+        title={t('archiveGroupConfirmTitle')}
+        closeLabel={t('menuCloseLabel')}
+      >
+        <p className="task-group-detail-page__delete-body">{t('archiveGroupConfirmBody')}</p>
+        <div className="task-group-detail-page__delete-actions">
+          <SecondaryButton onClick={archiveGroupSheet.close} disabled={archiving}>
+            {t('actionCancel')}
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              setArchiving(true);
+              try {
+                await taskService.archiveTaskGroup(group.id);
+                navigate('/tasks');
+              } catch (err) {
+                console.error('Failed to archive task group', err);
+                setArchiving(false);
+              }
+            }}
+            disabled={archiving}
+          >
+            {archiving ? t('formSaving') : t('archiveConfirmAction')}
+          </PrimaryButton>
         </div>
       </Sheet>
     </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArchivedNotice } from '../components/ArchivedNotice';
 import { CoverPhoto } from '../components/CoverPhoto';
 import { DangerButton } from '../components/DangerButton';
 import { EmptyState } from '../components/EmptyState';
@@ -34,8 +35,10 @@ export function PropertyProfilePage() {
   const editSheet = useDisclosure();
   const addDocSheet = useDisclosure();
   const deleteSheet = useDisclosure();
+  const archiveSheet = useDisclosure();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   const BackIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
 
@@ -49,6 +52,28 @@ export function PropertyProfilePage() {
         <EmptyState
           title={t('propertyNotFoundTitle')}
           action={<PrimaryButton onClick={() => navigate('/properties')}>{t('backToPropertiesLabel')}</PrimaryButton>}
+        />
+      </div>
+    );
+  }
+
+  // Hard Phase 10 rule: an archived card is never opened for viewing/
+  // editing directly -- Unarchive is the only way back to the full profile.
+  if (property.archivedAt) {
+    return (
+      <div className="property-profile-page">
+        <div className="property-profile-page__topbar">
+          <IconButton
+            icon={<BackIcon size={22} strokeWidth={1.75} />}
+            label={t('backToPropertiesLabel')}
+            onClick={() => navigate('/properties')}
+          />
+        </div>
+        <ArchivedNotice
+          onUnarchive={async () => {
+            await propertyService.unarchiveProperty(property.id);
+            await refresh();
+          }}
         />
       </div>
     );
@@ -108,6 +133,7 @@ export function PropertyProfilePage() {
         <StatusBadge variant={STATUS_VARIANT[property.status]}>{statusLabel}</StatusBadge>
         <div className="property-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
+          <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>
         </div>
       </div>
 
@@ -201,6 +227,34 @@ export function PropertyProfilePage() {
           <DangerButton onClick={handleDelete} disabled={deleting}>
             {deleting ? t('formSaving') : t('propertyDeleteConfirmAction')}
           </DangerButton>
+        </div>
+      </Sheet>
+      <Sheet
+        open={archiveSheet.isOpen}
+        onClose={archiveSheet.close}
+        title={t('archiveConfirmTitle')}
+        closeLabel={t('menuCloseLabel')}
+      >
+        <p className="property-profile-page__delete-body">{t('archiveConfirmBody')}</p>
+        <div className="property-profile-page__delete-actions">
+          <SecondaryButton onClick={archiveSheet.close} disabled={archiving}>
+            {t('actionCancel')}
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              setArchiving(true);
+              try {
+                await propertyService.archiveProperty(property.id);
+                navigate('/properties');
+              } catch (err) {
+                console.error('Failed to archive property', err);
+                setArchiving(false);
+              }
+            }}
+            disabled={archiving}
+          >
+            {archiving ? t('formSaving') : t('archiveConfirmAction')}
+          </PrimaryButton>
         </div>
       </Sheet>
     </div>

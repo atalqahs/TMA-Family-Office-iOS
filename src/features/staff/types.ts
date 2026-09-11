@@ -26,8 +26,17 @@ export const STAFF_ROLES: Array<{ id: StaffRole; title: LocalizedText }> = [
  * derived at render time (see staffStatus.ts), so it can never go stale
  * relative to the expiry/salary data it's computed from.
  *
- * Deletion is direct/permanent for this experimental prototype (same as
- * Properties/Vehicles, unlike Family's soft-delete) — no `deletedAt` field.
+ * Deletion outside Archive is still direct/permanent for this experimental
+ * prototype. `deletedAt` (Phase 10) is set ONLY by the "Delete Card" action
+ * inside Archive -- a forward-compatible soft-delete for the later Trash
+ * phase, never a second permanent-delete path; it hides the record from
+ * both the active list and Archive while preserving all data.
+ *
+ * `archivedAt` (Phase 10) is a display/organization state, NOT deletion: an
+ * archived staff member is the exact same record, with all of its data/
+ * documents/salary history/derived state fully intact -- it is simply
+ * hidden from the normal active Staff list and shown through Archive
+ * instead. Archiving never disables business logic (see features/archive/).
  */
 export interface HouseholdStaff {
   id: string;
@@ -47,6 +56,8 @@ export interface HouseholdStaff {
   profilePhoto?: Blob;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string;
+  deletedAt?: string;
 }
 
 export type StaffFormValues = Omit<HouseholdStaff, 'id' | 'createdAt' | 'updatedAt'>;

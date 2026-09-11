@@ -1,22 +1,28 @@
 import { useEffect, useState } from 'react';
-import { getContractCount } from '../features/contracts/contractRepository';
+import { getTotalArchivedCardCount } from '../features/archive/archiveService';
+import { getActiveContractCount } from '../features/contracts/contractRepository';
 import { getActiveFamilyMemberCount } from '../features/family/familyRepository';
 import { getActionableNotificationCount } from '../features/notifications/notificationService';
-import { getPropertyCount } from '../features/properties/propertyRepository';
-import { getStaffCount } from '../features/staff/staffRepository';
+import { getActivePropertyCount } from '../features/properties/propertyRepository';
+import { getActiveStaffCount } from '../features/staff/staffRepository';
 import { getTaskCount } from '../features/tasks/taskRepository';
-import { getVehicleCount } from '../features/vehicles/vehicleRepository';
+import { getActiveVehicleCount } from '../features/vehicles/vehicleRepository';
 
 const COUNT_LOADERS: Record<string, () => Promise<number>> = {
+  // Every count below excludes archived (and deleted) records -- Phase 10:
+  // an archived card must never inflate its active category's count.
   family: getActiveFamilyMemberCount,
-  properties: getPropertyCount,
-  vehicles: getVehicleCount,
-  staff: getStaffCount,
-  contracts: getContractCount,
+  properties: getActivePropertyCount,
+  vehicles: getActiveVehicleCount,
+  staff: getActiveStaffCount,
+  contracts: getActiveContractCount,
   tasks: getTaskCount,
   // Derived, never persisted -- see notificationService.ts. Recomputed on
   // every load, same as every other category's count.
   notifications: getActionableNotificationCount,
+  // Total archived top-level cards across all six domains -- derived, never
+  // persisted, same treatment as the notifications count above.
+  archive: getTotalArchivedCardCount,
 };
 
 /**

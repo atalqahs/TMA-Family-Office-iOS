@@ -8,10 +8,17 @@ import type { Property, PropertyDocument } from './types';
  * on it) instead.
  */
 
+/** Every non-deleted property, ARCHIVED ONES INCLUDED -- the read path for Notifications/Archive, which must see archived records too (see features/archive/, features/notifications/). */
 export async function listProperties(): Promise<Property[]> {
   const db = await getDB();
   const all = await db.getAll('properties');
-  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return all.filter((property) => !property.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Non-deleted AND non-archived -- the normal active Properties list. Centralized here so no component ever filters `archivedAt`/`deletedAt` itself. */
+export async function listActiveProperties(): Promise<Property[]> {
+  const all = await listProperties();
+  return all.filter((property) => !property.archivedAt);
 }
 
 export async function getProperty(id: string): Promise<Property | undefined> {
@@ -44,9 +51,34 @@ export async function deletePropertyWithDocuments(id: string): Promise<void> {
   await tx.done;
 }
 
-export async function getPropertyCount(): Promise<number> {
+export async function getActivePropertyCount(): Promise<number> {
+  const all = await listActiveProperties();
+  return all.length;
+}
+
+/** Sets `archivedAt` -- a display/organization change only, never touching any other field. */
+export async function archiveProperty(id: string): Promise<void> {
   const db = await getDB();
-  return db.count('properties');
+  const existing = await db.get('properties', id);
+  if (!existing) return;
+  await db.put('properties', { ...existing, archivedAt: new Date().toISOString() });
+}
+
+/** Clears `archivedAt`, returning the property to the active list exactly as it was -- never recreates/copies the record. */
+export async function unarchiveProperty(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('properties', id);
+  if (!existing) return;
+  const { archivedAt: _archivedAt, ...rest } = existing;
+  await db.put('properties', rest);
+}
+
+/** Sets `deletedAt` (the "Delete Card" action from within Archive) -- a forward-compatible soft-delete for the later Trash phase, never a permanent-delete path. Hides the record from both the active list and Archive while preserving all data/documents. */
+export async function softDeleteProperty(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('properties', id);
+  if (!existing) return;
+  await db.put('properties', { ...existing, deletedAt: new Date().toISOString() });
 }
 
 export async function listDocumentsForProperty(propertyId: string): Promise<PropertyDocument[]> {

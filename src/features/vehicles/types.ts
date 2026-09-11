@@ -12,8 +12,19 @@ import type { LocalizedText } from '../../localization/translations';
  * the vehicle's maintenance records (see vehicleStatus.ts), never persisted,
  * so it can never go stale relative to the data it's computed from.
  *
- * Deletion is direct/permanent for this experimental prototype (same as
- * Properties, unlike Family's soft-delete) — no `deletedAt` field here.
+ * Deletion outside Archive is still direct/permanent for this experimental
+ * prototype. `deletedAt` (Phase 10) is set ONLY by the "Delete Card" action
+ * inside Archive -- a forward-compatible soft-delete for the later Trash
+ * phase, never a second permanent-delete path; it hides the record from
+ * both the active list and Archive while preserving all data.
+ *
+ * `archivedAt` (Phase 10) is a display/organization state, NOT deletion: an
+ * archived vehicle is the exact same record, with all of its data/
+ * documents/maintenance history fully intact -- it is simply hidden from
+ * the normal active Vehicles list and shown through Archive instead.
+ * Archiving never disables business logic (see features/archive/) -- an
+ * archived vehicle's expiring registration/insurance/maintenance still
+ * produces its normal Notification.
  */
 export interface Vehicle {
   id: string;
@@ -32,6 +43,8 @@ export interface Vehicle {
   coverPhoto?: Blob;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string;
+  deletedAt?: string;
 }
 
 export type VehicleFormValues = Omit<Vehicle, 'id' | 'createdAt' | 'updatedAt'>;

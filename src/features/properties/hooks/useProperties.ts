@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { listProperties } from '../propertyRepository';
+import { listActiveProperties } from '../propertyRepository';
 import type { Property } from '../types';
 
 export function useProperties() {
@@ -11,7 +11,7 @@ export function useProperties() {
     setLoading(true);
     setError(false);
     try {
-      const result = await listProperties();
+      const result = await listActiveProperties();
       setProperties(result);
     } catch (err) {
       console.error('Failed to load properties', err);

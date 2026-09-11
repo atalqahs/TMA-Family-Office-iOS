@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArchivedNotice } from '../components/ArchivedNotice';
 import { Avatar } from '../components/Avatar';
 import { DangerButton } from '../components/DangerButton';
 import { EmptyState } from '../components/EmptyState';
@@ -26,8 +27,10 @@ export function FamilyMemberProfilePage() {
   const editSheet = useDisclosure();
   const addDocSheet = useDisclosure();
   const deleteSheet = useDisclosure();
+  const archiveSheet = useDisclosure();
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [archiving, setArchiving] = useState(false);
 
   const BackIcon = dir === 'rtl' ? ChevronRight : ChevronLeft;
 
@@ -41,6 +44,28 @@ export function FamilyMemberProfilePage() {
         <EmptyState
           title={t('memberNotFoundTitle')}
           action={<PrimaryButton onClick={() => navigate('/family')}>{t('backToFamilyLabel')}</PrimaryButton>}
+        />
+      </div>
+    );
+  }
+
+  // Hard Phase 10 rule: an archived card is never opened for viewing/
+  // editing directly -- Unarchive is the only way back to the full profile.
+  if (member.archivedAt) {
+    return (
+      <div className="family-profile-page">
+        <div className="family-profile-page__topbar">
+          <IconButton
+            icon={<BackIcon size={22} strokeWidth={1.75} />}
+            label={t('backToFamilyLabel')}
+            onClick={() => navigate('/family')}
+          />
+        </div>
+        <ArchivedNotice
+          onUnarchive={async () => {
+            await familyService.unarchiveFamilyMember(member.id);
+            await refresh();
+          }}
         />
       </div>
     );
@@ -92,6 +117,7 @@ export function FamilyMemberProfilePage() {
         </p>
         <div className="family-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
+          <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>
         </div>
       </div>
 
@@ -164,6 +190,34 @@ export function FamilyMemberProfilePage() {
           <DangerButton onClick={handleDelete} disabled={deleting}>
             {deleting ? t('formSaving') : t('profileDeleteConfirmAction')}
           </DangerButton>
+        </div>
+      </Sheet>
+      <Sheet
+        open={archiveSheet.isOpen}
+        onClose={archiveSheet.close}
+        title={t('archiveConfirmTitle')}
+        closeLabel={t('menuCloseLabel')}
+      >
+        <p className="family-profile-page__delete-body">{t('archiveConfirmBody')}</p>
+        <div className="family-profile-page__delete-actions">
+          <SecondaryButton onClick={archiveSheet.close} disabled={archiving}>
+            {t('actionCancel')}
+          </SecondaryButton>
+          <PrimaryButton
+            onClick={async () => {
+              setArchiving(true);
+              try {
+                await familyService.archiveFamilyMember(member.id);
+                navigate('/family');
+              } catch (err) {
+                console.error('Failed to archive family member', err);
+                setArchiving(false);
+              }
+            }}
+            disabled={archiving}
+          >
+            {archiving ? t('formSaving') : t('archiveConfirmAction')}
+          </PrimaryButton>
         </div>
       </Sheet>
     </div>

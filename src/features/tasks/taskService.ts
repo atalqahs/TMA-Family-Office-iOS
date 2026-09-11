@@ -79,6 +79,20 @@ export async function removeTaskGroup(id: string): Promise<void> {
   await taskRepository.deleteTaskGroupIfEmpty(id);
 }
 
+/** Archives the GROUP only (Phase 10): a display/organization change that never touches its Tasks or their TaskCompletion history, recurrence, or Notification behavior -- see features/archive/. */
+export async function archiveTaskGroup(id: string): Promise<void> {
+  await taskRepository.archiveTaskGroup(id);
+}
+
+export async function unarchiveTaskGroup(id: string): Promise<void> {
+  await taskRepository.unarchiveTaskGroup(id);
+}
+
+/** "Delete Card" from within Archive: a forward-compatible soft-delete for the later Trash phase -- distinct from `removeTaskGroup`'s existing empty-only hard-delete guard, which is unrelated and untouched. The group's Tasks and TaskCompletion history are preserved. */
+export async function deleteTaskGroupCard(id: string): Promise<void> {
+  await taskRepository.softDeleteTaskGroup(id);
+}
+
 /**
  * How many tasks currently have an overdue occurrence -- for the small,
  * dashboard-level "needs attention" indicator (see DashboardPage.tsx).

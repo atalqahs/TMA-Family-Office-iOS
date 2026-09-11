@@ -9,10 +9,17 @@ import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySche
  * it) instead.
  */
 
+/** Every non-deleted staff member, ARCHIVED ONES INCLUDED -- the read path for Notifications/Archive, which must see archived records too (see features/archive/, features/notifications/). */
 export async function listStaff(): Promise<HouseholdStaff[]> {
   const db = await getDB();
   const all = await db.getAll('householdStaff');
-  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return all.filter((staff) => !staff.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+/** Non-deleted AND non-archived -- the normal active Staff list. Centralized here so no component ever filters `archivedAt`/`deletedAt` itself. */
+export async function listActiveStaff(): Promise<HouseholdStaff[]> {
+  const all = await listStaff();
+  return all.filter((staff) => !staff.archivedAt);
 }
 
 export async function getStaffMember(id: string): Promise<HouseholdStaff | undefined> {
@@ -25,9 +32,34 @@ export async function saveStaffMember(staff: HouseholdStaff): Promise<void> {
   await db.put('householdStaff', staff);
 }
 
-export async function getStaffCount(): Promise<number> {
+export async function getActiveStaffCount(): Promise<number> {
+  const all = await listActiveStaff();
+  return all.length;
+}
+
+/** Sets `archivedAt` -- a display/organization change only, never touching any other field. */
+export async function archiveStaffMember(id: string): Promise<void> {
   const db = await getDB();
-  return db.count('householdStaff');
+  const existing = await db.get('householdStaff', id);
+  if (!existing) return;
+  await db.put('householdStaff', { ...existing, archivedAt: new Date().toISOString() });
+}
+
+/** Clears `archivedAt`, returning the member to the active list exactly as it was -- never recreates/copies the record. */
+export async function unarchiveStaffMember(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('householdStaff', id);
+  if (!existing) return;
+  const { archivedAt: _archivedAt, ...rest } = existing;
+  await db.put('householdStaff', rest);
+}
+
+/** Sets `deletedAt` (the "Delete Card" action from within Archive) -- a forward-compatible soft-delete for the later Trash phase, never a permanent-delete path. Hides the record from both the active list and Archive while preserving all data/documents/salary history. */
+export async function softDeleteStaffMember(id: string): Promise<void> {
+  const db = await getDB();
+  const existing = await db.get('householdStaff', id);
+  if (!existing) return;
+  await db.put('householdStaff', { ...existing, deletedAt: new Date().toISOString() });
 }
 
 export async function listDocumentsForStaff(staffId: string): Promise<StaffDocument[]> {

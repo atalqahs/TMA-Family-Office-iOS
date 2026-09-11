@@ -29,6 +29,16 @@ export const MAX_RECURRENCE_INTERVAL = 999;
  * Reminders is fully independent from every other category (see Task's
  * own doc comment below). Every Task belongs to exactly one group --
  * there are no ungrouped/orphan Tasks.
+ *
+ * Archive (Phase 10) applies to the GROUP as a whole, never to individual
+ * Tasks: `archivedAt` only hides the group from the top-level active
+ * group list (see taskRepository.listTaskGroups) -- its Tasks,
+ * TaskCompletion history, recurrence, and Notifications all continue
+ * completely unaffected (see features/archive/). `deletedAt` is set ONLY
+ * by the "Delete Card" action inside Archive -- a forward-compatible
+ * soft-delete for the later Trash phase, never a second permanent-delete
+ * path (deleteTaskGroupIfEmpty remains the existing hard-delete guard,
+ * untouched by this).
  */
 export interface TaskGroup {
   id: string;
@@ -36,6 +46,8 @@ export interface TaskGroup {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  archivedAt?: string;
+  deletedAt?: string;
 }
 
 export type TaskGroupFormValues = Omit<TaskGroup, 'id' | 'createdAt' | 'updatedAt'>;
