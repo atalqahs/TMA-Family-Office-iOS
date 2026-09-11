@@ -11,8 +11,10 @@ import { Sheet } from '../components/Sheet';
 import { TaskForm } from '../features/tasks/components/TaskForm';
 import { useTask } from '../features/tasks/hooks/useTask';
 import { useLinkableEntities } from '../features/tasks/hooks/useLinkableEntities';
+import { useTaskGroups } from '../features/tasks/hooks/useTaskGroups';
 import * as taskService from '../features/tasks/taskService';
 import { findLinkedEntity, getLinkedEntityLabel } from '../features/tasks/linkedEntity';
+import { getTaskGroupDisplayName } from '../features/tasks/taskGroupDisplay';
 import { computeTaskOccurrenceStatus, TASK_STATE_LABEL_KEY, TASK_STATE_VARIANT } from '../features/tasks/taskStatus';
 import { TASK_LINKED_ENTITY_TYPES, TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../features/tasks/types';
 import { useDisclosure } from '../hooks/useDisclosure';
@@ -29,6 +31,7 @@ export function TaskProfilePage() {
   const { t, locale, dir } = useLanguage();
   const { task, completions, loading, refresh } = useTask(taskId);
   const { entities: linkableEntities, loading: linkableEntitiesLoading } = useLinkableEntities();
+  const { groups } = useTaskGroups();
   const editSheet = useDisclosure();
   const deleteSheet = useDisclosure();
   const [deleting, setDeleting] = useState(false);
@@ -55,6 +58,8 @@ export function TaskProfilePage() {
   }
 
   const { occurrenceDate, state } = computeTaskOccurrenceStatus(task, completions);
+  const group = groups.find((g) => g.id === task.groupId);
+  const groupBackPath = `/tasks/group/${task.groupId}`;
   const priorityLabel = TASK_PRIORITIES.find((option) => option.id === task.priority)?.title[locale];
   const recurrenceLabel =
     task.recurrenceUnit === 'none'
@@ -73,6 +78,7 @@ export function TaskProfilePage() {
 
   const taskInfoRows: Array<[string, string]> = (
     [
+      [t('fieldTaskGroup'), group && getTaskGroupDisplayName(group, t)],
       [t('fieldDueDate'), new Intl.DateTimeFormat(locale).format(parseLocalDate(occurrenceDate))],
       [t('fieldDueTime'), task.dueTime ? formatLocalTime(task.dueTime, locale) : undefined],
       [t('fieldPriority'), priorityLabel],
@@ -102,7 +108,7 @@ export function TaskProfilePage() {
     setDeleteError(null);
     try {
       await taskService.removeTask(task.id);
-      navigate('/tasks');
+      navigate(groupBackPath);
     } catch (err) {
       console.error('Failed to delete task', err);
       setDeleteError(t('formSaveError'));
@@ -116,7 +122,7 @@ export function TaskProfilePage() {
         <IconButton
           icon={<BackIcon size={22} strokeWidth={1.75} />}
           label={t('backToTasksLabel')}
-          onClick={() => navigate('/tasks')}
+          onClick={() => navigate(groupBackPath)}
         />
       </div>
 

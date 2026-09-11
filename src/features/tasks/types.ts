@@ -33,8 +33,43 @@ export const TASK_LINKED_ENTITY_TYPES: Array<{ id: TaskLinkedEntityType; title: 
 ];
 
 /**
+ * A user-created internal organizational folder for Tasks -- e.g. "Vehicle
+ * Reminders", "Home", "Personal". Purely an organizational concept for the
+ * Tasks module: a group named "Vehicle Reminders" has NO automatic
+ * relationship to the Vehicles module (see `TaskLinkedEntityType` above for
+ * that separate, optional, per-Task concept). Every Task belongs to
+ * exactly one group -- there are no ungrouped/orphan Tasks.
+ */
+export interface TaskGroup {
+  id: string;
+  name: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type TaskGroupFormValues = Omit<TaskGroup, 'id' | 'createdAt' | 'updatedAt'>;
+
+/**
+ * The stable id of the single group created once, automatically, by the
+ * v8 -> v9 migration to hold every Task that existed before groups did.
+ * Its display name is resolved via a translation key rather than this
+ * literal string wherever it's shown (see taskGroupDisplay.ts), so it
+ * reads as "General"/"عام" in either language regardless of what's
+ * actually stored in its `name` field.
+ */
+export const MIGRATION_GENERAL_GROUP_ID = 'general';
+
+/**
  * A household task/reminder. `id` is a stable UUID, independent of
  * `title`.
+ *
+ * `groupId` is mandatory -- every Task belongs to exactly one TaskGroup,
+ * the user-facing top-level organization for this module. This is a
+ * completely separate concept from `linkedEntityType`/`linkedEntityId`
+ * below: the group is a Tasks-only folder with no meaning outside this
+ * module, while the linked entity is an optional pointer to a real
+ * Family/Property/Vehicle/Staff/Contract record.
  *
  * `dueDate` is the ANCHOR due date of the recurring schedule (or simply
  * the one due date for a one-time task) -- it never changes as occurrences
@@ -49,6 +84,7 @@ export const TASK_LINKED_ENTITY_TYPES: Array<{ id: TaskLinkedEntityType; title: 
  */
 export interface Task {
   id: string;
+  groupId: string;
   title: string;
   description?: string;
   dueDate: string;

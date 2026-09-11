@@ -1,5 +1,5 @@
 import { getDB } from '../../storage/db';
-import type { Task, TaskCompletion } from './types';
+import type { Task, TaskCompletion, TaskGroup } from './types';
 
 /**
  * All IndexedDB access for the Tasks module goes through this file.
@@ -19,14 +19,76 @@ export async function getTask(id: string): Promise<Task | undefined> {
   return db.get('tasks', id);
 }
 
-export async function saveTask(task: Task): Promise<void> {
+/**
+ * Saves a Task, verifying its `groupId` refers to a real TaskGroup INSIDE
+ * the same IndexedDB transaction before the Task is ever written -- the
+ * same existence-guard pattern already proven for Vehicle maintenance +
+ * mileage sync and for Task completion. A Task can therefore never be
+ * created or edited to reference a group that doesn't exist.
+ */
+export async function saveTaskWithGroupGuard(task: Task): Promise<void> {
   const db = await getDB();
-  await db.put('tasks', task);
+  const tx = db.transaction(['tasks', 'taskGroups'], 'readwrite');
+
+  const group = await tx.objectStore('taskGroups').get(task.groupId);
+  if (!group) {
+    tx.abort();
+    await tx.done.catch(() => {});
+    throw new Error(`Task group ${task.groupId} not found`);
+  }
+
+  await tx.objectStore('tasks').put(task);
+  await tx.done;
 }
 
 export async function getTaskCount(): Promise<number> {
   const db = await getDB();
   return db.count('tasks');
+}
+
+export async function listTaskGroups(): Promise<TaskGroup[]> {
+  const db = await getDB();
+  const all = await db.getAll('taskGroups');
+  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function getTaskGroup(id: string): Promise<TaskGroup | undefined> {
+  const db = await getDB();
+  return db.get('taskGroups', id);
+}
+
+export async function saveTaskGroup(group: TaskGroup): Promise<void> {
+  const db = await getDB();
+  await db.put('taskGroups', group);
+}
+
+/** Thrown by `deleteTaskGroupIfEmpty` when the group still has Tasks assigned to it -- Tasks are never silently orphaned or bulk-deleted as a side effect of removing their group. */
+export class GroupNotEmptyError extends Error {
+  constructor() {
+    super('Cannot delete a group that still has tasks');
+    this.name = 'GroupNotEmptyError';
+  }
+}
+
+/**
+ * Deletes a TaskGroup only if it currently has zero Tasks, checked INSIDE
+ * the same transaction as the delete itself so a Task can never end up
+ * pointing at a group that's mid-deletion. Never touches or moves the
+ * group's Tasks -- the caller must move or delete them first.
+ */
+export async function deleteTaskGroupIfEmpty(id: string): Promise<void> {
+  const db = await getDB();
+  const tx = db.transaction(['tasks', 'taskGroups'], 'readwrite');
+
+  const remainingTaskCount = await tx.objectStore('tasks').index('groupId').count(id);
+  if (remainingTaskCount > 0) {
+    tx.abort();
+    await tx.done.catch(() => {});
+    throw new GroupNotEmptyError();
+  }
+
+  await tx.objectStore('taskGroups').delete(id);
+  await tx.done;
 }
 
 export async function listCompletionsForTask(taskId: string): Promise<TaskCompletion[]> {

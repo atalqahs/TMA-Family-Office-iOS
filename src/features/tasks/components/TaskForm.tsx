@@ -1,9 +1,12 @@
 import { useId, useState, type FormEvent } from 'react';
+import { EmptyState } from '../../../components/EmptyState';
 import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { useLinkableEntities } from '../hooks/useLinkableEntities';
+import { useTaskGroups } from '../hooks/useTaskGroups';
+import { getTaskGroupDisplayName } from '../taskGroupDisplay';
 import { TASK_PRIORITIES, TASK_RECURRENCE_UNITS } from '../types';
 import type { Task, TaskFormValues, TaskLinkedEntityType, TaskPriority, TaskRecurrenceUnit } from '../types';
 import { validateTaskForm } from '../validation';
@@ -12,12 +15,15 @@ import './TaskForm.css';
 
 interface TaskFormProps {
   initialValue?: Task;
+  /** Preselects this group when adding a task from inside a group's detail page. Ignored when editing an existing task (its own `groupId` wins). */
+  initialGroupId?: string;
   onSubmit: (values: TaskFormValues) => Promise<void>;
   onCancel: () => void;
 }
 
 /** All fields live as strings in the form (controlled inputs), converted to Task's real numeric/optional types on submit. */
 interface TaskFormState {
+  groupId: string;
   title: string;
   description: string;
   dueDate: string;
@@ -30,8 +36,9 @@ interface TaskFormState {
   notes: string;
 }
 
-function toFormState(task?: Task): TaskFormState {
+function toFormState(task: Task | undefined, initialGroupId: string | undefined): TaskFormState {
   return {
+    groupId: task?.groupId ?? initialGroupId ?? '',
     title: task?.title ?? '',
     description: task?.description ?? '',
     dueDate: task?.dueDate ?? '',
@@ -47,6 +54,7 @@ function toFormState(task?: Task): TaskFormState {
 
 function toFormValues(state: TaskFormState): TaskFormValues {
   return {
+    groupId: state.groupId,
     title: state.title.trim(),
     description: state.description.trim() || undefined,
     dueDate: state.dueDate,
@@ -63,14 +71,31 @@ function toFormValues(state: TaskFormState): TaskFormValues {
   };
 }
 
-export function TaskForm({ initialValue, onSubmit, onCancel }: TaskFormProps) {
+export function TaskForm({ initialValue, initialGroupId, onSubmit, onCancel }: TaskFormProps) {
   const { t, locale } = useLanguage();
   const formId = useId();
   const { entities, loading: entitiesLoading } = useLinkableEntities();
-  const [state, setState] = useState<TaskFormState>(() => toFormState(initialValue));
+  const { groups, loading: groupsLoading } = useTaskGroups();
+  const [state, setState] = useState<TaskFormState>(() => toFormState(initialValue, initialGroupId));
   const [errors, setErrors] = useState<ReturnType<typeof validateTaskForm>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  if (!groupsLoading && groups.length === 0) {
+    // Every Task must belong to a group and none exist yet -- rather than
+    // allowing an ungrouped Task to be created, direct the user to create
+    // a group first (see TasksPage's own "+ Add Group" action).
+    return (
+      <div className="task-form">
+        <EmptyState title={t('noGroupsYetMessage')} />
+        <div className="task-form__actions">
+          <SecondaryButton type="button" onClick={onCancel}>
+            {t('actionCancel')}
+          </SecondaryButton>
+        </div>
+      </div>
+    );
+  }
 
   const update = <K extends keyof TaskFormState>(key: K, value: TaskFormState[K]) => {
     setState((prev) => ({ ...prev, [key]: value }));
@@ -106,6 +131,23 @@ export function TaskForm({ initialValue, onSubmit, onCancel }: TaskFormProps) {
           onChange={(e) => update('title', e.target.value)}
           required
         />
+      </FormField>
+
+      <FormField label={t('fieldTaskGroup')} htmlFor={`${formId}-group`} error={errors.groupId && t(errors.groupId)}>
+        <select
+          id={`${formId}-group`}
+          className="form-input"
+          value={state.groupId}
+          onChange={(e) => update('groupId', e.target.value)}
+          required
+        >
+          <option value="">{t('selectGroupPlaceholder')}</option>
+          {groups.map((group) => (
+            <option key={group.id} value={group.id}>
+              {getTaskGroupDisplayName(group, t)}
+            </option>
+          ))}
+        </select>
       </FormField>
 
       <FormField label={t('fieldDescription')} htmlFor={`${formId}-description`}>

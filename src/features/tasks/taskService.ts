@@ -1,7 +1,9 @@
 import { generateId } from '../../utils/id';
 import * as taskRepository from './taskRepository';
 import { computeTaskOccurrenceStatus, groupCompletionsByTaskId } from './taskStatus';
-import type { Task, TaskCompletion, TaskFormValues } from './types';
+import type { Task, TaskCompletion, TaskFormValues, TaskGroup, TaskGroupFormValues } from './types';
+
+export { GroupNotEmptyError } from './taskRepository';
 
 export async function createTask(values: TaskFormValues): Promise<Task> {
   const now = new Date().toISOString();
@@ -11,7 +13,7 @@ export async function createTask(values: TaskFormValues): Promise<Task> {
     createdAt: now,
     updatedAt: now,
   };
-  await taskRepository.saveTask(task);
+  await taskRepository.saveTaskWithGroupGuard(task);
   return task;
 }
 
@@ -35,13 +37,44 @@ export async function updateTask(id: string, values: TaskFormValues): Promise<Ta
     ...values,
     updatedAt: new Date().toISOString(),
   };
-  await taskRepository.saveTask(updated);
+  await taskRepository.saveTaskWithGroupGuard(updated);
   return updated;
 }
 
 /** Direct, permanent delete of the task and all of its completion history (see taskRepository for the transactional cascade). Never touches the linked entity, if any. */
 export async function removeTask(id: string): Promise<void> {
   await taskRepository.deleteTaskWithCompletions(id);
+}
+
+export async function createTaskGroup(values: TaskGroupFormValues): Promise<TaskGroup> {
+  const now = new Date().toISOString();
+  const group: TaskGroup = {
+    id: generateId(),
+    ...values,
+    createdAt: now,
+    updatedAt: now,
+  };
+  await taskRepository.saveTaskGroup(group);
+  return group;
+}
+
+export async function updateTaskGroup(id: string, values: TaskGroupFormValues): Promise<TaskGroup> {
+  const existing = await taskRepository.getTaskGroup(id);
+  if (!existing) {
+    throw new Error(`Task group ${id} not found`);
+  }
+  const updated: TaskGroup = {
+    ...existing,
+    ...values,
+    updatedAt: new Date().toISOString(),
+  };
+  await taskRepository.saveTaskGroup(updated);
+  return updated;
+}
+
+/** Deletes a group only if it has zero Tasks (see taskRepository.deleteTaskGroupIfEmpty) -- throws GroupNotEmptyError otherwise, never silently orphaning or bulk-deleting its Tasks. */
+export async function removeTaskGroup(id: string): Promise<void> {
+  await taskRepository.deleteTaskGroupIfEmpty(id);
 }
 
 /**

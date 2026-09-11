@@ -3,7 +3,8 @@ import type { Contract, ContractDocument } from '../features/contracts/types';
 import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
 import type { Property, PropertyDocument } from '../features/properties/types';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
-import type { Task, TaskCompletion } from '../features/tasks/types';
+import { MIGRATION_GENERAL_GROUP_ID } from '../features/tasks/types';
+import type { Task, TaskCompletion, TaskGroup } from '../features/tasks/types';
 import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../features/vehicles/types';
 
 /**
@@ -18,8 +19,10 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * Phase 5, all of that survives the v4 -> v5 upgrade that added the staff
  * stores in Phase 6, all of that survives the v5 -> v6 upgrade that added
  * recurring salary schedules, all of that survives the v6 -> v7 upgrade
- * that added the Contracts stores in Phase 7, and all of that survives
- * the v7 -> v8 upgrade that added the Tasks stores in Phase 8).
+ * that added the Contracts stores in Phase 7, all of that survives
+ * the v7 -> v8 upgrade that added the Tasks stores in Phase 8, and all of that survives the v8 -> v9
+ * upgrade that added the TaskGroups store for the Phase 8 groups correction (every pre-existing Task is
+ * assigned to a deterministic, automatically-created "General" group so no Task is ever left ungrouped).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -89,16 +92,21 @@ interface TmaDB extends DBSchema {
   tasks: {
     key: string;
     value: Task;
+    indexes: { groupId: string };
   };
   taskCompletions: {
     key: string;
     value: TaskCompletion;
     indexes: { taskId: string; taskId_occurrenceDate: [string, string] };
   };
+  taskGroups: {
+    key: string;
+    value: TaskGroup;
+  };
 }
 
 const DB_NAME = 'tma-family-office';
-const DB_VERSION = 8;
+const DB_VERSION = 9;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -148,7 +156,7 @@ export function subscribeDbLifecycle(listener: (state: DbLifecycleState) => void
 export function getDB(): Promise<IDBPDatabase<TmaDB>> {
   if (!dbPromise) {
     dbPromise = openDB<TmaDB>(DB_NAME, DB_VERSION, {
-      upgrade(db, _oldVersion, _newVersion, transaction) {
+      async upgrade(db, _oldVersion, _newVersion, transaction) {
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings');
         }
@@ -235,6 +243,42 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
           // atomically, the same pattern already proven for Staff salary
           // occurrences (scheduleId, dueDate).
           store.createIndex('taskId_occurrenceDate', ['taskId', 'occurrenceDate'], { unique: true });
+        }
+
+        // Phase 8 groups correction: every Task now belongs to exactly one
+        // TaskGroup. This whole block only ever runs ONCE, the first time
+        // a database crosses into this version (guarded on the NEW store
+        // not existing yet) -- it adds the store, adds the `groupId` index
+        // to the existing `tasks` store, and deterministically backfills
+        // every pre-existing Task (which has no `groupId` yet) into one
+        // migration-created "General" group, so no Task is ever left
+        // ungrouped and nothing about existing Tasks/TaskCompletions is
+        // touched beyond adding that one field.
+        if (!db.objectStoreNames.contains('taskGroups')) {
+          const groupsStore = db.createObjectStore('taskGroups', { keyPath: 'id' });
+          const tasksStore = transaction.objectStore('tasks');
+          if (!tasksStore.indexNames.contains('groupId')) {
+            tasksStore.createIndex('groupId', 'groupId');
+          }
+
+          const now = new Date().toISOString();
+          let generalGroupNeeded = false;
+          let cursor = await tasksStore.openCursor();
+          while (cursor) {
+            if (!cursor.value.groupId) {
+              generalGroupNeeded = true;
+              await cursor.update({ ...cursor.value, groupId: MIGRATION_GENERAL_GROUP_ID });
+            }
+            cursor = await cursor.continue();
+          }
+          if (generalGroupNeeded) {
+            await groupsStore.put({
+              id: MIGRATION_GENERAL_GROUP_ID,
+              name: 'General',
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
         }
       },
       blocked() {

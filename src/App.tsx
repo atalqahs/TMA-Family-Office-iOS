@@ -15,6 +15,7 @@ import { SettingsPage } from './pages/SettingsPage';
 import { StaffPage } from './pages/StaffPage';
 import { StaffProfilePage } from './pages/StaffProfilePage';
 import { TaskCalendarPage } from './pages/TaskCalendarPage';
+import { TaskGroupDetailPage } from './pages/TaskGroupDetailPage';
 import { TaskProfilePage } from './pages/TaskProfilePage';
 import { TasksPage } from './pages/TasksPage';
 import { TrashPage } from './pages/TrashPage';
@@ -59,7 +60,8 @@ export default function App() {
               <Route path="contracts/:contractId" element={<ContractProfilePage />} />
               <Route path="tasks" element={<TasksPage />} />
               <Route path="tasks/calendar" element={<TaskCalendarPage />} />
-              <Route path="tasks/:taskId" element={<TaskProfilePage />} />
+              <Route path="tasks/group/:groupId" element={<TaskGroupDetailPage />} />
+              <Route path="tasks/task/:taskId" element={<TaskProfilePage />} />
               {PLACEHOLDER_CATEGORIES.map((category) => (
                 <Route
                   key={category.id}

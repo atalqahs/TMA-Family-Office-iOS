@@ -306,7 +306,26 @@ export type TranslationKey =
   | 'calendarViewAction'
   | 'calendarPrevMonthLabel'
   | 'calendarNextMonthLabel'
-  | 'calendarNoTasksForDate';
+  | 'calendarNoTasksForDate'
+  | 'fieldTaskGroup'
+  | 'fieldGroupName'
+  | 'addGroupAction'
+  | 'taskGroupFormAddTitle'
+  | 'taskGroupFormEditTitle'
+  | 'validationTaskGroupNameRequired'
+  | 'validationTaskGroupRequired'
+  | 'selectGroupPlaceholder'
+  | 'noGroupsYetMessage'
+  | 'taskGroupsEmptyMessage'
+  | 'taskGroupDeleteAction'
+  | 'taskGroupDeleteConfirmTitle'
+  | 'taskGroupDeleteConfirmBody'
+  | 'taskGroupDeleteConfirmAction'
+  | 'taskGroupNotEmptyError'
+  | 'taskGroupGeneralName'
+  | 'taskGroupTaskCountUnit'
+  | 'taskGroupNextLabel'
+  | 'taskGroupNotFoundTitle';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -615,6 +634,25 @@ export const translations: Record<Locale, Dictionary> = {
     calendarPrevMonthLabel: 'الشهر السابق',
     calendarNextMonthLabel: 'الشهر التالي',
     calendarNoTasksForDate: 'لا توجد مهام مستحقة في هذا التاريخ.',
+    fieldTaskGroup: 'المجموعة',
+    fieldGroupName: 'اسم المجموعة',
+    addGroupAction: '+ إضافة مجموعة',
+    taskGroupFormAddTitle: 'إضافة مجموعة',
+    taskGroupFormEditTitle: 'تعديل المجموعة',
+    validationTaskGroupNameRequired: 'يرجى إدخال اسم المجموعة.',
+    validationTaskGroupRequired: 'يرجى اختيار مجموعة.',
+    selectGroupPlaceholder: 'اختر مجموعة',
+    noGroupsYetMessage: 'يرجى إنشاء مجموعة أولاً قبل إضافة المهام.',
+    taskGroupsEmptyMessage: 'لا توجد مجموعات بعد. أنشئ أول مجموعة لبدء إضافة المهام.',
+    taskGroupDeleteAction: 'حذف المجموعة',
+    taskGroupDeleteConfirmTitle: 'هل تريد حذف هذه المجموعة؟',
+    taskGroupDeleteConfirmBody: 'سيتم حذف هذه المجموعة نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    taskGroupDeleteConfirmAction: 'حذف',
+    taskGroupNotEmptyError: 'لا يمكن حذف مجموعة تحتوي على مهام. يرجى نقل أو حذف مهامها أولاً.',
+    taskGroupGeneralName: 'عام',
+    taskGroupTaskCountUnit: 'مهام',
+    taskGroupNextLabel: 'القادم',
+    taskGroupNotFoundTitle: 'لم يتم العثور على هذه المجموعة.',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -920,6 +958,25 @@ export const translations: Record<Locale, Dictionary> = {
     calendarPrevMonthLabel: 'Previous month',
     calendarNextMonthLabel: 'Next month',
     calendarNoTasksForDate: 'No tasks due on this date.',
+    fieldTaskGroup: 'Group',
+    fieldGroupName: 'Group Name',
+    addGroupAction: '+ Add Group',
+    taskGroupFormAddTitle: 'Add Group',
+    taskGroupFormEditTitle: 'Edit Group',
+    validationTaskGroupNameRequired: 'Please enter a group name.',
+    validationTaskGroupRequired: 'Please select a group.',
+    selectGroupPlaceholder: 'Select a group',
+    noGroupsYetMessage: 'Please create a group first before adding tasks.',
+    taskGroupsEmptyMessage: 'No groups yet. Create your first group to start adding tasks.',
+    taskGroupDeleteAction: 'Delete Group',
+    taskGroupDeleteConfirmTitle: 'Delete this group?',
+    taskGroupDeleteConfirmBody: 'This group will be permanently deleted. This cannot be undone.',
+    taskGroupDeleteConfirmAction: 'Delete',
+    taskGroupNotEmptyError: 'Cannot delete a non-empty group. Move or delete its tasks first.',
+    taskGroupGeneralName: 'General',
+    taskGroupTaskCountUnit: 'tasks',
+    taskGroupNextLabel: 'Next',
+    taskGroupNotFoundTitle: 'This group could not be found.',
   },
 };
 
