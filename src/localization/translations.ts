@@ -149,6 +149,7 @@ export type TranslationKey =
   | 'fieldMaintenanceType'
   | 'fieldMaintenanceTitle'
   | 'fieldServiceDate'
+  | 'fieldServiceDateOptional'
   | 'fieldMileage'
   | 'fieldNextServiceDate'
   | 'fieldNextServiceMileage'
@@ -185,9 +186,6 @@ export type TranslationKey =
   | 'validationSalaryAmountInvalid'
   | 'validationPaidDateRequired'
   | 'validationDuplicateSalaryOccurrence'
-  | 'validationScheduleIntervalInvalid'
-  | 'validationDueDayInvalid'
-  | 'validationDueMonthInvalid'
   | 'validationStartDateRequired'
   | 'validationEndDateBeforeStart'
   | 'staffFormAddTitle'
@@ -217,22 +215,19 @@ export type TranslationKey =
   | 'salaryStatusPending'
   | 'salaryStatusOverdue'
   | 'kwdUnitLabel'
-  | 'fieldRepeatsEvery'
-  | 'fieldDueDayOfMonth'
-  | 'fieldDueMonth'
   | 'fieldStartDate'
   | 'fieldEndDateOptional'
-  | 'frequencyDay'
-  | 'frequencyMonth'
-  | 'frequencyYear'
   | 'frequencyEveryLabel'
-  | 'scheduleDueDayLabel'
+  | 'fieldRecurrence'
+  | 'recurrenceWeekly'
+  | 'recurrenceMonthly'
+  | 'recurrenceYearly'
   | 'salarySchedulesLabel'
   | 'salarySchedulesEmpty'
   | 'salaryScheduleFormAddTitle'
   | 'salaryScheduleFormEditTitle'
-  | 'salaryUpcomingLabel'
-  | 'salaryUpcomingEmpty'
+  | 'salaryNextPaymentLabel'
+  | 'salaryNextPaymentEmpty'
   | 'salaryHistoryLabel'
   | 'salaryConfirmPaymentAction'
   | 'salaryConfirmPaymentTitle'
@@ -526,6 +521,7 @@ export const translations: Record<Locale, Dictionary> = {
     fieldMaintenanceType: 'نوع الصيانة',
     fieldMaintenanceTitle: 'عنوان الصيانة',
     fieldServiceDate: 'تاريخ الصيانة',
+    fieldServiceDateOptional: 'تاريخ الصيانة (اختياري)',
     fieldMileage: 'قراءة العداد',
     fieldNextServiceDate: 'تاريخ الصيانة القادمة',
     fieldNextServiceMileage: 'عداد الصيانة القادمة',
@@ -562,9 +558,6 @@ export const translations: Record<Locale, Dictionary> = {
     validationSalaryAmountInvalid: 'يجب أن يكون المبلغ أكبر من صفر.',
     validationPaidDateRequired: 'تاريخ الدفع مطلوب.',
     validationDuplicateSalaryOccurrence: 'تم تأكيد دفع هذه الدفعة مسبقاً.',
-    validationScheduleIntervalInvalid: 'يجب أن يكون التكرار رقماً صحيحاً أكبر من صفر.',
-    validationDueDayInvalid: 'يجب اختيار يوم استحقاق صحيح (1-31).',
-    validationDueMonthInvalid: 'يجب اختيار شهر استحقاق صحيح (1-12).',
     validationStartDateRequired: 'تاريخ البدء مطلوب.',
     validationEndDateBeforeStart: 'لا يمكن أن يكون تاريخ الانتهاء قبل تاريخ البدء.',
     staffFormAddTitle: 'إضافة عامل',
@@ -595,22 +588,19 @@ export const translations: Record<Locale, Dictionary> = {
     salaryStatusPending: 'الدفع معلّق',
     salaryStatusOverdue: 'متأخر',
     kwdUnitLabel: 'د.ك',
-    fieldRepeatsEvery: 'يتكرر كل',
-    fieldDueDayOfMonth: 'يوم الاستحقاق',
-    fieldDueMonth: 'شهر الاستحقاق',
     fieldStartDate: 'تاريخ البدء',
     fieldEndDateOptional: 'تاريخ الانتهاء (اختياري)',
-    frequencyDay: 'يوم',
-    frequencyMonth: 'شهر',
-    frequencyYear: 'سنة',
     frequencyEveryLabel: 'كل',
-    scheduleDueDayLabel: 'يوم',
+    fieldRecurrence: 'التكرار',
+    recurrenceWeekly: 'أسبوعي',
+    recurrenceMonthly: 'شهري',
+    recurrenceYearly: 'سنوي',
     salarySchedulesLabel: 'رواتب متكررة',
     salarySchedulesEmpty: 'لم تتم إضافة أي راتب متكرر بعد.',
     salaryScheduleFormAddTitle: 'إضافة راتب',
     salaryScheduleFormEditTitle: 'تعديل الراتب',
-    salaryUpcomingLabel: 'الدفعات الحالية والقادمة',
-    salaryUpcomingEmpty: 'لا توجد دفعات مستحقة حالياً.',
+    salaryNextPaymentLabel: 'الدفعة القادمة',
+    salaryNextPaymentEmpty: 'لا توجد دفعات مستحقة حالياً.',
     salaryHistoryLabel: 'سجل الدفعات',
     salaryConfirmPaymentAction: 'تأكيد الدفع',
     salaryConfirmPaymentTitle: 'تأكيد دفع الراتب',
@@ -659,7 +649,7 @@ export const translations: Record<Locale, Dictionary> = {
     taskFormAddTitle: 'إضافة مهمة',
     taskFormEditTitle: 'تعديل المهمة',
     taskNotFoundTitle: 'لم يتم العثور على هذه المهمة.',
-    backToTasksLabel: 'العودة إلى المهام',
+    backToTasksLabel: 'العودة إلى المهام والتذكيرات',
     profileSectionTaskInfo: 'معلومات المهمة',
     profileSectionCompletionHistory: 'سجل الإنجاز',
     taskStateOverdue: 'متأخرة',
@@ -715,7 +705,7 @@ export const translations: Record<Locale, Dictionary> = {
     notificationSourceVehicleLabel: 'المركبات',
     notificationSourceContractLabel: 'العقود',
     notificationSourceStaffLabel: 'العمالة',
-    notificationSourceTaskLabel: 'المهام',
+    notificationSourceTaskLabel: 'المهام والتذكيرات',
     notificationTitleVehicleRegistrationExpired: 'استمارة {name} منتهية',
     notificationTitleVehicleRegistrationExpiringSoon: 'استمارة {name} ستنتهي قريباً',
     notificationTitleVehicleInsuranceExpired: 'تأمين {name} منتهي',
@@ -745,7 +735,7 @@ export const translations: Record<Locale, Dictionary> = {
     archiveConfirmBody: 'ستختفي البطاقة من القائمة الرئيسية وستبقى محفوظة بالكامل في الأرشيف.',
     archiveConfirmAction: 'أرشفة',
     archiveGroupConfirmTitle: 'أرشفة المجموعة؟',
-    archiveGroupConfirmBody: 'ستختفي المجموعة من قائمة المهام الرئيسية، وتبقى جميع مهامها وسجل إنجازها محفوظاً بالكامل.',
+    archiveGroupConfirmBody: 'ستختفي المجموعة من قائمة المهام والتذكيرات الرئيسية، وتبقى جميع مهامها وسجل إنجازها محفوظاً بالكامل.',
     archivedNoticeTitle: 'هذه البطاقة مؤرشفة',
     archivedNoticeHint: 'قم بإلغاء الأرشفة لعرض المحتوى الكامل وتعديله.',
     unarchiveAction: 'إلغاء الأرشفة',
@@ -901,6 +891,7 @@ export const translations: Record<Locale, Dictionary> = {
     fieldMaintenanceType: 'Maintenance Type',
     fieldMaintenanceTitle: 'Maintenance Title',
     fieldServiceDate: 'Service Date',
+    fieldServiceDateOptional: 'Service Date (optional)',
     fieldMileage: 'Mileage',
     fieldNextServiceDate: 'Next Service Date',
     fieldNextServiceMileage: 'Next Service Mileage',
@@ -937,9 +928,6 @@ export const translations: Record<Locale, Dictionary> = {
     validationSalaryAmountInvalid: 'Amount must be greater than zero.',
     validationPaidDateRequired: 'Paid date is required.',
     validationDuplicateSalaryOccurrence: 'This payment has already been confirmed.',
-    validationScheduleIntervalInvalid: 'Repeat interval must be a whole number greater than zero.',
-    validationDueDayInvalid: 'Choose a valid due day (1-31).',
-    validationDueMonthInvalid: 'Choose a valid due month (1-12).',
     validationStartDateRequired: 'Start date is required.',
     validationEndDateBeforeStart: 'End date cannot be before the start date.',
     staffFormAddTitle: 'Add Staff',
@@ -970,22 +958,19 @@ export const translations: Record<Locale, Dictionary> = {
     salaryStatusPending: 'Payment pending',
     salaryStatusOverdue: 'Overdue',
     kwdUnitLabel: 'KWD',
-    fieldRepeatsEvery: 'Repeats every',
-    fieldDueDayOfMonth: 'Due day',
-    fieldDueMonth: 'Due month',
     fieldStartDate: 'Start Date',
     fieldEndDateOptional: 'End Date (optional)',
-    frequencyDay: 'Day',
-    frequencyMonth: 'Month',
-    frequencyYear: 'Year',
     frequencyEveryLabel: 'Every',
-    scheduleDueDayLabel: 'Day',
+    fieldRecurrence: 'Recurrence',
+    recurrenceWeekly: 'Weekly',
+    recurrenceMonthly: 'Monthly',
+    recurrenceYearly: 'Yearly',
     salarySchedulesLabel: 'Recurring Salary Schedules',
     salarySchedulesEmpty: 'No recurring salary added yet.',
     salaryScheduleFormAddTitle: 'Add Salary',
     salaryScheduleFormEditTitle: 'Edit Salary',
-    salaryUpcomingLabel: 'Current / Upcoming Payments',
-    salaryUpcomingEmpty: 'Nothing currently due.',
+    salaryNextPaymentLabel: 'Next Payment',
+    salaryNextPaymentEmpty: 'Nothing currently due.',
     salaryHistoryLabel: 'Payment History',
     salaryConfirmPaymentAction: 'Confirm Payment',
     salaryConfirmPaymentTitle: 'Confirm Salary Payment',
@@ -1034,7 +1019,7 @@ export const translations: Record<Locale, Dictionary> = {
     taskFormAddTitle: 'Add Task',
     taskFormEditTitle: 'Edit Task',
     taskNotFoundTitle: 'This task could not be found.',
-    backToTasksLabel: 'Back to Tasks',
+    backToTasksLabel: 'Back to Tasks & Reminders',
     profileSectionTaskInfo: 'Task Information',
     profileSectionCompletionHistory: 'Completion History',
     taskStateOverdue: 'Overdue',
@@ -1090,7 +1075,7 @@ export const translations: Record<Locale, Dictionary> = {
     notificationSourceVehicleLabel: 'Vehicles',
     notificationSourceContractLabel: 'Contracts',
     notificationSourceStaffLabel: 'Staff',
-    notificationSourceTaskLabel: 'Tasks',
+    notificationSourceTaskLabel: 'Tasks & Reminders',
     notificationTitleVehicleRegistrationExpired: '{name} registration has expired',
     notificationTitleVehicleRegistrationExpiringSoon: '{name} registration is expiring soon',
     notificationTitleVehicleInsuranceExpired: '{name} insurance has expired',
@@ -1120,7 +1105,7 @@ export const translations: Record<Locale, Dictionary> = {
     archiveConfirmBody: 'The card will be removed from the main list and remain fully preserved in Archive.',
     archiveConfirmAction: 'Archive',
     archiveGroupConfirmTitle: 'Archive Group?',
-    archiveGroupConfirmBody: 'The group will be removed from the main Tasks list, and all of its Tasks and completion history remain fully preserved.',
+    archiveGroupConfirmBody: 'The group will be removed from the main Tasks & Reminders list, and all of its Tasks and completion history remain fully preserved.',
     archivedNoticeTitle: 'This card is archived',
     archivedNoticeHint: 'Unarchive to view and edit the full content.',
     unarchiveAction: 'Unarchive',

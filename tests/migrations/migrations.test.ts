@@ -375,3 +375,134 @@ describe('Migration idempotency: opening an already-v11 database never destructi
     expect((await vehicleRepository.listActiveVehicles()).map((v) => v.id)).not.toContain('v1');
   });
 });
+
+/**
+ * Permanent Phase 10.1 migration suite -- items #46-50: the v11 -> v12
+ * upgrade normalizes every legacy `staffSalarySchedules` row (old
+ * frequency/interval/dueDayOfMonth/dueMonth model) to the new
+ * `recurrence` model, once, in place -- never losing a schedule or any
+ * confirmed payment history.
+ */
+function buildV11Stores(db: IDBDatabase): void {
+  // v10 -> v11 added no new store/index (Archive's archivedAt/deletedAt
+  // are optional fields on existing rows only) -- the v10 shape already
+  // matches v11 exactly.
+  buildV10Stores(db);
+}
+
+describe('Migration v11 -> v12: legacy staff salary recurrence normalization (Phase 10.1)', () => {
+  it('46-47. a clean legacy schedule (interval 1, due-day matching startDate) is normalized with no note, and its payment history survives untouched', async () => {
+    await seedRawVersionedDb(11, (db, tx) => {
+      buildV11Stores(db);
+      tx.objectStore('householdStaff').add({
+        id: 'staff1',
+        fullName: 'Driver Ali',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffSalarySchedules').add({
+        id: 'sch1',
+        staffId: 'staff1',
+        amount: 170,
+        frequency: 'month',
+        interval: 1,
+        dueDayOfMonth: 22,
+        startDate: '2026-09-22',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffSalaryPayments').add({
+        id: 'pay1',
+        staffId: 'staff1',
+        salaryScheduleId: 'sch1',
+        dueDate: '2026-09-22',
+        amount: 170,
+        paidDate: '2026-09-22',
+        createdAt: '2026-09-22T00:00:00.000Z',
+        updatedAt: '2026-09-22T00:00:00.000Z',
+      });
+    });
+
+    await getDB(); // runs the real v11 -> v12 upgrade
+
+    const schedule = await staffRepository.getSalarySchedule('sch1');
+    expect(schedule).toMatchObject({ id: 'sch1', staffId: 'staff1', amount: 170, recurrence: 'monthly', startDate: '2026-09-22' });
+    expect(schedule).not.toHaveProperty('frequency');
+    expect(schedule).not.toHaveProperty('interval');
+    expect(schedule).not.toHaveProperty('dueDayOfMonth');
+    expect(schedule).not.toHaveProperty('dueMonth');
+    expect(schedule?.notes).toBeUndefined(); // a precise 1:1 mapping needs no migration note
+
+    // Confirmed payment history is completely untouched.
+    const payments = await staffRepository.listSalaryPaymentsForStaff('staff1');
+    expect(payments).toHaveLength(1);
+    expect(payments[0]).toMatchObject({ id: 'pay1', dueDate: '2026-09-22', amount: 170, paidDate: '2026-09-22' });
+  });
+
+  it('48. a lossy legacy schedule (interval != 1) is normalized AND annotated with a migration note, never silently corrupted', async () => {
+    await seedRawVersionedDb(11, (db, tx) => {
+      buildV11Stores(db);
+      tx.objectStore('householdStaff').add({
+        id: 'staff1',
+        fullName: 'Driver Ali',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffSalarySchedules').add({
+        id: 'sch1',
+        staffId: 'staff1',
+        amount: 100,
+        frequency: 'month',
+        interval: 3, // every 3 months -- no equivalent in the new model
+        dueDayOfMonth: 1,
+        startDate: '2026-01-01',
+        notes: 'Quarterly bonus',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    const schedule = await staffRepository.getSalarySchedule('sch1');
+    expect(schedule?.recurrence).toBe('monthly');
+    expect(schedule?.startDate).toBe('2026-01-01'); // never rewritten
+    expect(schedule?.notes).toContain('Quarterly bonus'); // original note preserved
+    expect(schedule?.notes).toMatch(/migrat/i); // plus a visible migration note
+  });
+
+  it('49-50. no schedule is ever duplicated and re-running getDB() against an already-v12 database is a safe no-op', async () => {
+    await seedRawVersionedDb(11, (db, tx) => {
+      buildV11Stores(db);
+      tx.objectStore('householdStaff').add({
+        id: 'staff1',
+        fullName: 'Driver Ali',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffSalarySchedules').add({
+        id: 'sch1',
+        staffId: 'staff1',
+        amount: 170,
+        frequency: 'year',
+        interval: 1,
+        dueMonth: 9,
+        dueDayOfMonth: 22,
+        startDate: '2026-09-22',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+    expect(await staffRepository.listSalarySchedulesForStaff('staff1')).toHaveLength(1);
+
+    const { __resetDbConnectionForTests } = await import('../../src/storage/db');
+    __resetDbConnectionForTests();
+    await getDB(); // second open against the already-v12 database
+
+    const schedules = await staffRepository.listSalarySchedulesForStaff('staff1');
+    expect(schedules).toHaveLength(1); // never duplicated
+    expect(schedules[0].recurrence).toBe('yearly');
+  });
+});

@@ -85,7 +85,9 @@ export async function getMaintenanceRecord(id: string): Promise<VehicleMaintenan
 export async function listMaintenanceForVehicle(vehicleId: string): Promise<VehicleMaintenanceRecord[]> {
   const db = await getDB();
   const records = await db.getAllFromIndex('vehicleMaintenanceRecords', 'vehicleId', vehicleId);
-  return records.sort((a, b) => b.serviceDate.localeCompare(a.serviceDate));
+  // serviceDate is optional (Phase 10.1) -- an undated record sorts by its
+  // createdAt instead, never crashing on a missing value.
+  return records.sort((a, b) => (b.serviceDate ?? b.createdAt).localeCompare(a.serviceDate ?? a.createdAt));
 }
 
 /** Every maintenance record across all vehicles, for computing card-level status without an N+1 query per vehicle. */

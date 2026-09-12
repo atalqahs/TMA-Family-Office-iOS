@@ -44,33 +44,24 @@ export function validateStaffForm(values: StaffFormValues): StaffFormErrors {
 
 export interface SalaryScheduleFormErrors {
   amount?: TranslationKey;
-  interval?: TranslationKey;
-  dueDayOfMonth?: TranslationKey;
-  dueMonth?: TranslationKey;
   startDate?: TranslationKey;
   endDate?: TranslationKey;
 }
 
+/**
+ * Phase 10.1 simplification: recurrence is one of exactly three fixed
+ * choices (weekly/monthly/yearly) with no separate interval/due-day/
+ * due-month fields to validate -- `startDate` is the only anchor, and it
+ * is required (End Date remains optional).
+ */
 export function validateSalaryScheduleForm(values: StaffSalaryScheduleFormValues): SalaryScheduleFormErrors {
   const errors: SalaryScheduleFormErrors = {};
 
   if (!Number.isFinite(values.amount) || values.amount <= 0) {
     errors.amount = 'validationSalaryAmountInvalid';
   }
-  if (!Number.isInteger(values.interval) || values.interval < 1) {
-    errors.interval = 'validationScheduleIntervalInvalid';
-  }
   if (!values.startDate) {
     errors.startDate = 'validationStartDateRequired';
-  }
-  if (
-    (values.frequency === 'month' || values.frequency === 'year') &&
-    (values.dueDayOfMonth === undefined || values.dueDayOfMonth < 1 || values.dueDayOfMonth > 31)
-  ) {
-    errors.dueDayOfMonth = 'validationDueDayInvalid';
-  }
-  if (values.frequency === 'year' && (values.dueMonth === undefined || values.dueMonth < 1 || values.dueMonth > 12)) {
-    errors.dueMonth = 'validationDueMonthInvalid';
   }
   if (values.endDate && values.startDate && values.endDate < values.startDate) {
     errors.endDate = 'validationEndDateBeforeStart';

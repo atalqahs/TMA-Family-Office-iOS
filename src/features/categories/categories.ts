@@ -91,7 +91,7 @@ export const CATEGORIES: CategoryDefinition[] = [
     id: 'tasks',
     path: '/tasks',
     icon: ListChecks,
-    title: { ar: 'المهام', en: 'Tasks' },
+    title: { ar: 'المهام والتذكيرات', en: 'Tasks & Reminders' },
     subtitle: { ar: 'المهام والمتابعات اليومية.', en: 'Day-to-day tasks and follow-ups.' },
     emptyMessage: { ar: 'لا توجد مهام حالياً.', en: 'No tasks yet.' },
     addLabel: { ar: '+ إضافة مهمة', en: '+ Add Task' },

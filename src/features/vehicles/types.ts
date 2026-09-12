@@ -133,13 +133,20 @@ export const VEHICLE_MAINTENANCE_TYPES: Array<{ id: VehicleMaintenanceType; titl
  * `nextServiceDate` remains a purely informational fallback signal, used
  * for status only when no target mileage can be derived at all (see
  * vehicleStatus.ts) — mileage is authoritative whenever a target exists.
+ *
+ * `serviceDate` (Phase 10.1 correction) is OPTIONAL: a maintenance record
+ * is fully valid with only mileage tracking (mileageAtService +
+ * serviceIntervalKm) and no known/recorded service date at all. Absent
+ * means exactly that — never fabricated as "today", never an empty
+ * string. Mileage-based status/Notifications are entirely unaffected by
+ * its absence (see computeMaintenanceRecordStatus).
  */
 export interface VehicleMaintenanceRecord {
   id: string;
   vehicleId: string;
   type: VehicleMaintenanceType;
   title: string;
-  serviceDate: string;
+  serviceDate?: string;
   /** @deprecated Legacy odometer-at-service field, kept for old records. New records use `mileageAtService`. */
   mileage?: number;
   nextServiceDate?: string;

@@ -103,34 +103,42 @@ export interface StaffDocumentFormValues {
   expiryDate?: string;
 }
 
-export type SalaryFrequency = 'day' | 'month' | 'year';
+export type SalaryRecurrence = 'weekly' | 'monthly' | 'yearly';
 
 /**
  * A recurring salary schedule for one staff member, via `staffId`. A staff
  * member may have more than one active schedule at once (e.g. paid twice a
- * month, or one schedule that later got replaced by another with a
- * different due day) — the redesigned Phase 6 correction replaces the
- * old "one manually-added record per calendar month" concept with this:
- * the user configures the recurrence once, and every future occurrence is
+ * month, or one schedule that later replaced another) — the user
+ * configures the recurrence once, and every future occurrence is
  * *derived* (see salarySchedule.ts), never manually pre-created.
  *
- * - frequency 'day' + interval N: due every N days, starting `startDate`.
- * - frequency 'month' + interval N + dueDayOfMonth D: due on day D of
- *   every Nth month (clamped for short months, e.g. day 31 in February).
- * - frequency 'year' + interval N + dueMonth M + dueDayOfMonth D: due on
- *   day D of month M, every Nth year.
+ * Phase 10.1 correction: simplified from an arbitrary "repeats every N
+ * day/month/year" + separate due-day/due-month model down to exactly
+ * three recurrence choices, with `startDate` as the ONLY anchor --
+ * there is no separate due-day/due-month field. `startDate` is the first
+ * occurrence; every later occurrence is `startDate` + N * (1 week / 1
+ * month / 1 year), computed fresh from the original anchor each time
+ * (never chained from a previous occurrence) via the shared
+ * `utils/localDate.ts` helpers (`addLocalDays`/`addLocalMonths`) --
+ * exactly the same local-calendar-safe, never-permanently-drifting
+ * month-end/leap-year anchor semantics Tasks' own recurrence already
+ * uses (see salarySchedule.ts), reused here as a neutral shared utility
+ * (Staff does not depend on Tasks).
  *
  * `endDate`, if set, stops generating occurrences after that date — the
  * schedule and its historical payments are otherwise untouched.
+ *
+ * Legacy schedules created before this correction (which had
+ * `frequency`/`interval`/`dueDayOfMonth`/`dueMonth` instead of
+ * `recurrence`) are normalized once by the v11 -> v12 DB migration (see
+ * storage/db.ts) -- never read/interpreted ad hoc at the repository/
+ * service boundary.
  */
 export interface StaffSalarySchedule {
   id: string;
   staffId: string;
   amount: number;
-  frequency: SalaryFrequency;
-  interval: number;
-  dueDayOfMonth?: number;
-  dueMonth?: number;
+  recurrence: SalaryRecurrence;
   startDate: string;
   endDate?: string;
   notes?: string;

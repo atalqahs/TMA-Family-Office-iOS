@@ -33,6 +33,13 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * simply lacks them -- which already IS the correct "active" state (see each type's own doc comment) --
  * with no data to rewrite and no new store/index required. The version is still bumped (rather than
  * silently reusing v10) purely to mark the schema-meaning change and keep the migration chain testable.
+ * All of that survives the v11 -> v12 upgrade for Phase 10.1 (Staff salary recurrence simplification):
+ * every existing `staffSalarySchedules` row's legacy `frequency`/`interval`/`dueDayOfMonth`/`dueMonth`
+ * fields are rewritten to the new `recurrence: 'weekly'|'monthly'|'yearly'` field (see StaffSalarySchedule's
+ * own doc comment) -- `startDate` itself is NEVER rewritten (it is already a valid anchor date under both
+ * models, and every payment's own `dueDate` is a separate, already-confirmed historical record completely
+ * unaffected by this). No store or index changes; only existing rows are transformed in place, which is
+ * why this DOES need a real version bump (unlike the v10 -> v11 no-op).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -119,7 +126,7 @@ interface TmaDB extends DBSchema {
 // can open the exact same database by name/version without duplicating
 // these constants — never referenced by application code.
 export const DB_NAME = 'tma-family-office';
-export const DB_VERSION = 11;
+export const DB_VERSION = 12;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -169,7 +176,7 @@ export function subscribeDbLifecycle(listener: (state: DbLifecycleState) => void
 export function getDB(): Promise<IDBPDatabase<TmaDB>> {
   if (!dbPromise) {
     dbPromise = openDB<TmaDB>(DB_NAME, DB_VERSION, {
-      async upgrade(db, _oldVersion, _newVersion, transaction) {
+      async upgrade(db, oldVersion, _newVersion, transaction) {
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings');
         }
@@ -354,6 +361,65 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
         // them, which already means "active" (see each type's own doc
         // comment) -- there is nothing to backfill, no store, and no index
         // to add.
+
+        // Phase 10.1 correction, v11 -> v12: every existing
+        // staffSalarySchedules row created under the old arbitrary
+        // "repeats every N day/month/year" + separate due-day/due-month
+        // model is rewritten, once, to the new simplified
+        // `recurrence: 'weekly'|'monthly'|'yearly'` model (see
+        // StaffSalarySchedule's own doc comment). `oldVersion` (rather than
+        // an added-index guard, since this transform adds no new
+        // store/index) is what makes this run exactly once, the first time
+        // a database crosses into v12.
+        if (oldVersion < 12) {
+          const schedulesStore = transaction.objectStore('staffSalarySchedules');
+          let scheduleCursor = await schedulesStore.openCursor();
+          while (scheduleCursor) {
+            const legacy = scheduleCursor.value as unknown as {
+              frequency?: 'day' | 'month' | 'year';
+              interval?: number;
+              dueDayOfMonth?: number;
+              dueMonth?: number;
+              recurrence?: 'weekly' | 'monthly' | 'yearly';
+              startDate: string;
+              notes?: string;
+            } & Record<string, unknown>;
+
+            if (legacy.recurrence === undefined && legacy.frequency !== undefined) {
+              const recurrence = legacy.frequency === 'day' ? 'weekly' : legacy.frequency === 'month' ? 'monthly' : 'yearly';
+
+              // The new model has no interval/due-day/due-month at all --
+              // `startDate` alone is the anchor. `startDate` itself is
+              // NEVER rewritten (it is already a valid, already-used date
+              // for this schedule under either model, and every payment's
+              // own `dueDate` is a separate, already-confirmed historical
+              // record that this transform never touches). When the old
+              // schedule's interval/due-day/due-month diverged from a
+              // plain "every 1 unit, due on startDate's own day" schedule,
+              // this simplification cannot preserve that extra precision
+              // -- rather than silently changing future due dates without
+              // a trace, a note is appended so the user can review/adjust
+              // the migrated schedule.
+              const startDay = Number(legacy.startDate.slice(8, 10));
+              const startMonth = Number(legacy.startDate.slice(5, 7));
+              const impreciseInterval = legacy.interval !== undefined && legacy.interval !== 1;
+              const impreciseDueDay = legacy.dueDayOfMonth !== undefined && legacy.dueDayOfMonth !== startDay;
+              const impreciseDueMonth = legacy.dueMonth !== undefined && legacy.dueMonth !== startMonth;
+
+              const { frequency: _frequency, interval: _interval, dueDayOfMonth: _dueDayOfMonth, dueMonth: _dueMonth, ...rest } = legacy;
+              const updated = { ...rest, recurrence } as typeof rest & { recurrence: 'weekly' | 'monthly' | 'yearly' };
+
+              if (impreciseInterval || impreciseDueDay || impreciseDueMonth) {
+                const migrationNote =
+                  'تم ترحيل هذا الجدول من تكرار مخصص (فاصل/يوم استحقاق مختلف) — يرجى التحقق من تاريخ الاستحقاق القادم. / Migrated from a custom recurrence (interval/due-day) — please verify the next due date.';
+                updated.notes = rest.notes ? `${rest.notes}\n\n${migrationNote}` : migrationNote;
+              }
+
+              await scheduleCursor.update(updated as unknown as StaffSalarySchedule);
+            }
+            scheduleCursor = await scheduleCursor.continue();
+          }
+        }
       },
       blocked() {
         // Another tab/window/app-instance still holds an older-version

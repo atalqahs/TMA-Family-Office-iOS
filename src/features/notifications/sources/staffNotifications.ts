@@ -1,6 +1,6 @@
 import { computeDateExpiryStatus } from '../../../utils/expiryStatus';
 import { getLocalToday } from '../../../utils/localDate';
-import { buildScheduleOccurrences } from '../../staff/salarySchedule';
+import { getNextUnpaidOccurrence } from '../../staff/salarySchedule';
 import { computeOccurrenceLevel } from '../../staff/staffStatus';
 import type { HouseholdStaff, StaffSalaryPayment, StaffSalarySchedule } from '../../staff/types';
 import type { NotificationItem } from '../types';
@@ -10,17 +10,22 @@ import type { NotificationItem } from '../types';
  * local-calendar-safe utility `computeStaffStatus` itself calls, so there
  * is no second threshold definition to drift out of sync.
  *
- * Salary calls `buildScheduleOccurrences` + `computeOccurrenceLevel`
+ * Salary calls `getNextUnpaidOccurrence` + `computeOccurrenceLevel`
  * directly (the same functions `computeStaffStatus` calls internally)
  * rather than consuming `computeStaffStatus`'s aggregated `reasons[]` --
- * the lower-level call is used here specifically because it exposes each
+ * the lower-level call is used here specifically because it exposes the
  * occurrence's own `scheduleId`+`dueDate`, which this module needs for a
  * fully deterministic, collision-free notification id (two different
  * schedules may legitimately share a due date; `computeStaffStatus`'s
  * aggregated reasons do not carry the schedule id needed to tell them
- * apart). Every rule -- every-N-days/months/years generation, existing
- * payment history, the 10-day grace window -- is still the exact same
- * approved logic; nothing is reimplemented.
+ * apart). At most ONE salary notification per schedule (Phase 10.1: its
+ * single earliest-unpaid occurrence, never one per every unpaid month in
+ * a backlog) -- a paid occurrence never produces a notification, and
+ * prepaying the current occurrence immediately makes the following one
+ * the notification source, exactly mirroring the Staff profile's own
+ * single "Next Payment" UI. Every underlying rule -- weekly/monthly/
+ * yearly generation, existing payment history, the 10-day grace window --
+ * is still the exact same approved logic; nothing is reimplemented.
  */
 export function buildStaffNotifications(
   staff: HouseholdStaff[],
@@ -84,27 +89,26 @@ export function buildStaffNotifications(
     }
 
     for (const schedule of schedulesByStaff.get(member.id) ?? []) {
-      const occurrences = buildScheduleOccurrences(schedule, salaryPayments, today);
-      for (const occurrence of occurrences) {
-        const level = computeOccurrenceLevel(occurrence, today);
-        if (level !== 'red' && level !== 'orange') continue;
+      const occurrence = getNextUnpaidOccurrence(schedule, salaryPayments);
+      if (!occurrence) continue;
+      const level = computeOccurrenceLevel(occurrence, today);
+      if (level !== 'red' && level !== 'orange') continue;
 
-        const overdue = level === 'red';
-        items.push({
-          id: `staff:${member.id}:salary:${schedule.id}:${occurrence.dueDate}`,
-          sourceType: 'staff',
-          sourceId: member.id,
-          kind: overdue ? 'staffSalaryOverdue' : 'staffSalaryDue',
-          severity: overdue ? 'critical' : 'warning',
-          titleKey: overdue ? 'notificationTitleStaffSalaryOverdue' : 'notificationTitleStaffSalaryDue',
-          titleParams: { name: member.fullName },
-          messageKey: 'notificationMsgSalaryAmountDue',
-          messageParams: { amount: String(occurrence.amount), date: occurrence.dueDate },
-          effectiveDate: occurrence.dueDate,
-          sortDate: occurrence.dueDate,
-          route,
-        });
-      }
+      const overdue = level === 'red';
+      items.push({
+        id: `staff:${member.id}:salary:${schedule.id}:${occurrence.dueDate}`,
+        sourceType: 'staff',
+        sourceId: member.id,
+        kind: overdue ? 'staffSalaryOverdue' : 'staffSalaryDue',
+        severity: overdue ? 'critical' : 'warning',
+        titleKey: overdue ? 'notificationTitleStaffSalaryOverdue' : 'notificationTitleStaffSalaryDue',
+        titleParams: { name: member.fullName },
+        messageKey: 'notificationMsgSalaryAmountDue',
+        messageParams: { amount: String(occurrence.amount), date: occurrence.dueDate },
+        effectiveDate: occurrence.dueDate,
+        sortDate: occurrence.dueDate,
+        route,
+      });
     }
   }
 

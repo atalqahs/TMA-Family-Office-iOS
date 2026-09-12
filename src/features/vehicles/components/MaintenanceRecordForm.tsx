@@ -43,7 +43,7 @@ function toFormValues(state: MaintenanceFormState): VehicleMaintenanceFormValues
   return {
     type: state.type,
     title: state.title.trim(),
-    serviceDate: state.serviceDate,
+    serviceDate: state.serviceDate || undefined,
     mileageAtService: state.mileageAtService.trim() ? Number(state.mileageAtService) : undefined,
     serviceIntervalKm: state.serviceIntervalKm.trim() ? Number(state.serviceIntervalKm) : undefined,
     nextServiceDate: state.nextServiceDate || undefined,
@@ -114,18 +114,13 @@ export function MaintenanceRecordForm({ initialValue, onSubmit, onCancel }: Main
         />
       </FormField>
 
-      <FormField
-        label={t('fieldServiceDate')}
-        htmlFor={`${formId}-serviceDate`}
-        error={errors.serviceDate && t(errors.serviceDate)}
-      >
+      <FormField label={t('fieldServiceDateOptional')} htmlFor={`${formId}-serviceDate`}>
         <input
           id={`${formId}-serviceDate`}
           className="form-input"
           type="date"
           value={state.serviceDate}
           onChange={(e) => update('serviceDate', e.target.value)}
-          required
         />
       </FormField>
 

@@ -1,7 +1,7 @@
 import type { TranslationKey } from '../../localization/translations';
 import { computeDateExpiryStatus, type ExpiryStatusLevel } from '../../utils/expiryStatus';
 import { getLocalToday } from '../../utils/localDate';
-import { buildScheduleOccurrences, type SalaryOccurrence } from './salarySchedule';
+import { getNextUnpaidOccurrence, type SalaryOccurrence } from './salarySchedule';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from './types';
 
 export type StaffStatusLevel = ExpiryStatusLevel;
@@ -68,9 +68,12 @@ export interface StaffStatus {
 
 /**
  * Overall staff status: the worst signal across civil ID / passport /
- * residency expiry, every StaffDocument's own expiry, and every unpaid,
- * due-or-past salary schedule occurrence. Missing data is simply skipped —
- * it never invents a warning. Returns not just a level but the specific
+ * residency expiry, every StaffDocument's own expiry, and each active
+ * salary schedule's own EARLIEST UNPAID occurrence (never every overdue
+ * occurrence individually -- Phase 10.1 simplification: exactly one
+ * "Next Payment" signal per schedule, matching the Staff profile's own
+ * single Next Payment UI). Missing data is simply skipped — it never
+ * invents a warning. Returns not just a level but the specific
  * reasons behind it (per the Phase 6 spec: a vague "Approaching" was found
  * ambiguous during manual testing), so the Profile page can explain *why*
  * — e.g. "Residency expires soon" or "Salary of 130 KWD due 11 Oct has not
@@ -113,15 +116,14 @@ export function computeStaffStatus(
 
   const today = getLocalToday(now);
   for (const schedule of salarySchedules) {
-    const occurrences = buildScheduleOccurrences(schedule, salaryPayments, today);
-    for (const occurrence of occurrences) {
-      const occurrenceLevel = computeOccurrenceLevel(occurrence, today);
-      if (occurrenceLevel === 'green') continue;
-      addReason(occurrenceLevel, 'staffReasonSalaryUnconfirmed', undefined, {
-        amount: String(occurrence.amount),
-        date: occurrence.dueDate,
-      });
-    }
+    const occurrence = getNextUnpaidOccurrence(schedule, salaryPayments);
+    if (!occurrence) continue;
+    const occurrenceLevel = computeOccurrenceLevel(occurrence, today);
+    if (occurrenceLevel === 'green') continue;
+    addReason(occurrenceLevel, 'staffReasonSalaryUnconfirmed', undefined, {
+      amount: String(occurrence.amount),
+      date: occurrence.dueDate,
+    });
   }
 
   return { level, reasons };

@@ -8,7 +8,7 @@ import { useLanguage } from '../../../hooks/useLanguage';
 import type { TranslationKey } from '../../../localization/translations';
 import { getLocalToday } from '../../../utils/localDate';
 import { formatMoneyNumber } from '../../../utils/money';
-import { buildScheduleOccurrences, type SalaryOccurrence } from '../salarySchedule';
+import { getNextUnpaidOccurrence, type SalaryOccurrence } from '../salarySchedule';
 import { computeOccurrenceLevel, STAFF_STATUS_VARIANT, type SalaryOccurrenceLevel } from '../staffStatus';
 import { removeSalaryPayment, removeSalarySchedule } from '../staffService';
 import { getPaymentDueDate } from '../types';
@@ -25,10 +25,10 @@ interface SalarySectionProps {
   onRefresh: () => Promise<void> | void;
 }
 
-const FREQUENCY_LABEL_KEY: Record<StaffSalarySchedule['frequency'], TranslationKey> = {
-  day: 'frequencyDay',
-  month: 'frequencyMonth',
-  year: 'frequencyYear',
+const RECURRENCE_LABEL_KEY: Record<StaffSalarySchedule['recurrence'], TranslationKey> = {
+  weekly: 'recurrenceWeekly',
+  monthly: 'recurrenceMonthly',
+  yearly: 'recurrenceYearly',
 };
 
 function formatDate(dateStr: string, locale: string): string {
@@ -49,15 +49,10 @@ function ScheduleRow({ schedule, onEdit, onRemoved }: ScheduleRowProps) {
   const [removing, setRemoving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const monthName =
-    schedule.frequency === 'year' && schedule.dueMonth
-      ? new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2000, schedule.dueMonth - 1, 1))
-      : undefined;
-
   const metaParts = [
-    `${t('frequencyEveryLabel')} ${schedule.interval} ${t(FREQUENCY_LABEL_KEY[schedule.frequency])}`,
-    schedule.dueDayOfMonth !== undefined ? `${t('scheduleDueDayLabel')} ${schedule.dueDayOfMonth}` : undefined,
-    monthName ? `${t('fieldDueMonth')} ${monthName}` : undefined,
+    t(RECURRENCE_LABEL_KEY[schedule.recurrence]),
+    `${t('fieldStartDate')}: ${formatDate(schedule.startDate, locale)}`,
+    schedule.endDate ? `${t('fieldEndDateOptional')}: ${formatDate(schedule.endDate, locale)}` : undefined,
   ].filter(Boolean);
 
   const handleRemove = async () => {
@@ -110,13 +105,20 @@ const OCCURRENCE_STATE_LABEL_KEY: Record<SalaryOccurrenceLevel, TranslationKey> 
   red: 'salaryStatusOverdue',
 };
 
-interface OccurrenceRowProps {
+interface NextPaymentRowProps {
   occurrence: SalaryOccurrence;
   today: string;
   onConfirm: () => void;
 }
 
-function OccurrenceRow({ occurrence, today, onConfirm }: OccurrenceRowProps) {
+/**
+ * Exactly ONE row per active schedule -- its own EARLIEST UNPAID
+ * occurrence (never "first after today"; never every unpaid occurrence
+ * stacked). Prepayment is always allowed: even a not-yet-due occurrence
+ * can be confirmed immediately, at which point the next one becomes
+ * "Next Payment" for this schedule.
+ */
+function NextPaymentRow({ occurrence, today, onConfirm }: NextPaymentRowProps) {
   const { t, locale } = useLanguage();
   const level = computeOccurrenceLevel(occurrence, today);
   const isFuture = occurrence.dueDate > today;
@@ -211,8 +213,12 @@ export function SalarySection({
   const { t } = useLanguage();
   const today = getLocalToday();
 
-  const occurrences = salarySchedules.flatMap((schedule) => buildScheduleOccurrences(schedule, salaryPayments, today));
-  const pendingOccurrences = occurrences.filter((occurrence) => !occurrence.paid).sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  // Exactly one Next Payment per active schedule -- its own earliest
+  // unpaid occurrence, never a stacked list of every unpaid month.
+  const nextPayments = salarySchedules
+    .map((schedule) => getNextUnpaidOccurrence(schedule, salaryPayments))
+    .filter((occurrence): occurrence is SalaryOccurrence => occurrence !== undefined)
+    .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
 
   return (
     <div className="salary-section">
@@ -235,13 +241,13 @@ export function SalarySection({
         {t('salaryPaymentsAddAction')}
       </PrimaryButton>
 
-      <h3 className="salary-section__subtitle salary-section__subtitle--spaced">{t('salaryUpcomingLabel')}</h3>
-      {pendingOccurrences.length === 0 ? (
-        <p className="salary-section__empty">{t('salaryUpcomingEmpty')}</p>
+      <h3 className="salary-section__subtitle salary-section__subtitle--spaced">{t('salaryNextPaymentLabel')}</h3>
+      {nextPayments.length === 0 ? (
+        <p className="salary-section__empty">{t('salaryNextPaymentEmpty')}</p>
       ) : (
         <ul className="salary-section__list">
-          {pendingOccurrences.map((occurrence) => (
-            <OccurrenceRow
+          {nextPayments.map((occurrence) => (
+            <NextPaymentRow
               key={`${occurrence.scheduleId}-${occurrence.dueDate}`}
               occurrence={occurrence}
               today={today}

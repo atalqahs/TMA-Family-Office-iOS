@@ -76,7 +76,7 @@ function MaintenanceRow({ record, currentMileage, onEdit, onComplete, onRemoved 
       <span className="maintenance-row__text">
         <span className="maintenance-row__title">{record.title}</span>
         <span className="maintenance-row__meta">
-          {typeLabel} · {new Intl.DateTimeFormat(locale).format(new Date(record.serviceDate))}
+          {record.serviceDate ? `${typeLabel} · ${new Intl.DateTimeFormat(locale).format(new Date(record.serviceDate))}` : typeLabel}
           {mileageAtService !== undefined &&
             ` · ${t('fieldMileageAtService')}: ${formatMileageNumber(mileageAtService, locale)} ${t('mileageUnitLabel')}`}
         </span>

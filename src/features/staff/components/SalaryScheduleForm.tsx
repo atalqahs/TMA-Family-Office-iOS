@@ -4,7 +4,7 @@ import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { getLocalToday } from '../../../utils/localDate';
-import type { SalaryFrequency, StaffSalarySchedule, StaffSalaryScheduleFormValues } from '../types';
+import type { SalaryRecurrence, StaffSalarySchedule, StaffSalaryScheduleFormValues } from '../types';
 import { validateSalaryScheduleForm } from '../validation';
 import './SalaryScheduleForm.css';
 
@@ -17,24 +17,17 @@ interface SalaryScheduleFormProps {
 
 interface ScheduleFormState {
   amount: string;
-  frequency: SalaryFrequency;
-  interval: string;
-  dueDayOfMonth: string;
-  dueMonth: string;
+  recurrence: SalaryRecurrence;
   startDate: string;
   endDate: string;
   notes: string;
 }
 
 function toFormState(schedule?: StaffSalarySchedule, defaultAmount?: number): ScheduleFormState {
-  const today = getLocalToday();
   return {
     amount: schedule?.amount !== undefined ? String(schedule.amount) : defaultAmount !== undefined ? String(defaultAmount) : '',
-    frequency: schedule?.frequency ?? 'month',
-    interval: schedule?.interval !== undefined ? String(schedule.interval) : '1',
-    dueDayOfMonth: schedule?.dueDayOfMonth !== undefined ? String(schedule.dueDayOfMonth) : String(Number(today.slice(8, 10))),
-    dueMonth: schedule?.dueMonth !== undefined ? String(schedule.dueMonth) : String(Number(today.slice(5, 7))),
-    startDate: schedule?.startDate ?? today,
+    recurrence: schedule?.recurrence ?? 'monthly',
+    startDate: schedule?.startDate ?? getLocalToday(),
     endDate: schedule?.endDate ?? '',
     notes: schedule?.notes ?? '',
   };
@@ -43,21 +36,18 @@ function toFormState(schedule?: StaffSalarySchedule, defaultAmount?: number): Sc
 function toFormValues(state: ScheduleFormState): StaffSalaryScheduleFormValues {
   return {
     amount: state.amount.trim() ? Number(state.amount) : Number.NaN,
-    frequency: state.frequency,
-    interval: state.interval.trim() ? Number(state.interval) : Number.NaN,
-    dueDayOfMonth:
-      state.frequency === 'month' || state.frequency === 'year'
-        ? state.dueDayOfMonth.trim()
-          ? Number(state.dueDayOfMonth)
-          : undefined
-        : undefined,
-    dueMonth: state.frequency === 'year' ? (state.dueMonth.trim() ? Number(state.dueMonth) : undefined) : undefined,
+    recurrence: state.recurrence,
     startDate: state.startDate,
     endDate: state.endDate || undefined,
     notes: state.notes.trim() || undefined,
   };
 }
 
+/**
+ * Phase 10.1 simplification: exactly three recurrence choices
+ * (weekly/monthly/yearly), `startDate` as the ONLY anchor -- no separate
+ * "repeats every N" interval and no separate due-day/due-month fields.
+ */
 export function SalaryScheduleForm({ initialValue, defaultAmount, onSubmit, onCancel }: SalaryScheduleFormProps) {
   const { t } = useLanguage();
   const formId = useId();
@@ -105,72 +95,18 @@ export function SalaryScheduleForm({ initialValue, defaultAmount, onSubmit, onCa
         />
       </FormField>
 
-      <FormField label={t('fieldRepeatsEvery')} htmlFor={`${formId}-interval`} error={errors.interval && t(errors.interval)}>
-        <div className="salary-schedule-form__repeat-row">
-          <input
-            id={`${formId}-interval`}
-            className="form-input salary-schedule-form__interval-input"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            step="1"
-            value={state.interval}
-            onChange={(e) => update('interval', e.target.value)}
-            required
-          />
-          <select
-            className="form-input"
-            value={state.frequency}
-            onChange={(e) => update('frequency', e.target.value as SalaryFrequency)}
-          >
-            <option value="day">{t('frequencyDay')}</option>
-            <option value="month">{t('frequencyMonth')}</option>
-            <option value="year">{t('frequencyYear')}</option>
-          </select>
-        </div>
+      <FormField label={t('fieldRecurrence')} htmlFor={`${formId}-recurrence`}>
+        <select
+          id={`${formId}-recurrence`}
+          className="form-input"
+          value={state.recurrence}
+          onChange={(e) => update('recurrence', e.target.value as SalaryRecurrence)}
+        >
+          <option value="weekly">{t('recurrenceWeekly')}</option>
+          <option value="monthly">{t('recurrenceMonthly')}</option>
+          <option value="yearly">{t('recurrenceYearly')}</option>
+        </select>
       </FormField>
-
-      {(state.frequency === 'month' || state.frequency === 'year') && (
-        <FormField
-          label={t('fieldDueDayOfMonth')}
-          htmlFor={`${formId}-dueDay`}
-          error={errors.dueDayOfMonth && t(errors.dueDayOfMonth)}
-        >
-          <input
-            id={`${formId}-dueDay`}
-            className="form-input"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={31}
-            step="1"
-            value={state.dueDayOfMonth}
-            onChange={(e) => update('dueDayOfMonth', e.target.value)}
-            required
-          />
-        </FormField>
-      )}
-
-      {state.frequency === 'year' && (
-        <FormField
-          label={t('fieldDueMonth')}
-          htmlFor={`${formId}-dueMonth`}
-          error={errors.dueMonth && t(errors.dueMonth)}
-        >
-          <input
-            id={`${formId}-dueMonth`}
-            className="form-input"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            max={12}
-            step="1"
-            value={state.dueMonth}
-            onChange={(e) => update('dueMonth', e.target.value)}
-            required
-          />
-        </FormField>
-      )}
 
       <FormField
         label={t('fieldStartDate')}

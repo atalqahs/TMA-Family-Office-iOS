@@ -119,7 +119,10 @@ export function getActiveMaintenanceRecords(records: VehicleMaintenanceRecord[])
 }
 
 function isMoreRecent(a: VehicleMaintenanceRecord, b: VehicleMaintenanceRecord): boolean {
-  if (a.serviceDate !== b.serviceDate) return a.serviceDate > b.serviceDate;
+  // Undated records (Phase 10.1: serviceDate is optional) fall back to
+  // createdAt -- comparing an absent serviceDate against a present one
+  // would otherwise be meaningless.
+  if (a.serviceDate && b.serviceDate && a.serviceDate !== b.serviceDate) return a.serviceDate > b.serviceDate;
   return a.createdAt > b.createdAt;
 }
 

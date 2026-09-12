@@ -38,21 +38,18 @@ export function validateVehicleForm(values: VehicleFormValues): VehicleFormError
 
 export interface MaintenanceFormErrors {
   title?: TranslationKey;
-  serviceDate?: TranslationKey;
   mileage?: TranslationKey;
   nextServiceMileage?: TranslationKey;
   mileageAtService?: TranslationKey;
   serviceIntervalKm?: TranslationKey;
 }
 
+/** Maintenance Date is OPTIONAL (Phase 10.1 correction) -- a record is fully valid without it; mileage tracking alone is sufficient. */
 export function validateMaintenanceForm(values: VehicleMaintenanceFormValues): MaintenanceFormErrors {
   const errors: MaintenanceFormErrors = {};
 
   if (!values.title.trim()) {
     errors.title = 'validationMaintenanceTitleRequired';
-  }
-  if (!values.serviceDate) {
-    errors.serviceDate = 'validationMaintenanceDateRequired';
   }
   if (values.mileage !== undefined && (!Number.isFinite(values.mileage) || values.mileage < 0)) {
     errors.mileage = 'validationMileageNegative';

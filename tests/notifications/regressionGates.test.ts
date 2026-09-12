@@ -10,13 +10,14 @@ import { DB_VERSION } from '../../src/storage/db';
  * tests/architecture/architecture.test.ts) — nothing in this phase
  * touched or weakened any existing Phase 9A test or rule. Item 47 (no
  * DB_VERSION bump from Notifications specifically) is asserted directly
- * here. Phase 10 (Archive) subsequently bumped DB_VERSION 10 -> 11 for its
- * own schema change (see storage/db.ts's v10->v11 doc comment) -- this gate
- * is updated to that new baseline rather than pinned to a stale value, same
+ * here. Phase 10 (Archive) subsequently bumped DB_VERSION 10 -> 11, and
+ * Phase 10.1 bumped it again 11 -> 12 for the Staff salary recurrence
+ * normalization (see storage/db.ts's v11->v12 doc comment) -- this gate is
+ * updated to each new baseline rather than pinned to a stale value, same
  * as every future phase that legitimately changes the schema will do.
  */
 describe('Phase 9B regression gates', () => {
   it('47. DB_VERSION reflects only intentional schema changes -- Notifications itself introduced none', () => {
-    expect(DB_VERSION).toBe(11);
+    expect(DB_VERSION).toBe(12);
   });
 });
