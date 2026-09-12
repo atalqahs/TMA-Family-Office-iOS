@@ -1,11 +1,10 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { ArchivedNotice } from '../components/ArchivedNotice';
 import { DangerButton } from '../components/DangerButton';
 import { EmptyState } from '../components/EmptyState';
 import { IconButton } from '../components/IconButton';
-import { PageHeader } from '../components/PageHeader';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { Sheet } from '../components/Sheet';
@@ -177,10 +176,16 @@ export function TaskGroupDetailPage() {
         />
       </div>
 
-      <div className="task-group-detail-page__header-row">
-        <PageHeader title={getTaskGroupDisplayName(group, t)} />
-        <div className="task-group-detail-page__header-actions">
-          <SecondaryButton onClick={editGroupSheet.open}>{t('profileEditAction')}</SecondaryButton>
+      <div className="task-group-detail-page__header">
+        <div className="task-group-detail-page__title-row">
+          <h1 className="task-group-detail-page__title">{getTaskGroupDisplayName(group, t)}</h1>
+          <IconButton
+            icon={<Pencil size={18} strokeWidth={1.75} />}
+            label={t('profileEditAction')}
+            onClick={editGroupSheet.open}
+          />
+        </div>
+        <div className="task-group-detail-page__archive-row">
           <SecondaryButton onClick={archiveGroupSheet.open}>{t('archiveGroupAction')}</SecondaryButton>
         </div>
       </div>

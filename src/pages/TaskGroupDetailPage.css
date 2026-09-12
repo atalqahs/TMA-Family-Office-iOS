@@ -7,31 +7,48 @@
   padding: var(--space-2) var(--space-3) 0;
 }
 
-.task-group-detail-page__header-row {
+/*
+ * Final layout (Phase 10.2 correction, post-iPhone-testing): two
+ * independent rows, never competing for horizontal space.
+ *
+ * Row 1: title + a small inline Edit action. The title is a flex item
+ * that can shrink and WRAP (min-width: 0 + overflow-wrap) -- its font
+ * size is never reduced, only its line count grows. The Edit IconButton
+ * is `flex-shrink: 0`, so no title length can ever push it off-screen.
+ *
+ * Row 2: Archive Group alone, on its own row below -- it can never be
+ * squeezed by the title, at any title length or viewport width.
+ */
+.task-group-detail-page__header {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
   gap: var(--space-3);
-  padding-inline-end: var(--space-5);
+  padding: var(--space-5) var(--space-5) 0;
 }
 
-.task-group-detail-page__header-row > .page-header {
+.task-group-detail-page__title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.task-group-detail-page__title {
   flex: 1 1 auto;
   min-width: 0;
+  margin: 0;
+  font-size: var(--font-size-xl);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
-.task-group-detail-page__header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  padding-top: var(--space-3);
+.task-group-detail-page__title-row > .icon-button {
   flex-shrink: 0;
 }
 
-.task-group-detail-page__header-actions > * {
-  flex: 0 0 auto;
+.task-group-detail-page__archive-row {
+  display: flex;
 }
 
 .task-group-detail-page__filters {
