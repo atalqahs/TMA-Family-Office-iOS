@@ -135,7 +135,7 @@ export function TaskProfilePage() {
               </>
             ) : (
               <PrimaryButton onClick={() => setConfirmingComplete(true)}>
-                {t('taskCompleteOccurrenceAction')}
+                {t(task.recurrenceUnit === 'none' ? 'taskCompleteAction' : 'taskCompleteOccurrenceAction')}
               </PrimaryButton>
             ))}
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>

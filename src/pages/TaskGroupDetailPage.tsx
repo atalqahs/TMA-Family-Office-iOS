@@ -32,29 +32,40 @@ import './TaskGroupDetailPage.css';
 
 const TASKS_CATEGORY = CATEGORIES.find((category) => category.id === 'tasks')!;
 
-const FILTERS: TaskListFilter[] = ['all', 'overdue', 'dueToday', 'upcoming', 'noDueDate', 'completed'];
-const FILTER_LABEL_KEY: Record<TaskListFilter, TranslationKey> = {
+// Phase 10.2: "Completed" is intentionally excluded from every
+// user-facing filter/section here -- never a filter chip, never a
+// grouped section, never rendered in the normal list. This is a pure
+// UI presentation choice: TaskCompletion records, recurrence state, and
+// occurrence identity are completely untouched (see taskStatus.ts/
+// taskRecurrence.ts, neither of which changed) -- a completed one-time
+// Task simply produces a `state: 'completed'` entry that this page never
+// displays, and a completed recurring occurrence was already excluded
+// automatically (computeTaskOccurrenceStatus always reports the OLDEST
+// UNCOMPLETED occurrence for a recurring Task, so it never even reaches
+// 'completed' state while future occurrences remain).
+const FILTERS: Exclude<TaskListFilter, 'completed'>[] = ['all', 'overdue', 'dueToday', 'upcoming', 'noDueDate'];
+const FILTER_LABEL_KEY: Record<Exclude<TaskListFilter, 'completed'>, TranslationKey> = {
   all: 'taskFilterAll',
   overdue: 'taskFilterOverdue',
   dueToday: 'taskFilterToday',
   upcoming: 'taskFilterUpcoming',
   noDueDate: 'taskFilterNoDueDate',
-  completed: 'taskFilterCompleted',
 };
-const GROUP_ORDER: Exclude<TaskListFilter, 'all'>[] = ['overdue', 'dueToday', 'upcoming', 'noDueDate', 'completed'];
-const GROUP_LABEL_KEY: Record<Exclude<TaskListFilter, 'all'>, TranslationKey> = {
+const GROUP_ORDER: Exclude<TaskListFilter, 'all' | 'completed'>[] = ['overdue', 'dueToday', 'upcoming', 'noDueDate'];
+const GROUP_LABEL_KEY: Record<Exclude<TaskListFilter, 'all' | 'completed'>, TranslationKey> = {
   overdue: 'taskStateOverdue',
   dueToday: 'taskStateDueToday',
   upcoming: 'taskStateUpcoming',
   noDueDate: 'taskStateNoDueDate',
-  completed: 'taskStateCompleted',
 };
 
 /**
- * The Overdue/Today/Upcoming/Completed task-state organization from the
- * original Phase 8 Tasks page -- unchanged in behavior, just scoped to a
- * single TaskGroup now that the top-level Tasks page shows groups instead
- * of one global mixed list (see TasksPage.tsx / TaskGroupCard).
+ * The Overdue/Today/Upcoming task-state organization from the original
+ * Phase 8 Tasks page -- unchanged in behavior, just scoped to a single
+ * TaskGroup now that the top-level Tasks page shows groups instead of one
+ * global mixed list (see TasksPage.tsx / TaskGroupCard). Completed tasks
+ * are filtered out of this page's own view entirely (Phase 10.2) --
+ * never a reason to touch the underlying completion data.
  */
 export function TaskGroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
@@ -67,7 +78,7 @@ export function TaskGroupDetailPage() {
   const deleteGroupSheet = useDisclosure();
   const archiveGroupSheet = useDisclosure();
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [filter, setFilter] = useState<TaskListFilter>('all');
+  const [filter, setFilter] = useState<Exclude<TaskListFilter, 'completed'>>('all');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [archiving, setArchiving] = useState(false);
@@ -83,8 +94,13 @@ export function TaskGroupDetailPage() {
     [completions, groupTaskIds],
   );
 
+  // Phase 10.2: completed entries are excluded from this page's own view
+  // right after computing them -- everything downstream (the "all" count,
+  // the empty-state check, the filter chips) only ever sees the entries
+  // this page actually shows. `buildTaskListEntries`/`sortTaskListEntries`
+  // themselves are untouched; this is a display-only filter.
   const sortedEntries = useMemo(
-    () => sortTaskListEntries(buildTaskListEntries(groupTasks, groupCompletions)),
+    () => sortTaskListEntries(buildTaskListEntries(groupTasks, groupCompletions)).filter((entry) => entry.state !== 'completed'),
     [groupTasks, groupCompletions],
   );
   const visibleEntries = useMemo(() => filterTaskListEntries(sortedEntries, filter), [sortedEntries, filter]);

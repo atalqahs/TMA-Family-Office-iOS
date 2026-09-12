@@ -287,7 +287,6 @@ export type TranslationKey =
   | 'taskFilterOverdue'
   | 'taskFilterToday'
   | 'taskFilterUpcoming'
-  | 'taskFilterCompleted'
   | 'taskFilterEmptyMessage'
   | 'completionHistoryEmpty'
   | 'taskCompleteAction'
@@ -660,10 +659,9 @@ export const translations: Record<Locale, Dictionary> = {
     taskFilterOverdue: 'متأخرة',
     taskFilterToday: 'اليوم',
     taskFilterUpcoming: 'قادمة',
-    taskFilterCompleted: 'مكتملة',
     taskFilterEmptyMessage: 'لا توجد مهام ضمن هذا التصنيف.',
     completionHistoryEmpty: 'لا يوجد سجل إنجاز بعد.',
-    taskCompleteAction: 'إنجاز',
+    taskCompleteAction: 'تم الإنجاز',
     taskCompleteOccurrenceAction: 'إنجاز هذه الدورة',
     taskCompletedOnLabel: 'أُنجزت في',
     duplicateTaskCompletionError: 'تم إنجاز هذه الدورة مسبقاً.',
@@ -1030,11 +1028,10 @@ export const translations: Record<Locale, Dictionary> = {
     taskFilterOverdue: 'Overdue',
     taskFilterToday: 'Today',
     taskFilterUpcoming: 'Upcoming',
-    taskFilterCompleted: 'Completed',
     taskFilterEmptyMessage: 'No tasks match this filter.',
     completionHistoryEmpty: 'No completion history yet.',
     taskCompleteAction: 'Complete',
-    taskCompleteOccurrenceAction: 'Complete Current Occurrence',
+    taskCompleteOccurrenceAction: 'Complete This Occurrence',
     taskCompletedOnLabel: 'Completed on',
     duplicateTaskCompletionError: 'This occurrence has already been completed.',
     taskDeleteAction: 'Delete Task',

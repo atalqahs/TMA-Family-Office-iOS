@@ -79,7 +79,7 @@ export function TaskCard({ task, completions, onOpen, onEdit, onComplete }: Task
             </SecondaryButton>
           ) : (
             <SecondaryButton type="button" onClick={() => setConfirming(true)}>
-              {t('taskCompleteAction')}
+              {t(task.recurrenceUnit === 'none' ? 'taskCompleteAction' : 'taskCompleteOccurrenceAction')}
             </SecondaryButton>
           ))}
         {confirming && (
