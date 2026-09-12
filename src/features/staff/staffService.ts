@@ -51,11 +51,6 @@ export async function unarchiveStaffMember(id: string): Promise<void> {
   await staffRepository.unarchiveStaffMember(id);
 }
 
-/** "Delete Card" from within Archive: a forward-compatible soft-delete for the later Trash phase -- distinct from `removeStaffMember`'s existing hard cascade delete, which is unrelated and untouched. */
-export async function deleteStaffMemberCard(id: string): Promise<void> {
-  await staffRepository.softDeleteStaffMember(id);
-}
-
 export async function addStaffDocument(staffId: string, values: StaffDocumentFormValues): Promise<StaffDocument> {
   const now = new Date().toISOString();
   const document: StaffDocument = {

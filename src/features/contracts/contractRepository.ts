@@ -8,14 +8,14 @@ import type { Contract, ContractDocument } from './types';
  * on it) instead.
  */
 
-/** Every non-deleted contract, ARCHIVED ONES INCLUDED -- the read path for Notifications/Archive, which must see archived records too (see features/archive/, features/notifications/). */
+/** Every contract, ARCHIVED ONES INCLUDED -- the read path for Notifications/Archive, which must see archived records too (see features/archive/, features/notifications/). */
 export async function listContracts(): Promise<Contract[]> {
   const db = await getDB();
   const all = await db.getAll('contracts');
-  return all.filter((contract) => !contract.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-/** Non-deleted AND non-archived -- the normal active Contracts list. Centralized here so no component ever filters `archivedAt`/`deletedAt` itself. */
+/** Non-archived -- the normal active Contracts list. Centralized here so no component ever filters `archivedAt` itself. */
 export async function listActiveContracts(): Promise<Contract[]> {
   const all = await listContracts();
   return all.filter((contract) => !contract.archivedAt);
@@ -51,14 +51,6 @@ export async function unarchiveContract(id: string): Promise<void> {
   if (!existing) return;
   const { archivedAt: _archivedAt, ...rest } = existing;
   await db.put('contracts', rest);
-}
-
-/** Sets `deletedAt` (the "Delete Card" action from within Archive) -- a forward-compatible soft-delete for the later Trash phase, never a permanent-delete path. Hides the record from both the active list and Archive while preserving all data/documents/linked relationship. */
-export async function softDeleteContract(id: string): Promise<void> {
-  const db = await getDB();
-  const existing = await db.get('contracts', id);
-  if (!existing) return;
-  await db.put('contracts', { ...existing, deletedAt: new Date().toISOString() });
 }
 
 export async function listDocumentsForContract(contractId: string): Promise<ContractDocument[]> {

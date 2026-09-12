@@ -9,8 +9,12 @@ import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
 import { ContractProfilePage } from './pages/ContractProfilePage';
 import { ContractsPage } from './pages/ContractsPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { EducationProfilePage } from './pages/EducationProfilePage';
+import { EducationPage } from './pages/EducationPage';
 import { FamilyMemberProfilePage } from './pages/FamilyMemberProfilePage';
 import { FamilyPage } from './pages/FamilyPage';
+import { HealthProfilePage } from './pages/HealthProfilePage';
+import { HealthPage } from './pages/HealthPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { PropertiesPage } from './pages/PropertiesPage';
 import { PropertyProfilePage } from './pages/PropertyProfilePage';
@@ -21,7 +25,6 @@ import { TaskCalendarPage } from './pages/TaskCalendarPage';
 import { TaskGroupDetailPage } from './pages/TaskGroupDetailPage';
 import { TaskProfilePage } from './pages/TaskProfilePage';
 import { TasksPage } from './pages/TasksPage';
-import { TrashPage } from './pages/TrashPage';
 import { VehicleProfilePage } from './pages/VehicleProfilePage';
 import { VehiclesPage } from './pages/VehiclesPage';
 
@@ -34,7 +37,9 @@ const PLACEHOLDER_CATEGORIES = CATEGORIES.filter(
     category.id !== 'contracts' &&
     category.id !== 'tasks' &&
     category.id !== 'notifications' &&
-    category.id !== 'archive',
+    category.id !== 'archive' &&
+    category.id !== 'health' &&
+    category.id !== 'education',
 );
 
 export default function App() {
@@ -70,6 +75,10 @@ export default function App() {
               <Route path="notifications" element={<NotificationsPage />} />
               <Route path="archive" element={<ArchivePage />} />
               <Route path="archive/:categoryId" element={<ArchiveCategoryPage />} />
+              <Route path="health" element={<HealthPage />} />
+              <Route path="health/:profileId" element={<HealthProfilePage />} />
+              <Route path="education" element={<EducationPage />} />
+              <Route path="education/:profileId" element={<EducationProfilePage />} />
               {PLACEHOLDER_CATEGORIES.map((category) => (
                 <Route
                   key={category.id}
@@ -78,7 +87,6 @@ export default function App() {
                 />
               ))}
               <Route path="settings" element={<SettingsPage />} />
-              <Route path="trash" element={<TrashPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Routes>

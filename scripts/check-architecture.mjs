@@ -21,7 +21,7 @@ import ts from 'typescript';
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const SRC = join(ROOT, 'src');
 
-const CROSS_MODULE_FEATURES = ['family', 'properties', 'vehicles', 'staff', 'contracts'];
+const CROSS_MODULE_FEATURES = ['family', 'properties', 'vehicles', 'staff', 'contracts', 'health', 'education'];
 
 /** @type {string[]} */
 const violations = [];
@@ -129,7 +129,8 @@ function relPath(file) {
 }
 
 // ---------------------------------------------------------------------------
-// 2. Tasks cannot import family/properties/vehicles/staff/contracts.
+// 2. Tasks cannot import family/properties/vehicles/staff/contracts/health/
+//    education.
 // ---------------------------------------------------------------------------
 {
   const tasksDir = join(SRC, 'features', 'tasks') + '/';
@@ -321,9 +322,9 @@ function relPath(file) {
 // ---------------------------------------------------------------------------
 // 11. No Notification persistence store (Phase 9B is a derived-only
 //     aggregation layer -- no schema change), and DB_VERSION reflects the
-//     latest intentional schema change (currently 12 -- Phase 10.1's
-//     staff salary recurrence normalization; see storage/db.ts's own
-//     v11->v12 doc comment).
+//     latest intentional schema change (currently 13 -- Phase 11's Health/
+//     Education stores + Trash/deletedAt removal; see storage/db.ts's own
+//     v12->v13 doc comment).
 // ---------------------------------------------------------------------------
 {
   const dbFile = join(SRC, 'storage', 'db.ts');
@@ -332,8 +333,8 @@ function relPath(file) {
     violations.push(`storage/db.ts appears to reference a notification store -- Notifications must never be persisted (Phase 9B Section B)`);
   }
   const versionMatch = dbSource.match(/DB_VERSION\s*=\s*(\d+)/);
-  if (!versionMatch || versionMatch[1] !== '12') {
-    violations.push(`DB_VERSION must be 12 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
+  if (!versionMatch || versionMatch[1] !== '13') {
+    violations.push(`DB_VERSION must be 13 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
   }
 }
 
@@ -389,34 +390,30 @@ function relPath(file) {
 }
 
 // ---------------------------------------------------------------------------
-// 14. No permanent-deletion path from Archive: features/archive must never
-//     import a domain's hard-delete function (remove*/deleteTaskGroupIfEmpty)
-//     -- only the soft-delete `delete*Card`/`softDelete*`/`archive*`/
-//     `unarchive*` functions, since Archive's "Delete Card" action is
-//     explicitly a future-Trash soft delete, never permanent erasure
-//     (Phase 10 Section Q).
+// 14. Phase 11 product decision: Trash was cancelled (lifecycle is now
+//     ACTIVE <-> ARCHIVED -> PERMANENT DELETE, with no Trash state -- so
+//     Archive's "Delete" action is now REQUIRED to call the same real,
+//     permanent cascade-delete function every profile page uses) and
+//     Global Search was removed entirely. Text-scan every source file for
+//     the retired identifiers so a stray reintroduction of either feature
+//     fails the gate immediately.
 // ---------------------------------------------------------------------------
 {
-  const archiveDir = join(SRC, 'features', 'archive') + '/';
-  const HARD_DELETE_NAMES = new Set([
-    'removeFamilyMember',
-    'removeProperty',
-    'removeVehicle',
-    'removeStaffMember',
-    'removeContract',
-    'removeTaskGroup',
-    'removeTask',
-    'deleteTaskGroupIfEmpty',
-  ]);
+  const BANNED_TOKENS = ['deletedAt', 'softDelete', 'TrashPage', 'onSearchClick', 'searchPlaceholderMessage'];
+  // storage/db.ts is the one legitimate exception for 'deletedAt'/
+  // 'softDelete': the v12->v13 migration must reference the retired field
+  // name by that exact string to find and clean up any legacy record that
+  // still carries it (see this file's own top-level doc comment) -- that
+  // is cleanup of the past, not a live reintroduction of the feature.
+  const dbFile = join(SRC, 'storage', 'db.ts');
   for (const file of allFiles) {
-    if (!file.startsWith(archiveDir)) continue;
-    const sf = sourceFiles.get(file);
-    ts.forEachChild(sf, function visit(node) {
-      if ((ts.isImportSpecifier(node) || ts.isBindingElement(node)) && ts.isIdentifier(node.name) && HARD_DELETE_NAMES.has(node.name.text)) {
-        violations.push(`Archive imports a permanent-deletion function '${node.name.text}': ${relPath(file)}`);
+    if (file === dbFile) continue;
+    const text = readFileSync(file, 'utf-8');
+    for (const token of BANNED_TOKENS) {
+      if (text.includes(token)) {
+        violations.push(`Stale Trash/Global-Search identifier '${token}' found: ${relPath(file)}`);
       }
-      ts.forEachChild(node, visit);
-    });
+    }
   }
 }
 

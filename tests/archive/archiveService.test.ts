@@ -78,10 +78,10 @@ describe('Archive aggregator: dynamic category discovery', () => {
     expect(cards[0].archivedAt).toBeDefined();
   });
 
-  it('a soft-deleted ("Delete Card") entity never appears in Archive at all -- hidden from both the active list AND Archive', async () => {
+  it('a permanently-deleted entity never appears in Archive at all (Phase 11: Delete is real, no Trash intermediate state)', async () => {
     await vehicleRepository.saveVehicle({ id: 'v1', name: 'Family SUV', createdAt: NOW, updatedAt: NOW });
     await vehicleRepository.archiveVehicle('v1');
-    await vehicleRepository.softDeleteVehicle('v1');
+    await vehicleRepository.deleteVehicleWithChildren('v1');
 
     expect(await getArchiveCategorySummaries()).toEqual([]);
     expect(await getArchivedCardsForSource('vehicles')).toEqual([]);

@@ -50,11 +50,6 @@ export async function unarchiveVehicle(id: string): Promise<void> {
   await vehicleRepository.unarchiveVehicle(id);
 }
 
-/** "Delete Card" from within Archive: a forward-compatible soft-delete for the later Trash phase -- distinct from `removeVehicle`'s existing hard cascade delete, which is unrelated and untouched. */
-export async function deleteVehicleCard(id: string): Promise<void> {
-  await vehicleRepository.softDeleteVehicle(id);
-}
-
 export async function addVehicleDocument(
   vehicleId: string,
   values: VehicleDocumentFormValues,

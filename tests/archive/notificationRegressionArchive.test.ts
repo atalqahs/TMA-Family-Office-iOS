@@ -117,7 +117,7 @@ describe('Aggregator-level: loadNotifications reads listX() (archived included),
     expect(items.some((item) => item.sourceId === 's1' && item.kind === 'staffResidencyExpiringSoon')).toBe(true);
   });
 
-  it('a SOFT-DELETED ("Delete Card") entity, unlike an archived one, correctly STOPS producing Notifications -- deletedAt is not "still active", only archivedAt is', async () => {
+  it('a PERMANENTLY DELETED entity, unlike an archived one, correctly STOPS producing Notifications (Phase 11: Delete is real, no Trash intermediate state)', async () => {
     await vehicleRepository.saveVehicle({
       id: 'v1',
       name: 'Family SUV',
@@ -126,7 +126,7 @@ describe('Aggregator-level: loadNotifications reads listX() (archived included),
       updatedAt: NOW,
     });
     await vehicleRepository.archiveVehicle('v1');
-    await vehicleRepository.softDeleteVehicle('v1');
+    await vehicleRepository.deleteVehicleWithChildren('v1');
 
     const items = await loadNotifications(now);
     expect(items.some((item) => item.sourceId === 'v1')).toBe(false);

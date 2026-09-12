@@ -16,8 +16,6 @@ export type TranslationKey =
   | 'menuCloseLabel'
   | 'menuMoreSection'
   | 'homeLabel'
-  | 'searchLabel'
-  | 'searchPlaceholderMessage'
   | 'notificationsLabel'
   | 'settingsLabel'
   | 'comingSoonNotice'
@@ -29,8 +27,6 @@ export type TranslationKey =
   | 'settingsAboutSectionTitle'
   | 'settingsVersionValue'
   | 'settingsDisclaimer'
-  | 'trashTitle'
-  | 'trashEmptyMessage'
   | 'loadingLabel'
   | 'actionSave'
   | 'actionCancel'
@@ -370,7 +366,37 @@ export type TranslationKey =
   | 'deleteCardConfirmBody'
   | 'archiveEmptyStateTitle'
   | 'archivedOnLabel'
-  | 'backToArchiveLabel';
+  | 'backToArchiveLabel'
+  | 'fieldSelectFamilyMember'
+  | 'fieldHealthStatus'
+  | 'fieldHeight'
+  | 'fieldWeight'
+  | 'fieldAllergies'
+  | 'fieldHealthNotes'
+  | 'unitCm'
+  | 'unitKg'
+  | 'healthFormAddTitle'
+  | 'healthNoFamilyMembersMessage'
+  | 'healthProfileNotFoundTitle'
+  | 'backToHealthLabel'
+  | 'healthSectionFamilyIdentity'
+  | 'healthSectionDetails'
+  | 'healthDeleteConfirmBody'
+  | 'validationHeightInvalid'
+  | 'validationWeightInvalid'
+  | 'fieldEducationStage'
+  | 'fieldInstitution'
+  | 'fieldGradeOrYear'
+  | 'fieldSpecialization'
+  | 'fieldEducationStatus'
+  | 'healthDeleteAction'
+  | 'educationDeleteAction'
+  | 'educationFormAddTitle'
+  | 'educationNoFamilyMembersMessage'
+  | 'educationProfileNotFoundTitle'
+  | 'backToEducationLabel'
+  | 'educationDeleteConfirmBody'
+  | 'validationEducationStageRequired';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -385,8 +411,6 @@ export const translations: Record<Locale, Dictionary> = {
     menuCloseLabel: 'إغلاق',
     menuMoreSection: 'المزيد',
     homeLabel: 'الانتقال إلى الصفحة الرئيسية',
-    searchLabel: 'بحث',
-    searchPlaceholderMessage: 'سيتم تفعيل البحث في مرحلة لاحقة.',
     notificationsLabel: 'الإشعارات',
     settingsLabel: 'الإعدادات',
     comingSoonNotice: 'ستتوفر هذه الميزة في مرحلة لاحقة.',
@@ -399,8 +423,6 @@ export const translations: Record<Locale, Dictionary> = {
     settingsVersionValue: 'نسخة تجريبية',
     settingsDisclaimer:
       'هذه نسخة تجريبية لتجربة الفكرة والتصميم على آيفون. النسخة النهائية ستكون تطبيق ويندوز مستقل.',
-    trashTitle: 'سلة المحذوفات',
-    trashEmptyMessage: 'لا توجد عناصر محذوفة.',
     loadingLabel: 'جارٍ التحميل...',
     actionSave: 'حفظ',
     actionCancel: 'إلغاء',
@@ -440,7 +462,8 @@ export const translations: Record<Locale, Dictionary> = {
     profileEditAction: 'تعديل',
     profileDeleteAction: 'حذف الفرد',
     profileDeleteConfirmTitle: 'هل تريد حذف هذا الفرد؟',
-    profileDeleteConfirmBody: 'سيتم إخفاء هذا الفرد من قائمة الأسرة.',
+    profileDeleteConfirmBody:
+      'حذف نهائي: سيتم حذف هذا الفرد ومستنداته نهائيًا، بالإضافة إلى ملفه الصحي والتعليمي ومستنداتهما إن وُجدا. لا يمكن التراجع عن هذا الإجراء.',
     profileDeleteConfirmAction: 'حذف',
     profileSectionPersonalInfo: 'المعلومات الشخصية',
     profileSectionNotes: 'ملاحظات',
@@ -739,10 +762,40 @@ export const translations: Record<Locale, Dictionary> = {
     unarchiveAction: 'إلغاء الأرشفة',
     deleteCardAction: 'حذف البطاقة',
     deleteCardConfirmTitle: 'حذف البطاقة؟',
-    deleteCardConfirmBody: 'ستختفي البطاقة من الأرشيف. لن يتم حذف بياناتها نهائياً الآن -- هذا تمهيد لخاصية سلة المحذوفات القادمة.',
+    deleteCardConfirmBody: 'حذف نهائي: سيتم حذف هذه البطاقة وبياناتها التابعة نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
     archiveEmptyStateTitle: 'لا توجد بطاقات مؤرشفة',
     archivedOnLabel: 'أُرشفت بتاريخ {date}',
     backToArchiveLabel: 'العودة إلى الأرشيف',
+    fieldSelectFamilyMember: 'اختر فرد العائلة',
+    fieldHealthStatus: 'الحالة الصحية',
+    fieldHeight: 'الطول',
+    fieldWeight: 'الوزن',
+    fieldAllergies: 'الحساسية',
+    fieldHealthNotes: 'ملاحظات صحية',
+    unitCm: 'سم',
+    unitKg: 'كجم',
+    healthFormAddTitle: 'إضافة سجل صحي',
+    healthNoFamilyMembersMessage: 'يجب إضافة فرد من العائلة أولاً.',
+    healthProfileNotFoundTitle: 'السجل الصحي غير موجود',
+    backToHealthLabel: 'العودة إلى الصحة',
+    healthSectionFamilyIdentity: 'بيانات فرد العائلة',
+    healthSectionDetails: 'التفاصيل',
+    healthDeleteConfirmBody: 'حذف نهائي: سيتم حذف هذا السجل الصحي ومستنداته نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
+    validationHeightInvalid: 'الطول غير صالح',
+    validationWeightInvalid: 'الوزن غير صالح',
+    fieldEducationStage: 'المرحلة الدراسية',
+    fieldInstitution: 'المؤسسة التعليمية',
+    fieldGradeOrYear: 'الصف/السنة',
+    fieldSpecialization: 'التخصص',
+    fieldEducationStatus: 'الحالة التعليمية',
+    healthDeleteAction: 'حذف السجل الصحي',
+    educationDeleteAction: 'حذف السجل التعليمي',
+    educationFormAddTitle: 'إضافة سجل تعليمي',
+    educationNoFamilyMembersMessage: 'يجب إضافة فرد من العائلة أولاً.',
+    educationProfileNotFoundTitle: 'السجل التعليمي غير موجود',
+    backToEducationLabel: 'العودة إلى التعليم',
+    educationDeleteConfirmBody: 'حذف نهائي: سيتم حذف هذا السجل التعليمي ومستنداته نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
+    validationEducationStageRequired: 'المرحلة الدراسية مطلوبة',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -754,8 +807,6 @@ export const translations: Record<Locale, Dictionary> = {
     menuCloseLabel: 'Close',
     menuMoreSection: 'More',
     homeLabel: 'Go to Home',
-    searchLabel: 'Search',
-    searchPlaceholderMessage: 'Search will be available in a later phase.',
     notificationsLabel: 'Notifications',
     settingsLabel: 'Settings',
     comingSoonNotice: 'This feature will be available in a later phase.',
@@ -768,8 +819,6 @@ export const translations: Record<Locale, Dictionary> = {
     settingsVersionValue: 'Experimental Prototype',
     settingsDisclaimer:
       'This is an experimental prototype for testing the idea and design on iPhone. The final version will be a standalone Windows application.',
-    trashTitle: 'Trash',
-    trashEmptyMessage: 'No deleted items.',
     loadingLabel: 'Loading…',
     actionSave: 'Save',
     actionCancel: 'Cancel',
@@ -809,7 +858,8 @@ export const translations: Record<Locale, Dictionary> = {
     profileEditAction: 'Edit',
     profileDeleteAction: 'Delete Member',
     profileDeleteConfirmTitle: 'Delete this member?',
-    profileDeleteConfirmBody: 'This member will be hidden from your Family list.',
+    profileDeleteConfirmBody:
+      'Permanent Delete: this member and their documents will be permanently deleted, along with their Health and Education profiles and documents, if any. This action cannot be undone.',
     profileDeleteConfirmAction: 'Delete',
     profileSectionPersonalInfo: 'Personal Information',
     profileSectionNotes: 'Notes',
@@ -1108,10 +1158,40 @@ export const translations: Record<Locale, Dictionary> = {
     unarchiveAction: 'Unarchive',
     deleteCardAction: 'Delete Card',
     deleteCardConfirmTitle: 'Delete Card?',
-    deleteCardConfirmBody: 'The card will be removed from Archive. Nothing is permanently deleted yet -- this prepares for the future Trash feature.',
+    deleteCardConfirmBody: 'Permanent Delete: this card and its dependent data will be permanently deleted. This action cannot be undone.',
     archiveEmptyStateTitle: 'No archived cards',
     archivedOnLabel: 'Archived on {date}',
     backToArchiveLabel: 'Back to Archive',
+    fieldSelectFamilyMember: 'Select Family Member',
+    fieldHealthStatus: 'Health Status',
+    fieldHeight: 'Height',
+    fieldWeight: 'Weight',
+    fieldAllergies: 'Allergies',
+    fieldHealthNotes: 'Health Notes',
+    unitCm: 'cm',
+    unitKg: 'kg',
+    healthFormAddTitle: 'Add Health Record',
+    healthNoFamilyMembersMessage: 'You must add a Family Member first.',
+    healthProfileNotFoundTitle: 'Health record not found',
+    backToHealthLabel: 'Back to Health',
+    healthSectionFamilyIdentity: 'Family Member Details',
+    healthSectionDetails: 'Details',
+    healthDeleteConfirmBody: 'Permanent Delete: this Health record and its documents will be permanently deleted. This action cannot be undone.',
+    validationHeightInvalid: 'Height is invalid',
+    validationWeightInvalid: 'Weight is invalid',
+    fieldEducationStage: 'Education Stage',
+    fieldInstitution: 'Institution',
+    fieldGradeOrYear: 'Grade/Year',
+    fieldSpecialization: 'Specialization',
+    fieldEducationStatus: 'Education Status',
+    healthDeleteAction: 'Delete Health Record',
+    educationDeleteAction: 'Delete Education Record',
+    educationFormAddTitle: 'Add Education Record',
+    educationNoFamilyMembersMessage: 'You must add a Family Member first.',
+    educationProfileNotFoundTitle: 'Education record not found',
+    backToEducationLabel: 'Back to Education',
+    educationDeleteConfirmBody: 'Permanent Delete: this Education record and its documents will be permanently deleted. This action cannot be undone.',
+    validationEducationStageRequired: 'Education stage is required',
   },
 };
 

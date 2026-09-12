@@ -31,7 +31,7 @@ function task(overrides: Partial<Task> = {}): Task {
   };
 }
 
-describe('TaskGroup: archive/unarchive/soft-delete lifecycle', () => {
+describe('TaskGroup: archive/unarchive lifecycle', () => {
   it('archiving a group sets ONLY its own archivedAt -- name/notes/timestamps untouched', async () => {
     await taskRepository.saveTaskGroup(group());
     await taskRepository.archiveTaskGroup('g1');
@@ -65,14 +65,14 @@ describe('TaskGroup: archive/unarchive/soft-delete lifecycle', () => {
     expect((await taskRepository.listTaskGroups()).map((g) => g.id)).toEqual(['g1']);
   });
 
-  it('"Delete Card" (soft delete) hides the group from both listTaskGroups() and listAllTaskGroups() while preserving the record', async () => {
+  it('permanently deleting an empty group (Phase 11: real delete, no Trash) removes it from both listTaskGroups() and listAllTaskGroups()', async () => {
     await taskRepository.saveTaskGroup(group());
     await taskRepository.archiveTaskGroup('g1');
-    await taskRepository.softDeleteTaskGroup('g1');
+    await taskRepository.deleteTaskGroupIfEmpty('g1');
 
     expect((await taskRepository.listTaskGroups()).map((g) => g.id)).not.toContain('g1');
     expect((await taskRepository.listAllTaskGroups()).map((g) => g.id)).not.toContain('g1');
-    expect((await taskRepository.getTaskGroup('g1'))?.deletedAt).toBeDefined();
+    expect(await taskRepository.getTaskGroup('g1')).toBeUndefined();
   });
 
   it('archiving a group NEVER auto-archives, hides, or deletes its Tasks -- every Task remains fully visible via listTasks()', async () => {

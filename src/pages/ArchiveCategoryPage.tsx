@@ -8,7 +8,9 @@ import { ArchivedCard } from '../features/archive/components/ArchivedCard';
 import { useArchivedCards } from '../features/archive/hooks/useArchivedCards';
 import type { ArchiveSourceType } from '../features/archive/types';
 import * as contractService from '../features/contracts/contractService';
+import * as educationService from '../features/education/educationService';
 import * as familyService from '../features/family/familyService';
+import * as healthService from '../features/health/healthService';
 import * as propertyService from '../features/properties/propertyService';
 import * as staffService from '../features/staff/staffService';
 import * as taskService from '../features/tasks/taskService';
@@ -23,18 +25,32 @@ const SOURCE_CATEGORY_ID: Record<ArchiveSourceType, string> = {
   vehicles: 'vehicles',
   contracts: 'contracts',
   tasks: 'tasks',
+  health: 'health',
+  education: 'education',
 };
 
 const VALID_SOURCE_TYPES = new Set<string>(Object.keys(SOURCE_CATEGORY_ID));
 
-/** Unarchive/Delete Card handlers per source -- each delegating straight to that domain's own service (Archive never owns this logic, never touches IndexedDB itself). */
+/**
+ * Unarchive/Delete handlers per source -- each delegating straight to that
+ * domain's own service (Archive never owns this logic, never touches
+ * IndexedDB itself). Delete now means REAL PERMANENT deletion (Phase 11 --
+ * Trash was cancelled): the exact same `removeX` cascade-delete function
+ * used by that domain's own profile page, never a separate soft-delete
+ * path. For `tasks`, `removeTaskGroup` preserves the established
+ * empty-only hard-delete guard and can reject with `GroupNotEmptyError`,
+ * which `ArchivedCard` surfaces as a specific message rather than the
+ * generic failure one.
+ */
 const SOURCE_ACTIONS: Record<ArchiveSourceType, { unarchive: (id: string) => Promise<void>; deleteCard: (id: string) => Promise<void> }> = {
-  family: { unarchive: familyService.unarchiveFamilyMember, deleteCard: familyService.deleteFamilyMemberCard },
-  staff: { unarchive: staffService.unarchiveStaffMember, deleteCard: staffService.deleteStaffMemberCard },
-  properties: { unarchive: propertyService.unarchiveProperty, deleteCard: propertyService.deletePropertyCard },
-  vehicles: { unarchive: vehicleService.unarchiveVehicle, deleteCard: vehicleService.deleteVehicleCard },
-  contracts: { unarchive: contractService.unarchiveContract, deleteCard: contractService.deleteContractCard },
-  tasks: { unarchive: taskService.unarchiveTaskGroup, deleteCard: taskService.deleteTaskGroupCard },
+  family: { unarchive: familyService.unarchiveFamilyMember, deleteCard: familyService.removeFamilyMember },
+  staff: { unarchive: staffService.unarchiveStaffMember, deleteCard: staffService.removeStaffMember },
+  properties: { unarchive: propertyService.unarchiveProperty, deleteCard: propertyService.removeProperty },
+  vehicles: { unarchive: vehicleService.unarchiveVehicle, deleteCard: vehicleService.removeVehicle },
+  contracts: { unarchive: contractService.unarchiveContract, deleteCard: contractService.removeContract },
+  tasks: { unarchive: taskService.unarchiveTaskGroup, deleteCard: taskService.removeTaskGroup },
+  health: { unarchive: healthService.unarchiveHealthProfile, deleteCard: healthService.removeHealthProfile },
+  education: { unarchive: educationService.unarchiveEducationProfile, deleteCard: educationService.removeEducationProfile },
 };
 
 export function ArchiveCategoryPage() {
@@ -82,7 +98,14 @@ export function ArchiveCategoryPage() {
                 await refresh();
               }}
               onDeleteCard={async () => {
-                await actions.deleteCard(item.id);
+                try {
+                  await actions.deleteCard(item.id);
+                } catch (err) {
+                  if (sourceType === 'tasks' && err instanceof taskService.GroupNotEmptyError) {
+                    throw new Error(t('taskGroupNotEmptyError'));
+                  }
+                  throw err;
+                }
                 await refresh();
               }}
             />

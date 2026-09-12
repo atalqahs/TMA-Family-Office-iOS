@@ -6,6 +6,8 @@ import * as staffRepository from '../../src/features/staff/staffRepository';
 import * as propertyRepository from '../../src/features/properties/propertyRepository';
 import * as vehicleRepository from '../../src/features/vehicles/vehicleRepository';
 import * as contractRepository from '../../src/features/contracts/contractRepository';
+import * as healthRepository from '../../src/features/health/healthRepository';
+import * as educationRepository from '../../src/features/education/educationRepository';
 import { MIGRATION_GENERAL_GROUP_ID } from '../../src/features/tasks/types';
 import { seedRawVersionedDb } from './rawDbHelpers';
 
@@ -504,5 +506,235 @@ describe('Migration v11 -> v12: legacy staff salary recurrence normalization (Ph
     const schedules = await staffRepository.listSalarySchedulesForStaff('staff1');
     expect(schedules).toHaveLength(1); // never duplicated
     expect(schedules[0].recurrence).toBe('yearly');
+  });
+});
+
+/**
+ * Permanent Phase 11 migration suite: the v12 -> v13 upgrade adds the four
+ * new Health/Education stores and permanently removes the cancelled
+ * Trash/`deletedAt` soft-delete lifecycle -- see storage/db.ts's own
+ * v12->v13 doc comment for the full documented policy this verifies.
+ */
+function buildV12Stores(db: IDBDatabase): void {
+  // v11 -> v12 added no new store/index (only a field-level rewrite of
+  // existing staffSalarySchedules rows) -- the v11 shape already matches
+  // v12 exactly.
+  buildV11Stores(db);
+}
+
+describe('Migration v12 -> v13: Health/Education stores + Trash removal (Phase 11)', () => {
+  it('creates all four new stores empty -- no Health/Education profile is ever fabricated for a pre-existing Family Member', async () => {
+    await seedRawVersionedDb(12, (db, tx) => {
+      buildV12Stores(db);
+      tx.objectStore('familyMembers').add({
+        id: 'fm1',
+        fullName: 'Fatima',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    expect(await healthRepository.listHealthProfiles()).toEqual([]);
+    expect(await educationRepository.listEducationProfiles()).toEqual([]);
+    expect(await familyRepository.getFamilyMember('fm1')).toMatchObject({ fullName: 'Fatima' });
+  });
+
+  it('a Family Member/Property/Vehicle(+maintenance)/Contract that already had deletedAt set is permanently deleted, cascading its own documents', async () => {
+    await seedRawVersionedDb(12, (db, tx) => {
+      buildV12Stores(db);
+      tx.objectStore('familyMembers').add({
+        id: 'fm1',
+        fullName: 'Old Deleted Member',
+        deletedAt: '2025-06-01T00:00:00.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('familyMemberDocuments').add({
+        id: 'fmdoc1',
+        familyMemberId: 'fm1',
+        type: 'other',
+        title: 'Old doc',
+        file: new Blob(['x']),
+        fileName: 'old.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 1,
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('vehicles').add({
+        id: 'v1',
+        name: 'Old Deleted Vehicle',
+        deletedAt: '2025-06-01T00:00:00.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('vehicleMaintenanceRecords').add({
+        id: 'vm1',
+        vehicleId: 'v1',
+        type: 'oilChange',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('properties').add({
+        id: 'p1',
+        name: 'Old Deleted Property',
+        type: 'house',
+        status: 'owned',
+        deletedAt: '2025-06-01T00:00:00.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('contracts').add({
+        id: 'c1',
+        title: 'Old Deleted Contract',
+        contractType: 'rental',
+        partyName: 'ACME',
+        startDate: '2025-01-01',
+        deletedAt: '2025-06-01T00:00:00.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      // A never-deleted, still-active family member survives untouched.
+      tx.objectStore('familyMembers').add({
+        id: 'fm2',
+        fullName: 'Active Member',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    expect(await familyRepository.getFamilyMember('fm1')).toBeUndefined();
+    expect(await familyRepository.listDocumentsForMember('fm1')).toEqual([]);
+    expect(await vehicleRepository.getVehicle('v1')).toBeUndefined();
+    expect((await vehicleRepository.listAllMaintenanceRecords()).map((r) => r.id)).not.toContain('vm1');
+    expect(await propertyRepository.getProperty('p1')).toBeUndefined();
+    expect(await contractRepository.getContract('c1')).toBeUndefined();
+
+    // The untouched, never-deleted member is completely unaffected.
+    expect(await familyRepository.getFamilyMember('fm2')).toMatchObject({ fullName: 'Active Member' });
+  });
+
+  it('a Staff member with deletedAt set is permanently deleted, cascading its documents/salary schedules/salary payments', async () => {
+    await seedRawVersionedDb(12, (db, tx) => {
+      buildV12Stores(db);
+      tx.objectStore('householdStaff').add({
+        id: 'staff1',
+        fullName: 'Old Deleted Staff',
+        deletedAt: '2025-06-01T00:00:00.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffDocuments').add({
+        id: 'sdoc1',
+        staffId: 'staff1',
+        type: 'other',
+        title: 'Old doc',
+        file: new Blob(['x']),
+        fileName: 'old.pdf',
+        mimeType: 'application/pdf',
+        fileSize: 1,
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffSalarySchedules').add({
+        id: 'sch1',
+        staffId: 'staff1',
+        amount: 100,
+        recurrence: 'monthly',
+        startDate: '2025-01-01',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      tx.objectStore('staffSalaryPayments').add({
+        id: 'pay1',
+        staffId: 'staff1',
+        salaryScheduleId: 'sch1',
+        dueDate: '2025-01-01',
+        amount: 100,
+        paidDate: '2025-01-01',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    expect(await staffRepository.getStaffMember('staff1')).toBeUndefined();
+    expect(await staffRepository.listDocumentsForStaff('staff1')).toEqual([]);
+    expect(await staffRepository.listSalarySchedulesForStaff('staff1')).toEqual([]);
+    expect(await staffRepository.listSalaryPaymentsForStaff('staff1')).toEqual([]);
+  });
+
+  it('a TaskGroup with deletedAt set is NEVER hard-deleted (that could orphan/bulk-delete its Tasks) -- it is instead demoted to archived, preserving every Task untouched', async () => {
+    await seedRawVersionedDb(12, (db, tx) => {
+      buildV12Stores(db);
+      tx.objectStore('taskGroups').add({
+        id: 'g1',
+        name: 'Vehicle Reminders',
+        deletedAt: '2025-06-01T00:00:00.000Z',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+      const tasks = tx.objectStore('tasks');
+      tasks.add({
+        id: 't1',
+        groupId: 'g1',
+        title: 'Renew registration',
+        priority: 'normal',
+        recurrenceUnit: 'none',
+        dueDate: '2025-06-01',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    const group = await taskRepository.getTaskGroup('g1');
+    expect(group).toBeDefined();
+    expect(group).not.toHaveProperty('deletedAt');
+    expect(group?.archivedAt).toBeDefined();
+    expect(await taskRepository.getTask('t1')).toMatchObject({ groupId: 'g1', title: 'Renew registration' });
+  });
+
+  it('a record that never had deletedAt set is completely unaffected by the v12 -> v13 upgrade', async () => {
+    await seedRawVersionedDb(12, (db, tx) => {
+      buildV12Stores(db);
+      tx.objectStore('vehicles').add({
+        id: 'v1',
+        name: 'Family SUV',
+        currentMileage: 42_000,
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    expect(await vehicleRepository.getVehicle('v1')).toMatchObject({ name: 'Family SUV', currentMileage: 42_000 });
+  });
+
+  it('idempotency: a second getDB() call against the already-v13 database never re-deletes/duplicates anything', async () => {
+    await seedRawVersionedDb(12, (db, tx) => {
+      buildV12Stores(db);
+      tx.objectStore('familyMembers').add({
+        id: 'fm1',
+        fullName: 'Active Member',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+    const { __resetDbConnectionForTests } = await import('../../src/storage/db');
+    __resetDbConnectionForTests();
+    await getDB();
+
+    expect(await familyRepository.getFamilyMember('fm1')).toMatchObject({ fullName: 'Active Member' });
+    expect(await healthRepository.listHealthProfiles()).toEqual([]);
   });
 });

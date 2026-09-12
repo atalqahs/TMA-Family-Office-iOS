@@ -1,6 +1,8 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import type { Contract, ContractDocument } from '../features/contracts/types';
+import type { EducationDocument, EducationProfile } from '../features/education/types';
 import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
+import type { HealthDocument, HealthProfile } from '../features/health/types';
 import type { Property, PropertyDocument } from '../features/properties/types';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
 import { MIGRATION_GENERAL_GROUP_ID } from '../features/tasks/types';
@@ -40,6 +42,39 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * models, and every payment's own `dueDate` is a separate, already-confirmed historical record completely
  * unaffected by this). No store or index changes; only existing rows are transformed in place, which is
  * why this DOES need a real version bump (unlike the v10 -> v11 no-op).
+ *
+ * All of that survives the v12 -> v13 upgrade for Phase 11 (Health + Education + Trash removal):
+ *
+ * 1. Four new stores are added: `healthProfiles`/`healthDocuments` and `educationProfiles`/
+ *    `educationDocuments`, mirroring every other module's own-record + own-documents shape. Each profile
+ *    store has a UNIQUE `familyMemberId` index (enforcing "at most one Health/Education profile per Family
+ *    Member" atomically at the IndexedDB level, the same unique-index pattern already proven for Staff
+ *    salary payments/Task completions), and each document store has a plain (non-unique)
+ *    `healthProfileId`/`educationProfileId` index. No existing Family Member gets a fabricated Health/
+ *    Education profile -- these stores start empty; a profile is created only when a user explicitly adds
+ *    one for a specific Family Member.
+ *
+ * 2. The Trash/Deleted-Items feature (and its `deletedAt` soft-delete field on familyMembers/
+ *    householdStaff/properties/vehicles/contracts/taskGroups) is cancelled as a product decision -- the
+ *    lifecycle is now ACTIVE <-> ARCHIVED -> PERMANENT DELETE, with no Trash state in between. `deletedAt`
+ *    is removed from every one of those types. Any record that ALREADY had `deletedAt` set (from prior
+ *    prototype testing of the old "Delete Card" soft-delete) represents an explicit, already-expressed user
+ *    intent to delete that card -- resurrecting it back to "active" would silently undo that choice, which
+ *    is worse than completing it, so this migration finishes the deletion for real:
+ *      - familyMembers/householdStaff/properties/vehicles/contracts: the record and all of its own
+ *        documents (and, for Staff, salary schedules/payments) are deleted outright, using the exact same
+ *        cascade each module's own hard-delete-with-children function already performs -- never leaving an
+ *        orphaned document/schedule/payment behind. (No pre-existing Health/Education profile can reference
+ *        a deleted Family Member here, since those stores are brand new in this same version.)
+ *      - taskGroups is the one exception: completing a permanent delete could silently orphan that group's
+ *        Tasks (or worse, cascade-delete Tasks/TaskCompletions the user never asked to remove) -- the
+ *        established rule that a TaskGroup may only ever be hard-deleted while empty (see
+ *        `deleteTaskGroupIfEmpty`) must never be bypassed by a migration. So a soft-deleted TaskGroup is
+ *        instead demoted to ARCHIVED (never destroyed) if it wasn't already, preserving every Task/
+ *        TaskCompletion untouched -- the user can then explicitly permanently delete it later through the
+ *        normal confirmed flow, which still enforces "empty group only".
+ *    Every record that does NOT have `deletedAt` set is completely unaffected beyond the field's removal
+ *    from the type (there is nothing to rewrite for it).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -120,13 +155,33 @@ interface TmaDB extends DBSchema {
     key: string;
     value: TaskGroup;
   };
+  healthProfiles: {
+    key: string;
+    value: HealthProfile;
+    indexes: { familyMemberId: string };
+  };
+  healthDocuments: {
+    key: string;
+    value: HealthDocument;
+    indexes: { healthProfileId: string };
+  };
+  educationProfiles: {
+    key: string;
+    value: EducationProfile;
+    indexes: { familyMemberId: string };
+  };
+  educationDocuments: {
+    key: string;
+    value: EducationDocument;
+    indexes: { educationProfileId: string };
+  };
 }
 
 // Exported so the permanent migration regression suite (tests/migrations)
 // can open the exact same database by name/version without duplicating
 // these constants — never referenced by application code.
 export const DB_NAME = 'tma-family-office';
-export const DB_VERSION = 12;
+export const DB_VERSION = 13;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -419,6 +474,155 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
             }
             scheduleCursor = await scheduleCursor.continue();
           }
+        }
+
+        // Phase 11, v12 -> v13: new Health/Education stores + Trash removal
+        // (see this file's top-level doc comment for the full policy).
+        if (!db.objectStoreNames.contains('healthProfiles')) {
+          const store = db.createObjectStore('healthProfiles', { keyPath: 'id' });
+          store.createIndex('familyMemberId', 'familyMemberId', { unique: true });
+        }
+        if (!db.objectStoreNames.contains('healthDocuments')) {
+          const store = db.createObjectStore('healthDocuments', { keyPath: 'id' });
+          store.createIndex('healthProfileId', 'healthProfileId');
+        }
+        if (!db.objectStoreNames.contains('educationProfiles')) {
+          const store = db.createObjectStore('educationProfiles', { keyPath: 'id' });
+          store.createIndex('familyMemberId', 'familyMemberId', { unique: true });
+        }
+        if (!db.objectStoreNames.contains('educationDocuments')) {
+          const store = db.createObjectStore('educationDocuments', { keyPath: 'id' });
+          store.createIndex('educationProfileId', 'educationProfileId');
+        }
+
+        if (oldVersion < 13) {
+          // Any record that already has `deletedAt` set represents an
+          // explicit prior "delete this card" intent (the cancelled Trash
+          // feature's soft-delete) -- completing that deletion for real
+          // (rather than silently resurrecting it back to active) is the
+          // deterministic policy documented at the top of this file.
+          {
+            const entityStore = transaction.objectStore('familyMembers');
+            const documentsStore = transaction.objectStore('familyMemberDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('familyMemberId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const entityStore = transaction.objectStore('properties');
+            const documentsStore = transaction.objectStore('propertyDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('propertyId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const entityStore = transaction.objectStore('contracts');
+            const documentsStore = transaction.objectStore('contractDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('contractId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const entityStore = transaction.objectStore('vehicles');
+            const documentsStore = transaction.objectStore('vehicleDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('vehicleId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+
+          // Vehicles also own maintenance records, and Staff owns
+          // documents/salary schedules/salary payments -- both need an
+          // extra store cascaded beyond the simple entity+documents purge
+          // above.
+          {
+            const vehiclesStore = transaction.objectStore('vehicles');
+            const maintenanceStore = transaction.objectStore('vehicleMaintenanceRecords');
+            // The vehicle records themselves were already deleted by the
+            // purge above; their maintenance records would otherwise be
+            // orphaned, so re-scan for maintenance rows whose vehicleId no
+            // longer resolves to any existing vehicle. This only ever
+            // matches rows belonging to a vehicle that just got purged
+            // for having `deletedAt` set -- a vehicle without `deletedAt`
+            // was never deleted, so its maintenance records are untouched.
+            let cursor = await maintenanceStore.openCursor();
+            while (cursor) {
+              const stillExists = await vehiclesStore.get(cursor.value.vehicleId);
+              if (!stillExists) {
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const staffStore = transaction.objectStore('householdStaff');
+            const staffDocsStore = transaction.objectStore('staffDocuments');
+            const schedulesStore = transaction.objectStore('staffSalarySchedules');
+            const paymentsStore = transaction.objectStore('staffSalaryPayments');
+            let cursor = await staffStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const [docIds, scheduleIds, paymentIds] = await Promise.all([
+                  staffDocsStore.index('staffId').getAllKeys(value.id),
+                  schedulesStore.index('staffId').getAllKeys(value.id),
+                  paymentsStore.index('staffId').getAllKeys(value.id),
+                ]);
+                for (const docId of docIds) await staffDocsStore.delete(docId);
+                for (const scheduleId of scheduleIds) await schedulesStore.delete(scheduleId);
+                for (const paymentId of paymentIds) await paymentsStore.delete(paymentId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+
+          // TaskGroups are the one exception: a permanent delete could
+          // silently orphan (or force cascade-deleting) that group's
+          // Tasks, bypassing the established "only ever hard-delete an
+          // EMPTY group" rule (deleteTaskGroupIfEmpty). So a soft-deleted
+          // group is demoted to archived instead of being destroyed,
+          // never touching its Tasks/TaskCompletions.
+          {
+            const groupsStore = transaction.objectStore('taskGroups');
+            let cursor = await groupsStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { deletedAt?: string; archivedAt?: string } & Record<string, unknown>;
+              if (value.deletedAt) {
+                const { deletedAt: _deletedAt, ...rest } = value;
+                await cursor.update({ ...rest, archivedAt: rest.archivedAt ?? new Date().toISOString() } as unknown as TaskGroup);
+              }
+              cursor = await cursor.continue();
+            }
+          }
+
         }
       },
       blocked() {

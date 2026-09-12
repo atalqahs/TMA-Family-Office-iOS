@@ -9,7 +9,6 @@ import {
   HeartPulse,
   ListChecks,
   Settings,
-  Trash2,
   Users,
   type LucideIcon,
 } from 'lucide-react';
@@ -150,18 +149,12 @@ export interface SecondaryNavItem {
   title: LocalizedText;
 }
 
-/** Settings and Trash: reachable from the menu, deliberately not on the Dashboard grid. */
+/** Settings: reachable from the menu, deliberately not on the Dashboard grid. */
 export const SECONDARY_NAV_ITEMS: SecondaryNavItem[] = [
   {
     id: 'settings',
     path: '/settings',
     icon: Settings,
     title: { ar: 'الإعدادات', en: 'Settings' },
-  },
-  {
-    id: 'trash',
-    path: '/trash',
-    icon: Trash2,
-    title: { ar: 'سلة المحذوفات', en: 'Trash' },
   },
 ];

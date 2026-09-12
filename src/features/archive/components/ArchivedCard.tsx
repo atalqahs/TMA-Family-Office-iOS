@@ -15,6 +15,8 @@ const SOURCE_CATEGORY_ID: Record<ArchiveSourceType, string> = {
   vehicles: 'vehicles',
   contracts: 'contracts',
   tasks: 'tasks',
+  health: 'health',
+  education: 'education',
 };
 
 interface ArchivedCardProps {
@@ -34,7 +36,7 @@ export function ArchivedCard({ item, onUnarchive, onDeleteCard }: ArchivedCardPr
   const { t, locale } = useLanguage();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const category = CATEGORIES.find((entry) => entry.id === SOURCE_CATEGORY_ID[item.sourceType]);
   const Icon = category?.icon;
@@ -50,24 +52,24 @@ export function ArchivedCard({ item, onUnarchive, onDeleteCard }: ArchivedCardPr
 
   const handleUnarchive = async () => {
     setBusy(true);
-    setError(false);
+    setError(null);
     try {
       await onUnarchive();
     } catch (err) {
       console.error('Failed to unarchive card', err);
-      setError(true);
+      setError(t('formSaveError'));
       setBusy(false);
     }
   };
 
   const handleDeleteCard = async () => {
     setBusy(true);
-    setError(false);
+    setError(null);
     try {
       await onDeleteCard();
     } catch (err) {
       console.error('Failed to delete card', err);
-      setError(true);
+      setError(err instanceof Error && err.message ? err.message : t('formSaveError'));
       setBusy(false);
     }
   };
@@ -83,7 +85,7 @@ export function ArchivedCard({ item, onUnarchive, onDeleteCard }: ArchivedCardPr
         <span className="archived-card__title">{title}</span>
         <span className="archived-card__meta">{archivedOnText}</span>
         {confirmingDelete && <span className="archived-card__confirm-text">{t('deleteCardConfirmBody')}</span>}
-        {error && <span className="archived-card__error">{t('formSaveError')}</span>}
+        {error && <span className="archived-card__error">{error}</span>}
       </div>
       <div className="archived-card__actions">
         {confirmingDelete ? (

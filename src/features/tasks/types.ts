@@ -34,11 +34,12 @@ export const MAX_RECURRENCE_INTERVAL = 999;
  * Tasks: `archivedAt` only hides the group from the top-level active
  * group list (see taskRepository.listTaskGroups) -- its Tasks,
  * TaskCompletion history, recurrence, and Notifications all continue
- * completely unaffected (see features/archive/). `deletedAt` is set ONLY
- * by the "Delete Card" action inside Archive -- a forward-compatible
- * soft-delete for the later Trash phase, never a second permanent-delete
- * path (deleteTaskGroupIfEmpty remains the existing hard-delete guard,
- * untouched by this).
+ * completely unaffected (see features/archive/). There is no Trash/soft-
+ * delete state (Phase 11 product decision): Delete (from the group page
+ * or from within Archive) always goes through the same established
+ * empty-only hard-delete guard (`deleteTaskGroupIfEmpty`) -- a group's
+ * Tasks are never silently orphaned or bulk-deleted as a side effect of
+ * deleting their group.
  */
 export interface TaskGroup {
   id: string;
@@ -47,7 +48,6 @@ export interface TaskGroup {
   createdAt: string;
   updatedAt: string;
   archivedAt?: string;
-  deletedAt?: string;
 }
 
 export type TaskGroupFormValues = Omit<TaskGroup, 'id' | 'createdAt' | 'updatedAt'>;

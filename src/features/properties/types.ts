@@ -30,11 +30,10 @@ export const PROPERTY_STATUSES: Array<{ id: PropertyStatus; title: LocalizedText
  * mortgage, expenses, profit/loss) — finance was explicitly excluded from
  * this project.
  *
- * Deletion outside Archive is still direct/permanent for this experimental
- * prototype. `deletedAt` (Phase 10) is set ONLY by the "Delete Card" action
- * inside Archive -- a forward-compatible soft-delete for the later Trash
- * phase, never a second permanent-delete path; it hides the record from
- * both the active list and Archive while preserving all data.
+ * Deletion is direct and permanent (no Trash/soft-delete state -- Phase 11
+ * product decision): the lifecycle is ACTIVE <-> ARCHIVED -> PERMANENT
+ * DELETE, with Delete (from the profile page or from within Archive)
+ * always performing the same real cascade delete after confirmation.
  *
  * `archivedAt` (Phase 10) is a display/organization state, NOT deletion: an
  * archived property is the exact same record, with all of its data/
@@ -60,7 +59,6 @@ export interface Property {
   createdAt: string;
   updatedAt: string;
   archivedAt?: string;
-  deletedAt?: string;
 }
 
 export type PropertyFormValues = Omit<Property, 'id' | 'createdAt' | 'updatedAt'>;

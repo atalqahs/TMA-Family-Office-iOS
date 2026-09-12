@@ -1,4 +1,0 @@
-.trash-page {
-  flex: 1;
-  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
-}

@@ -46,14 +46,14 @@ export async function getTaskCount(): Promise<number> {
   return db.count('tasks');
 }
 
-/** Every non-deleted group, ARCHIVED ONES INCLUDED -- the read path for Archive, which must see archived groups too (see features/archive/). Tasks themselves are never filtered by their group's archive/delete state (see taskRecurrence.ts/Notifications -- archiving a group never disables its Tasks' business logic). */
+/** Every group, ARCHIVED ONES INCLUDED -- the read path for Archive, which must see archived groups too (see features/archive/). Tasks themselves are never filtered by their group's archive state (see taskRecurrence.ts/Notifications -- archiving a group never disables its Tasks' business logic). */
 export async function listAllTaskGroups(): Promise<TaskGroup[]> {
   const db = await getDB();
   const all = await db.getAll('taskGroups');
-  return all.filter((group) => !group.deletedAt).sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  return all.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
-/** Non-deleted AND non-archived -- the normal top-level active Groups list (TasksPage). Centralized here so no component ever filters `archivedAt`/`deletedAt` itself. */
+/** Non-archived -- the normal top-level active Groups list (TasksPage). Centralized here so no component ever filters `archivedAt` itself. */
 export async function listTaskGroups(): Promise<TaskGroup[]> {
   const all = await listAllTaskGroups();
   return all.filter((group) => !group.archivedAt);
@@ -84,14 +84,6 @@ export async function unarchiveTaskGroup(id: string): Promise<void> {
   if (!existing) return;
   const { archivedAt: _archivedAt, ...rest } = existing;
   await db.put('taskGroups', rest);
-}
-
-/** Sets `deletedAt` (the "Delete Card" action from within Archive) -- a forward-compatible soft-delete for the later Trash phase, never a permanent-delete path. Hides the group from both the active list and Archive while preserving its Tasks and TaskCompletion history (unrelated to the existing `deleteTaskGroupIfEmpty` hard-delete guard). */
-export async function softDeleteTaskGroup(id: string): Promise<void> {
-  const db = await getDB();
-  const existing = await db.get('taskGroups', id);
-  if (!existing) return;
-  await db.put('taskGroups', { ...existing, deletedAt: new Date().toISOString() });
 }
 
 /** Thrown by `deleteTaskGroupIfEmpty` when the group still has Tasks assigned to it -- Tasks are never silently orphaned or bulk-deleted as a side effect of removing their group. */

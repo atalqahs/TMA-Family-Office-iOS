@@ -10,19 +10,17 @@ export const BLOOD_TYPES: BloodType[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', '
  * by id without ever depending on how their name is spelled or whether it
  * changes.
  *
- * `deletedAt` is a soft-delete marker: Phase 3 does not build the Trash
- * system yet, so a "deleted" member is simply hidden from every list
- * instead of being destroyed — this keeps the data available for the
- * future Trash phase without inventing an incompatible deletion model now.
+ * `archivedAt` (Phase 10) is a display/organization state, NOT deletion: an
+ * archived member is the exact same record, with all of its data/
+ * documents/relationships/derived state fully intact -- it is simply
+ * hidden from the normal active Family list and shown through Archive
+ * instead. Archiving never disables business logic (see features/archive/).
  *
- * `archivedAt` (Phase 10) is a display/organization state, NOT a second
- * deletion flag: an archived member is the exact same record, with all of
- * its data/documents/relationships/derived state fully intact -- it is
- * simply hidden from the normal active Family list and shown through
- * Archive instead. Archiving never disables business logic (see
- * features/archive/). `deletedAt` and `archivedAt` are independent and
- * mutually exclusive in practice: a member moves through
- * active -> archived -> deleted, never occupying two states at once.
+ * There is no Trash/soft-delete state (Phase 11 product decision): the
+ * lifecycle is ACTIVE <-> ARCHIVED -> PERMANENT DELETE. Deleting a member
+ * permanently removes the record (and its documents/linked Health/
+ * Education profiles -- see familyRepository.deleteFamilyMemberWithChildren)
+ * after explicit user confirmation; there is no intermediate hidden state.
  */
 export interface FamilyMember {
   id: string;
@@ -38,11 +36,10 @@ export interface FamilyMember {
   profilePhoto?: Blob;
   createdAt: string;
   updatedAt: string;
-  deletedAt?: string;
   archivedAt?: string;
 }
 
-export type FamilyMemberFormValues = Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt' | 'deletedAt'>;
+export type FamilyMemberFormValues = Omit<FamilyMember, 'id' | 'createdAt' | 'updatedAt'>;
 
 export type FamilyMemberDocumentType = 'civilId' | 'passport' | 'birthCertificate' | 'other';
 

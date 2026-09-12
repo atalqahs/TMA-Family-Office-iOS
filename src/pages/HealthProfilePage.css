@@ -1,0 +1,121 @@
+.health-profile-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.health-profile-page__topbar {
+  padding: var(--space-2) var(--space-3) 0;
+}
+
+.health-profile-page__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+.health-profile-page__name {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow-wrap: anywhere;
+}
+
+.health-profile-page__subtitle {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}
+
+.health-profile-page__header-actions {
+  margin-top: var(--space-2);
+}
+
+.health-profile-page__section {
+  margin: 0 var(--space-5) var(--space-5);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.health-profile-page__section-title {
+  margin: 0 0 var(--space-3);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.health-profile-page__info-list {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.health-profile-page__info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.health-profile-page__info-row dt {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+.health-profile-page__info-row dd {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  text-align: end;
+  overflow-wrap: anywhere;
+  max-width: 60%;
+}
+
+.health-profile-page__notes {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.health-profile-page__danger-zone {
+  margin: var(--space-6) var(--space-5) 0;
+}
+
+.health-profile-page__delete-body {
+  margin: 0 0 var(--space-2);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+  line-height: 1.5;
+}
+
+.health-profile-page__delete-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.health-profile-page__delete-actions > * {
+  flex: 1;
+}
+
+.health-profile-page__delete-error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}
+
+.health-profile-page__status {
+  display: block;
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-secondary);
+}

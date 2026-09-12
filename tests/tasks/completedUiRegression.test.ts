@@ -190,7 +190,7 @@ describe('Regression (items #25-28)', () => {
     expect(await taskRepository.listCompletionsForTask('t1')).toHaveLength(1);
   });
 
-  it('28. DB_VERSION remains exactly 12 -- no schema change was required for this UI-only phase', () => {
-    expect(DB_VERSION).toBe(12);
+  it('28. DB_VERSION reflects only intentional schema changes -- this UI-only phase itself required none', () => {
+    expect(DB_VERSION).toBe(13);
   });
 });

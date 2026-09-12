@@ -1,0 +1,26 @@
+.education-profile-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.education-profile-create-form__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.education-profile-create-form__actions > * {
+  flex: 1;
+}
+
+.education-profile-create-form__error {
+  margin: 0;
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+}
+
+.education-profile-create-form__empty {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-body);
+}

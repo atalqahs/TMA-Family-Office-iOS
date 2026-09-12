@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { getDB } from '../../src/storage/db';
 import * as familyRepository from '../../src/features/family/familyRepository';
 import type { FamilyMember } from '../../src/features/family/types';
 import * as staffRepository from '../../src/features/staff/staffRepository';
@@ -21,20 +20,19 @@ import type { Contract } from '../../src/features/contracts/types';
  * config table rather than five near-identical hand-written test files.
  */
 
-interface Lifecycle<T extends { id: string; archivedAt?: string; deletedAt?: string; createdAt: string; updatedAt: string }> {
+interface Lifecycle<T extends { id: string; archivedAt?: string; createdAt: string; updatedAt: string }> {
   name: string;
-  /** The underlying IndexedDB object store name, for reads that must bypass each module's own get()/deletedAt-filtering conventions (some pre-date Phase 10 and already hide soft-deleted records; this checks raw preservation regardless). */
+  /** The underlying IndexedDB object store name, for reads that must bypass each module's own get() conventions. */
   storeName: string;
   build: (overrides: Partial<T>) => T;
   save: (record: T) => Promise<void>;
   get: (id: string) => Promise<T | undefined>;
-  /** listX(): excludes deleted only, archived INCLUDED -- the Notifications/Archive read path. */
+  /** listX(): archived INCLUDED -- the Notifications/Archive read path. */
   listAll: () => Promise<T[]>;
-  /** listActiveX(): excludes both deleted and archived -- the normal category list/count. */
+  /** listActiveX(): excludes archived -- the normal category list/count. */
   listActive: () => Promise<T[]>;
   archive: (id: string) => Promise<void>;
   unarchive: (id: string) => Promise<void>;
-  softDelete: (id: string) => Promise<void>;
 }
 
 const NOW = '2026-01-01T00:00:00.000Z';
@@ -42,7 +40,6 @@ const NOW = '2026-01-01T00:00:00.000Z';
 interface ArchivableRecord {
   id: string;
   archivedAt?: string;
-  deletedAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -62,7 +59,6 @@ const modules = [
     listActive: familyRepository.listActiveFamilyMembers,
     archive: familyRepository.archiveFamilyMember,
     unarchive: familyRepository.unarchiveFamilyMember,
-    softDelete: familyRepository.softDeleteFamilyMember,
   },
   {
     name: 'Staff',
@@ -74,7 +70,6 @@ const modules = [
     listActive: staffRepository.listActiveStaff,
     archive: staffRepository.archiveStaffMember,
     unarchive: staffRepository.unarchiveStaffMember,
-    softDelete: staffRepository.softDeleteStaffMember,
   },
   {
     name: 'Properties',
@@ -94,7 +89,6 @@ const modules = [
     listActive: propertyRepository.listActiveProperties,
     archive: propertyRepository.archiveProperty,
     unarchive: propertyRepository.unarchiveProperty,
-    softDelete: propertyRepository.softDeleteProperty,
   },
   {
     name: 'Vehicles',
@@ -106,7 +100,6 @@ const modules = [
     listActive: vehicleRepository.listActiveVehicles,
     archive: vehicleRepository.archiveVehicle,
     unarchive: vehicleRepository.unarchiveVehicle,
-    softDelete: vehicleRepository.softDeleteVehicle,
   },
   {
     name: 'Contracts',
@@ -127,11 +120,10 @@ const modules = [
     listActive: contractRepository.listActiveContracts,
     archive: contractRepository.archiveContract,
     unarchive: contractRepository.unarchiveContract,
-    softDelete: contractRepository.softDeleteContract,
   },
 ] as unknown as Array<Lifecycle<ArchivableRecord>>;
 
-describe.each(modules)('$name: archive/unarchive/soft-delete lifecycle', (mod) => {
+describe.each(modules)('$name: archive/unarchive lifecycle', (mod) => {
   it('archiving sets ONLY archivedAt -- every other field is left byte-for-byte untouched', async () => {
     const record = mod.build({});
     await mod.save(record);
@@ -184,33 +176,6 @@ describe.each(modules)('$name: archive/unarchive/soft-delete lifecycle', (mod) =
 
     await mod.archive(record.id);
     expect((await mod.listActive()).map((r) => r.id)).not.toContain(record.id);
-  });
-
-  it('"Delete Card" (soft delete) hides the card from BOTH the active list AND listX() -- unlike Archive, deletion is not meant to keep notifying/surfacing forever', async () => {
-    const record = mod.build({});
-    await mod.save(record);
-    await mod.archive(record.id);
-    await mod.softDelete(record.id);
-
-    expect((await mod.listActive()).map((r) => r.id)).not.toContain(record.id);
-    expect((await mod.listAll()).map((r) => r.id)).not.toContain(record.id);
-  });
-
-  it('soft delete never erases the underlying record -- the raw store still holds it with all its data intact', async () => {
-    const record = mod.build({});
-    await mod.save(record);
-    await mod.softDelete(record.id);
-
-    // Read the raw object store directly rather than through each module's
-    // own get()/list() (some, like Family, pre-date Phase 10 and already
-    // hide a deletedAt record from their own get() -- irrelevant here,
-    // since what this test verifies is that the DATA ITSELF was never
-    // erased, only hidden from the normal read paths).
-    const db = await getDB();
-    const rawGet = db.get.bind(db) as (store: string, id: string) => Promise<{ id: string; deletedAt?: string } | undefined>;
-    const stillThere = await rawGet(mod.storeName, record.id);
-    expect(stillThere?.id).toBe(record.id);
-    expect(stillThere?.deletedAt).toBeDefined();
   });
 
   it('archiving one card never affects an unrelated active card of the same type', async () => {

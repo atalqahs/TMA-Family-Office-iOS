@@ -28,25 +28,26 @@ export async function updateFamilyMember(id: string, values: FamilyMemberFormVal
   return updated;
 }
 
-/** Soft-delete only: hides the member from every list without destroying
- * the record, so the future Trash phase can build restore/purge on top of
- * this instead of a separate, incompatible deletion model. */
+/**
+ * Direct, permanent delete of the family member and everything it owns:
+ * its own documents, and (Phase 11) its linked Health/Education profile
+ * and their documents, if any (see familyRepository for the transactional
+ * cascade). The same function is used whether Delete is invoked from the
+ * normal profile page or from within Archive -- there is no separate
+ * soft-delete entry point anymore (Trash was cancelled as a product
+ * decision; see Phase 11).
+ */
 export async function removeFamilyMember(id: string): Promise<void> {
-  await familyRepository.softDeleteFamilyMember(id);
+  await familyRepository.deleteFamilyMemberWithChildren(id);
 }
 
-/** Archives the member (Phase 10): a display/organization change only -- see features/archive/. */
+/** Archives the member (Phase 10): a display/organization change only -- see features/archive/. Never archives the linked Health/Education profile, if any. */
 export async function archiveFamilyMember(id: string): Promise<void> {
   await familyRepository.archiveFamilyMember(id);
 }
 
 export async function unarchiveFamilyMember(id: string): Promise<void> {
   await familyRepository.unarchiveFamilyMember(id);
-}
-
-/** "Delete Card" from within Archive -- the same forward-compatible soft-delete as `removeFamilyMember`, exposed under its own name for that specific entry point. */
-export async function deleteFamilyMemberCard(id: string): Promise<void> {
-  await familyRepository.softDeleteFamilyMember(id);
 }
 
 export async function addFamilyMemberDocument(

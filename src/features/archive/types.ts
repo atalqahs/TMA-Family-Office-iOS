@@ -15,7 +15,15 @@
  * `getTaskGroupDisplayName` the same way every other Tasks screen already
  * does (see components/ArchivedCard.tsx).
  */
-export type ArchiveSourceType = 'family' | 'staff' | 'properties' | 'vehicles' | 'contracts' | 'tasks';
+export type ArchiveSourceType =
+  | 'family'
+  | 'staff'
+  | 'properties'
+  | 'vehicles'
+  | 'contracts'
+  | 'tasks'
+  | 'health'
+  | 'education';
 
 export interface ArchivedCardItem {
   id: string;

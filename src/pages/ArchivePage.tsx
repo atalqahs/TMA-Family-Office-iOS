@@ -17,6 +17,8 @@ const SOURCE_CATEGORY_ID: Record<ArchiveSourceType, string> = {
   vehicles: 'vehicles',
   contracts: 'contracts',
   tasks: 'tasks',
+  health: 'health',
+  education: 'education',
 };
 
 /**
