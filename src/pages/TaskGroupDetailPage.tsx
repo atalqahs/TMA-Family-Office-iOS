@@ -185,9 +185,6 @@ export function TaskGroupDetailPage() {
             onClick={editGroupSheet.open}
           />
         </div>
-        <div className="task-group-detail-page__archive-row">
-          <SecondaryButton onClick={archiveGroupSheet.open}>{t('archiveGroupAction')}</SecondaryButton>
-        </div>
       </div>
 
       {error && <p className="task-group-detail-page__status">{t('formSaveError')}</p>}
@@ -258,7 +255,15 @@ export function TaskGroupDetailPage() {
         </>
       )}
 
-      <div className="task-group-detail-page__danger-zone">
+      {/*
+        Bottom group actions (Phase 10.2 final correction): Archive Group
+        (non-destructive) and Delete Group (destructive) live together
+        here, separate from normal task actions like "Add Task" above,
+        and Archive Group is never in the header. Archive Group first,
+        Delete Group second -- neither action's own behavior changed.
+      */}
+      <div className="task-group-detail-page__group-actions">
+        <SecondaryButton onClick={archiveGroupSheet.open}>{t('archiveGroupAction')}</SecondaryButton>
         <DangerButton onClick={deleteGroupSheet.open}>{t('taskGroupDeleteAction')}</DangerButton>
       </div>
 

@@ -223,25 +223,32 @@ describe('Completion button wording depends on recurrence', () => {
 
 /**
  * Section "3. TASK GROUP HEADER ACTION LAYOUT", items #22-24: structural
- * verification -- both actions render as distinct, independently
- * clickable buttons (never merged/overlapping in the DOM), and RTL/LTR
- * both resolve correctly.
+ * verification. NOTE: following the final post-iPhone-testing correction,
+ * Archive Group no longer lives in the header at all -- it moved to the
+ * bottom group-actions area alongside Delete Group. Only Edit remains in
+ * the header, beside the title. The header/bottom-area DOM-structure
+ * details (Archive Group's exact location, DOM order vs. Delete Group,
+ * long-name handling) are covered exhaustively by
+ * tests/tasks/taskGroupHeaderLayout.test.tsx -- these three tests just
+ * confirm Edit itself renders correctly as a standalone, accessible
+ * button in both locales.
  */
-describe('Task Group header renders Edit and Archive Group cleanly', () => {
-  it('22. both actions render as separate, accessible buttons', async () => {
+describe('Task Group header renders Edit cleanly (Archive Group lives in the bottom actions area)', () => {
+  it('22. Edit renders as a distinct, accessible button in the header', async () => {
     await setSetting('locale', 'en');
     await taskRepository.saveTaskGroup({ id: 'g1', name: 'Home', createdAt: NOW, updatedAt: NOW });
 
     renderGroupPage('g1');
 
     const editButton = await screen.findByRole('button', { name: 'Edit' });
-    const archiveButton = screen.getByRole('button', { name: 'Archive Group' });
     expect(editButton).toBeInTheDocument();
-    expect(archiveButton).toBeInTheDocument();
-    expect(editButton).not.toBe(archiveButton);
+    // Archive Group is never in the header -- it now lives in the bottom
+    // group-actions area together with Delete Group.
+    expect(screen.getByRole('button', { name: 'Archive Group' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
   });
 
-  it('23. RTL layout renders both actions correctly (Arabic locale)', async () => {
+  it('23. RTL layout renders Edit and the bottom group actions correctly (Arabic locale)', async () => {
     await setSetting('locale', 'ar');
     await taskRepository.saveTaskGroup({ id: 'g1', name: 'المنزل', createdAt: NOW, updatedAt: NOW });
 
@@ -257,10 +264,11 @@ describe('Task Group header renders Edit and Archive Group cleanly', () => {
 
     await screen.findByRole('button', { name: 'تعديل' });
     expect(screen.getByRole('button', { name: 'أرشفة المجموعة' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'حذف المجموعة' })).toBeInTheDocument();
     expect(document.documentElement.dir).toBe('rtl');
   });
 
-  it('24. LTR layout renders both actions correctly (English locale)', async () => {
+  it('24. LTR layout renders Edit and the bottom group actions correctly (English locale)', async () => {
     await setSetting('locale', 'en');
     await taskRepository.saveTaskGroup({ id: 'g1', name: 'Home', createdAt: NOW, updatedAt: NOW });
 
@@ -268,6 +276,7 @@ describe('Task Group header renders Edit and Archive Group cleanly', () => {
 
     await screen.findByRole('button', { name: 'Edit' });
     expect(screen.getByRole('button', { name: 'Archive Group' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
     expect(document.documentElement.dir).toBe('ltr');
   });
 });

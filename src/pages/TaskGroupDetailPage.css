@@ -8,16 +8,15 @@
 }
 
 /*
- * Final layout (Phase 10.2 correction, post-iPhone-testing): two
- * independent rows, never competing for horizontal space.
+ * Final header layout (last correction, post-iPhone-testing): the header
+ * holds ONLY the title + its small inline Edit action -- Archive Group
+ * was removed from the header entirely and now lives in the bottom
+ * group-actions area (see .task-group-detail-page__group-actions below).
  *
- * Row 1: title + a small inline Edit action. The title is a flex item
- * that can shrink and WRAP (min-width: 0 + overflow-wrap) -- its font
+ * The title is a flex item that can shrink and WRAP (min-width: 0 +
+ * overflow-wrap) and gets the full remaining header width -- its font
  * size is never reduced, only its line count grows. The Edit IconButton
  * is `flex-shrink: 0`, so no title length can ever push it off-screen.
- *
- * Row 2: Archive Group alone, on its own row below -- it can never be
- * squeezed by the title, at any title length or viewport width.
  */
 .task-group-detail-page__header {
   display: flex;
@@ -45,10 +44,6 @@
 
 .task-group-detail-page__title-row > .icon-button {
   flex-shrink: 0;
-}
-
-.task-group-detail-page__archive-row {
-  display: flex;
 }
 
 .task-group-detail-page__filters {
@@ -107,7 +102,16 @@
   padding: 0 var(--space-5);
 }
 
-.task-group-detail-page__danger-zone {
+/*
+ * Bottom group actions (final correction): Archive Group (non-destructive)
+ * and Delete Group (destructive) together, in that order, visually
+ * separated from normal task actions like "Add Task" above by the same
+ * top margin the old danger-zone used.
+ */
+.task-group-detail-page__group-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
   margin: var(--space-6) var(--space-5) 0;
 }
 
