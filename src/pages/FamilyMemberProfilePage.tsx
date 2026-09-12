@@ -80,6 +80,14 @@ export function FamilyMemberProfilePage() {
     ],
     [t('fieldNationality'), member.nationality],
     [t('fieldCivilId'), member.civilId],
+    [
+      t('fieldCivilIdExpiryDate'),
+      member.civilIdExpiryDate ? new Intl.DateTimeFormat(locale).format(new Date(member.civilIdExpiryDate)) : undefined,
+    ],
+    [
+      t('fieldPassportExpiryDate'),
+      member.passportExpiryDate ? new Intl.DateTimeFormat(locale).format(new Date(member.passportExpiryDate)) : undefined,
+    ],
     [t('fieldPhone'), member.phone],
     [t('fieldEmail'), member.email],
     [t('fieldBloodType'), member.bloodType],

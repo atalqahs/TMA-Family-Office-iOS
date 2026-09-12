@@ -1,9 +1,11 @@
 import * as contractRepository from '../contracts/contractRepository';
+import * as familyRepository from '../family/familyRepository';
 import * as staffRepository from '../staff/staffRepository';
 import * as taskRepository from '../tasks/taskRepository';
 import * as vehicleRepository from '../vehicles/vehicleRepository';
 import { dedupeNotificationItems, sortNotificationItems } from './sorting';
 import { buildContractNotifications } from './sources/contractNotifications';
+import { buildFamilyNotifications } from './sources/familyNotifications';
 import { buildStaffNotifications } from './sources/staffNotifications';
 import { buildTaskNotifications } from './sources/taskNotifications';
 import { buildVehicleNotifications } from './sources/vehicleNotifications';
@@ -21,22 +23,25 @@ import type { NotificationItem } from './types';
  * failure, rather than silently reporting zero notifications.
  */
 export async function loadNotifications(now: Date = new Date()): Promise<NotificationItem[]> {
-  const [vehicles, maintenanceRecords, contracts, staff, salarySchedules, salaryPayments, tasks, completions] = await Promise.all([
-    vehicleRepository.listVehicles(),
-    vehicleRepository.listAllMaintenanceRecords(),
-    contractRepository.listContracts(),
-    staffRepository.listStaff(),
-    staffRepository.listAllSalarySchedules(),
-    staffRepository.listAllSalaryPayments(),
-    taskRepository.listTasks(),
-    taskRepository.listAllCompletions(),
-  ]);
+  const [vehicles, maintenanceRecords, contracts, staff, salarySchedules, salaryPayments, tasks, completions, familyMembers] =
+    await Promise.all([
+      vehicleRepository.listVehicles(),
+      vehicleRepository.listAllMaintenanceRecords(),
+      contractRepository.listContracts(),
+      staffRepository.listStaff(),
+      staffRepository.listAllSalarySchedules(),
+      staffRepository.listAllSalaryPayments(),
+      taskRepository.listTasks(),
+      taskRepository.listAllCompletions(),
+      familyRepository.listFamilyMembers(),
+    ]);
 
   const items = [
     ...buildVehicleNotifications(vehicles, maintenanceRecords, now),
     ...buildContractNotifications(contracts, now),
     ...buildStaffNotifications(staff, salarySchedules, salaryPayments, now),
     ...buildTaskNotifications(tasks, completions, now),
+    ...buildFamilyNotifications(familyMembers, now),
   ];
 
   return sortNotificationItems(dedupeNotificationItems(items));

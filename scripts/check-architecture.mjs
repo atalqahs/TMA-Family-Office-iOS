@@ -322,9 +322,9 @@ function relPath(file) {
 // ---------------------------------------------------------------------------
 // 11. No Notification persistence store (Phase 9B is a derived-only
 //     aggregation layer -- no schema change), and DB_VERSION reflects the
-//     latest intentional schema change (currently 13 -- Phase 11's Health/
-//     Education stores + Trash/deletedAt removal; see storage/db.ts's own
-//     v12->v13 doc comment).
+//     latest intentional schema change (currently 14 -- Family Civil ID/
+//     Passport expiry date fields, purely additive; see storage/db.ts's own
+//     v13->v14 doc comment).
 // ---------------------------------------------------------------------------
 {
   const dbFile = join(SRC, 'storage', 'db.ts');
@@ -333,8 +333,8 @@ function relPath(file) {
     violations.push(`storage/db.ts appears to reference a notification store -- Notifications must never be persisted (Phase 9B Section B)`);
   }
   const versionMatch = dbSource.match(/DB_VERSION\s*=\s*(\d+)/);
-  if (!versionMatch || versionMatch[1] !== '13') {
-    violations.push(`DB_VERSION must be 13 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
+  if (!versionMatch || versionMatch[1] !== '14') {
+    violations.push(`DB_VERSION must be 14 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
   }
 }
 

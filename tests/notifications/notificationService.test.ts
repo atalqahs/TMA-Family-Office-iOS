@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as contractRepository from '../../src/features/contracts/contractRepository';
+import * as familyRepository from '../../src/features/family/familyRepository';
 import { getActionableNotificationCount, loadNotifications } from '../../src/features/notifications/notificationService';
 import * as staffRepository from '../../src/features/staff/staffRepository';
 import * as taskRepository from '../../src/features/tasks/taskRepository';
@@ -52,6 +53,21 @@ describe('loadNotifications: aggregation over real repositories', () => {
 
     // All four are critical (expired/overdue) -> every one sorts before any lower tier, and the aggregation is fully deterministic.
     expect(items.every((item) => item.severity === 'critical')).toBe(true);
+  });
+
+  it('includes Family Civil ID/Passport expiry notifications, routed to the real Family Member profile, even for an archived member', async () => {
+    await familyRepository.saveFamilyMember({
+      id: 'fm1',
+      fullName: 'Sara',
+      civilIdExpiryDate: '2026-01-01',
+      archivedAt: '2026-01-15T00:00:00.000Z',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    const items = await loadNotifications(NOW);
+    const familyItem = items.find((item) => item.sourceType === 'family');
+    expect(familyItem).toMatchObject({ id: 'family:fm1:civil-id-expired', route: '/family/fm1', severity: 'critical' });
   });
 
   it('never produces duplicate ids even when called repeatedly against unchanged data', async () => {

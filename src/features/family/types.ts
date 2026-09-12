@@ -29,6 +29,10 @@ export interface FamilyMember {
   dateOfBirth?: string;
   nationality?: string;
   civilId?: string;
+  /** Optional source-of-truth expiry date for `civilId` -- absence simply means the date hasn't been entered yet, never a fabricated warning (see utils/expiryStatus.ts, features/notifications/sources/familyNotifications.ts). */
+  civilIdExpiryDate?: string;
+  /** Optional source-of-truth passport expiry date. There is currently no `passportNumber` field on Family -- this expiry date does not depend on one. */
+  passportExpiryDate?: string;
   phone?: string;
   email?: string;
   bloodType?: BloodType;

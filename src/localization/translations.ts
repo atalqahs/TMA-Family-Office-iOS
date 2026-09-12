@@ -36,6 +36,8 @@ export type TranslationKey =
   | 'fieldDateOfBirth'
   | 'fieldNationality'
   | 'fieldCivilId'
+  | 'fieldCivilIdExpiryDate'
+  | 'fieldPassportExpiryDate'
   | 'fieldPhone'
   | 'fieldEmail'
   | 'fieldBloodType'
@@ -328,6 +330,7 @@ export type TranslationKey =
   | 'notificationSourceContractLabel'
   | 'notificationSourceStaffLabel'
   | 'notificationSourceTaskLabel'
+  | 'notificationSourceFamilyLabel'
   | 'notificationTitleVehicleRegistrationExpired'
   | 'notificationTitleVehicleRegistrationExpiringSoon'
   | 'notificationTitleVehicleInsuranceExpired'
@@ -344,6 +347,10 @@ export type TranslationKey =
   | 'notificationTitleStaffSalaryDue'
   | 'notificationTitleTaskOverdue'
   | 'notificationTitleTaskDueToday'
+  | 'notificationTitleFamilyCivilIdExpired'
+  | 'notificationTitleFamilyCivilIdExpiringSoon'
+  | 'notificationTitleFamilyPassportExpired'
+  | 'notificationTitleFamilyPassportExpiringSoon'
   | 'notificationMsgExpiredOn'
   | 'notificationMsgExpiringOn'
   | 'notificationMsgOverdueByKm'
@@ -432,6 +439,8 @@ export const translations: Record<Locale, Dictionary> = {
     fieldDateOfBirth: 'تاريخ الميلاد',
     fieldNationality: 'الجنسية',
     fieldCivilId: 'الرقم المدني',
+    fieldCivilIdExpiryDate: 'تاريخ انتهاء البطاقة المدنية',
+    fieldPassportExpiryDate: 'تاريخ انتهاء جواز السفر',
     fieldPhone: 'الهاتف',
     fieldEmail: 'البريد الإلكتروني',
     fieldBloodType: 'فصيلة الدم',
@@ -727,6 +736,7 @@ export const translations: Record<Locale, Dictionary> = {
     notificationSourceContractLabel: 'العقود',
     notificationSourceStaffLabel: 'العمالة',
     notificationSourceTaskLabel: 'المهام والتذكيرات',
+    notificationSourceFamilyLabel: 'الأسرة',
     notificationTitleVehicleRegistrationExpired: 'استمارة {name} منتهية',
     notificationTitleVehicleRegistrationExpiringSoon: 'استمارة {name} ستنتهي قريباً',
     notificationTitleVehicleInsuranceExpired: 'تأمين {name} منتهي',
@@ -743,6 +753,10 @@ export const translations: Record<Locale, Dictionary> = {
     notificationTitleStaffSalaryDue: 'راتب {name} مستحق',
     notificationTitleTaskOverdue: '{title} متأخرة',
     notificationTitleTaskDueToday: '{title} مستحقة اليوم',
+    notificationTitleFamilyCivilIdExpired: 'البطاقة المدنية لـ {name} منتهية',
+    notificationTitleFamilyCivilIdExpiringSoon: 'البطاقة المدنية لـ {name} ستنتهي قريباً',
+    notificationTitleFamilyPassportExpired: 'جواز سفر {name} منتهي',
+    notificationTitleFamilyPassportExpiringSoon: 'جواز سفر {name} سينتهي قريباً',
     notificationMsgExpiredOn: 'انتهى بتاريخ {date}',
     notificationMsgExpiringOn: 'سينتهي بتاريخ {date}',
     notificationMsgOverdueByKm: 'متأخر بمقدار {km} كم',
@@ -828,6 +842,8 @@ export const translations: Record<Locale, Dictionary> = {
     fieldDateOfBirth: 'Date of Birth',
     fieldNationality: 'Nationality',
     fieldCivilId: 'Civil ID',
+    fieldCivilIdExpiryDate: 'Civil ID Expiry Date',
+    fieldPassportExpiryDate: 'Passport Expiry Date',
     fieldPhone: 'Phone',
     fieldEmail: 'Email',
     fieldBloodType: 'Blood Type',
@@ -1123,6 +1139,7 @@ export const translations: Record<Locale, Dictionary> = {
     notificationSourceContractLabel: 'Contracts',
     notificationSourceStaffLabel: 'Staff',
     notificationSourceTaskLabel: 'Tasks & Reminders',
+    notificationSourceFamilyLabel: 'Family',
     notificationTitleVehicleRegistrationExpired: '{name} registration has expired',
     notificationTitleVehicleRegistrationExpiringSoon: '{name} registration is expiring soon',
     notificationTitleVehicleInsuranceExpired: '{name} insurance has expired',
@@ -1139,6 +1156,10 @@ export const translations: Record<Locale, Dictionary> = {
     notificationTitleStaffSalaryDue: "{name}'s salary payment is due",
     notificationTitleTaskOverdue: '{title} is overdue',
     notificationTitleTaskDueToday: '{title} is due today',
+    notificationTitleFamilyCivilIdExpired: "{name}'s Civil ID has expired",
+    notificationTitleFamilyCivilIdExpiringSoon: "{name}'s Civil ID is expiring soon",
+    notificationTitleFamilyPassportExpired: "{name}'s passport has expired",
+    notificationTitleFamilyPassportExpiringSoon: "{name}'s passport is expiring soon",
     notificationMsgExpiredOn: 'Expired on {date}',
     notificationMsgExpiringOn: 'Expiring on {date}',
     notificationMsgOverdueByKm: 'Overdue by {km} km',

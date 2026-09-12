@@ -105,6 +105,59 @@ describe('NotificationCard', () => {
   });
 });
 
+function familyCivilIdItem(): NotificationItem {
+  return {
+    id: 'family:m1:civil-id-expired',
+    sourceType: 'family',
+    sourceId: 'm1',
+    kind: 'familyCivilIdExpired',
+    severity: 'critical',
+    titleKey: 'notificationTitleFamilyCivilIdExpired',
+    titleParams: { name: 'Sara' },
+    messageKey: 'notificationMsgExpiredOn',
+    messageParams: { date: '2026-01-01' },
+    route: '/family/m1',
+  };
+}
+
+describe('NotificationCard: Family Civil ID/Passport expiry (AR/EN + navigation)', () => {
+  it('renders the Arabic Family source label and title text', () => {
+    renderWithLocale(
+      <MemoryRouter>
+        <NotificationCard item={familyCivilIdItem()} />
+      </MemoryRouter>,
+      'ar',
+    );
+    expect(screen.getByText('الأسرة')).toBeInTheDocument();
+    expect(screen.getByText('البطاقة المدنية لـ Sara منتهية')).toBeInTheDocument();
+  });
+
+  it('renders the English Family source label and title text', () => {
+    renderWithLocale(
+      <MemoryRouter>
+        <NotificationCard item={familyCivilIdItem()} />
+      </MemoryRouter>,
+      'en',
+    );
+    expect(screen.getByText('Family')).toBeInTheDocument();
+    expect(screen.getByText("Sara's Civil ID has expired")).toBeInTheDocument();
+  });
+
+  it('tapping a Family expiry notification navigates to the real Family Member profile, never a separate document page', async () => {
+    renderWithLocale(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<NotificationCard item={familyCivilIdItem()} />} />
+          <Route path="/family/:memberId" element={<div>Family Member Profile Page</div>} />
+        </Routes>
+      </MemoryRouter>,
+      'en',
+    );
+    fireEvent.click(screen.getByRole('button'));
+    expect(await screen.findByText('Family Member Profile Page')).toBeInTheDocument();
+  });
+});
+
 describe('RTL/LTR (end-to-end via the real LanguageProvider)', () => {
   it('43. defaults to RTL for the default Arabic locale', async () => {
     render(

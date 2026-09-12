@@ -191,6 +191,6 @@ describe('Regression (items #25-28)', () => {
   });
 
   it('28. DB_VERSION reflects only intentional schema changes -- this UI-only phase itself required none', () => {
-    expect(DB_VERSION).toBe(13);
+    expect(DB_VERSION).toBeGreaterThanOrEqual(13);
   });
 });

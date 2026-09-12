@@ -11,7 +11,7 @@ import type { TranslationKey } from '../../localization/translations';
  * bump, no notification store, no read/unread/dismissed state (see the
  * Phase 9B spec, Sections B and T).
  */
-export type NotificationSourceType = 'vehicle' | 'contract' | 'staff' | 'task';
+export type NotificationSourceType = 'vehicle' | 'contract' | 'staff' | 'task' | 'family';
 
 export type NotificationSeverity = 'critical' | 'warning' | 'info';
 
@@ -31,7 +31,11 @@ export type NotificationKind =
   | 'staffSalaryOverdue'
   | 'staffSalaryDue'
   | 'taskOverdue'
-  | 'taskDueToday';
+  | 'taskDueToday'
+  | 'familyCivilIdExpired'
+  | 'familyCivilIdExpiringSoon'
+  | 'familyPassportExpired'
+  | 'familyPassportExpiringSoon';
 
 /**
  * A small, normalized derived item. `id` is deterministic (built from the

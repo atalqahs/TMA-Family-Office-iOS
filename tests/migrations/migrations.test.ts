@@ -738,3 +738,82 @@ describe('Migration v12 -> v13: Health/Education stores + Trash removal (Phase 1
     expect(await healthRepository.listHealthProfiles()).toEqual([]);
   });
 });
+
+/**
+ * Permanent migration suite for the Family Civil ID/Passport expiry
+ * correction: the v13 -> v14 upgrade is a no-op in code (no new store/
+ * index -- `civilIdExpiryDate`/`passportExpiryDate` are new OPTIONAL
+ * fields on the existing `familyMembers` record shape, same precedent as
+ * the v10 -> v11 archivedAt/deletedAt addition). These tests build a
+ * REALISTIC pre-v14 database and verify the real `getDB()` upgrade path
+ * preserves every pre-existing Family Member record untouched.
+ */
+function buildV13Stores(db: IDBDatabase): void {
+  // v12 -> v13 only added the four new Health/Education stores (no change
+  // to familyMembers' own shape) -- reuse buildV12Stores plus those stores.
+  buildV12Stores(db);
+  db.createObjectStore('healthProfiles', { keyPath: 'id' }).createIndex('familyMemberId', 'familyMemberId', { unique: true });
+  db.createObjectStore('healthDocuments', { keyPath: 'id' }).createIndex('healthProfileId', 'healthProfileId');
+  db.createObjectStore('educationProfiles', { keyPath: 'id' }).createIndex('familyMemberId', 'familyMemberId', { unique: true });
+  db.createObjectStore('educationDocuments', { keyPath: 'id' }).createIndex('educationProfileId', 'educationProfileId');
+}
+
+describe('Migration v13 -> v14: Family Civil ID/Passport expiry fields (no-op schema)', () => {
+  it('preserves every pre-existing Family Member record untouched, with the new expiry fields simply absent (never fabricated)', async () => {
+    await seedRawVersionedDb(13, (db, tx) => {
+      buildV13Stores(db);
+      tx.objectStore('familyMembers').add({
+        id: 'fm1',
+        fullName: 'Fatima',
+        civilId: '123456789',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB(); // runs the real v13 -> v14 upgrade (a no-op in code)
+
+    const member = await familyRepository.getFamilyMember('fm1');
+    expect(member).toMatchObject({ fullName: 'Fatima', civilId: '123456789' });
+    expect(member).not.toHaveProperty('civilIdExpiryDate');
+    expect(member).not.toHaveProperty('passportExpiryDate');
+  });
+
+  it('a pre-v14 Family Member can immediately have expiry dates saved after the upgrade, exactly like a record created post-v14', async () => {
+    await seedRawVersionedDb(13, (db, tx) => {
+      buildV13Stores(db);
+      tx.objectStore('familyMembers').add({
+        id: 'fm1',
+        fullName: 'Fatima',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    const member = await familyRepository.getFamilyMember('fm1');
+    await familyRepository.saveFamilyMember({ ...member!, civilIdExpiryDate: '2027-06-15', passportExpiryDate: '2027-12-15' });
+
+    const updated = await familyRepository.getFamilyMember('fm1');
+    expect(updated).toMatchObject({ civilIdExpiryDate: '2027-06-15', passportExpiryDate: '2027-12-15' });
+  });
+
+  it('idempotency: a second getDB() call against the already-v14 database never loses or duplicates the expiry fields', async () => {
+    await getDB();
+    await familyRepository.saveFamilyMember({
+      id: 'fm1',
+      fullName: 'Fatima',
+      civilIdExpiryDate: '2027-06-15',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    const { __resetDbConnectionForTests } = await import('../../src/storage/db');
+    __resetDbConnectionForTests();
+    await getDB();
+
+    const reloaded = await familyRepository.getFamilyMember('fm1');
+    expect(reloaded?.civilIdExpiryDate).toBe('2027-06-15');
+  });
+});

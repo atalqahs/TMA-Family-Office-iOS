@@ -181,7 +181,7 @@ interface TmaDB extends DBSchema {
 // can open the exact same database by name/version without duplicating
 // these constants — never referenced by application code.
 export const DB_NAME = 'tma-family-office';
-export const DB_VERSION = 13;
+export const DB_VERSION = 14;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -623,6 +623,14 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
             }
           }
 
+        }
+
+        if (oldVersion < 14) {
+          // Purely additive: `civilIdExpiryDate`/`passportExpiryDate` are new
+          // OPTIONAL fields on the existing `familyMembers` record shape (no
+          // new store/index, same precedent as the v10->v11 archivedAt/
+          // deletedAt addition). Existing records simply lack these fields
+          // until a user fills them in -- no backfill, no fabricated dates.
         }
       },
       blocked() {

@@ -18,6 +18,6 @@ import { DB_VERSION } from '../../src/storage/db';
  */
 describe('Phase 9B regression gates', () => {
   it('47. DB_VERSION reflects only intentional schema changes -- Notifications itself introduced none', () => {
-    expect(DB_VERSION).toBe(13);
+    expect(DB_VERSION).toBeGreaterThanOrEqual(13);
   });
 });

@@ -24,6 +24,8 @@ function toFormValues(member?: FamilyMember): FamilyMemberFormValues {
     dateOfBirth: member?.dateOfBirth ?? '',
     nationality: member?.nationality ?? '',
     civilId: member?.civilId ?? '',
+    civilIdExpiryDate: member?.civilIdExpiryDate ?? '',
+    passportExpiryDate: member?.passportExpiryDate ?? '',
     phone: member?.phone ?? '',
     email: member?.email ?? '',
     bloodType: member?.bloodType,
@@ -77,6 +79,8 @@ export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMem
         relationship: values.relationship?.trim() || undefined,
         nationality: values.nationality?.trim() || undefined,
         civilId: values.civilId?.trim() || undefined,
+        civilIdExpiryDate: values.civilIdExpiryDate || undefined,
+        passportExpiryDate: values.passportExpiryDate || undefined,
         phone: values.phone?.trim() || undefined,
         email: values.email?.trim() || undefined,
         notes: values.notes?.trim() || undefined,
@@ -158,6 +162,26 @@ export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMem
             setDuplicateWarning(false);
           }}
           onBlur={handleCivilIdBlur}
+        />
+      </FormField>
+
+      <FormField label={t('fieldCivilIdExpiryDate')} htmlFor={`${formId}-civilIdExpiryDate`}>
+        <input
+          id={`${formId}-civilIdExpiryDate`}
+          className="form-input"
+          type="date"
+          value={values.civilIdExpiryDate ?? ''}
+          onChange={(e) => update('civilIdExpiryDate', e.target.value)}
+        />
+      </FormField>
+
+      <FormField label={t('fieldPassportExpiryDate')} htmlFor={`${formId}-passportExpiryDate`}>
+        <input
+          id={`${formId}-passportExpiryDate`}
+          className="form-input"
+          type="date"
+          value={values.passportExpiryDate ?? ''}
+          onChange={(e) => update('passportExpiryDate', e.target.value)}
         />
       </FormField>
 

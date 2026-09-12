@@ -41,6 +41,7 @@ const SOURCE_LABEL_KEY: Record<NotificationSourceType, TranslationKey> = {
   contract: 'notificationSourceContractLabel',
   staff: 'notificationSourceStaffLabel',
   task: 'notificationSourceTaskLabel',
+  family: 'notificationSourceFamilyLabel',
 };
 
 export function getNotificationSourceLabel(sourceType: NotificationSourceType, t: (key: TranslationKey) => string): string {

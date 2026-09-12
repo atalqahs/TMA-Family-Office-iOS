@@ -173,7 +173,7 @@ describe('Health: permanent deletion', () => {
     expect(await familyRepository.getFamilyMember('fm1')).toBeDefined();
   });
 
-  it('DB_VERSION is 13 -- the Health/Education stores were added under this version', () => {
-    expect(DB_VERSION).toBe(13);
+  it('DB_VERSION is at least 13 -- the Health/Education stores were added under this version', () => {
+    expect(DB_VERSION).toBeGreaterThanOrEqual(13);
   });
 });

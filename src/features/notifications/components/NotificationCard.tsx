@@ -11,6 +11,7 @@ const SOURCE_CATEGORY_ID: Record<NotificationSourceType, string> = {
   contract: 'contracts',
   staff: 'staff',
   task: 'tasks',
+  family: 'family',
 };
 
 const SEVERITY_VARIANT: Record<NotificationSeverity, 'danger' | 'warning' | 'neutral'> = {
