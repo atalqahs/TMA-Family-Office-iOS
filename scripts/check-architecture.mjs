@@ -321,10 +321,13 @@ function relPath(file) {
 
 // ---------------------------------------------------------------------------
 // 11. No Notification persistence store (Phase 9B is a derived-only
-//     aggregation layer -- no schema change), and DB_VERSION reflects the
-//     latest intentional schema change (currently 14 -- Family Civil ID/
-//     Passport expiry date fields, purely additive; see storage/db.ts's own
-//     v13->v14 doc comment).
+//     aggregation layer -- no schema change), and DB_VERSION must equal the
+//     HIGHEST `oldVersion < N` migration guard actually present in the
+//     upgrade() callback -- never a number hardcoded in this script. That
+//     makes the check self-maintaining: a legitimate new migration (add a
+//     guard, bump DB_VERSION to match) never requires editing this file,
+//     while a DB_VERSION bump with no corresponding migration step (or a
+//     migration step nothing bumped DB_VERSION for) still fails the gate.
 // ---------------------------------------------------------------------------
 {
   const dbFile = join(SRC, 'storage', 'db.ts');
@@ -332,9 +335,35 @@ function relPath(file) {
   if (/\bnotification/i.test(dbSource)) {
     violations.push(`storage/db.ts appears to reference a notification store -- Notifications must never be persisted (Phase 9B Section B)`);
   }
+
   const versionMatch = dbSource.match(/DB_VERSION\s*=\s*(\d+)/);
-  if (!versionMatch || versionMatch[1] !== '14') {
-    violations.push(`DB_VERSION must be 14 (found: ${versionMatch ? versionMatch[1] : 'not found'})`);
+  const declaredVersion = versionMatch ? Number(versionMatch[1]) : undefined;
+
+  let highestMigrationGuard = 0;
+  const dbSf = sourceFiles.get(dbFile);
+  if (dbSf) {
+    ts.forEachChild(dbSf, function visit(node) {
+      if (
+        ts.isBinaryExpression(node) &&
+        node.operatorToken.kind === ts.SyntaxKind.LessThanToken &&
+        ts.isIdentifier(node.left) &&
+        node.left.text === 'oldVersion' &&
+        ts.isNumericLiteral(node.right)
+      ) {
+        highestMigrationGuard = Math.max(highestMigrationGuard, Number(node.right.text));
+      }
+      ts.forEachChild(node, visit);
+    });
+  }
+
+  if (declaredVersion === undefined) {
+    violations.push('storage/db.ts: DB_VERSION constant not found');
+  } else if (highestMigrationGuard === 0) {
+    violations.push('storage/db.ts: no `if (oldVersion < N)` migration guard found to verify DB_VERSION against');
+  } else if (declaredVersion !== highestMigrationGuard) {
+    violations.push(
+      `DB_VERSION (${declaredVersion}) does not match the highest 'if (oldVersion < ${highestMigrationGuard})' migration guard in storage/db.ts -- every DB_VERSION bump must be paired with its own migration step, and vice versa`,
+    );
   }
 }
 
@@ -394,26 +423,30 @@ function relPath(file) {
 //     ACTIVE <-> ARCHIVED -> PERMANENT DELETE, with no Trash state -- so
 //     Archive's "Delete" action is now REQUIRED to call the same real,
 //     permanent cascade-delete function every profile page uses) and
-//     Global Search was removed entirely. Text-scan every source file for
-//     the retired identifiers so a stray reintroduction of either feature
-//     fails the gate immediately.
+//     Global Search was removed entirely. Scan every source file's actual
+//     IDENTIFIERS (declarations, references, property/JSX-tag names -- not
+//     a raw substring match over the whole file text) for the retired
+//     names, so a stray reintroduction of either feature fails the gate
+//     immediately without also tripping on an unrelated comment or string
+//     that merely mentions one of these words.
 // ---------------------------------------------------------------------------
 {
-  const BANNED_TOKENS = ['deletedAt', 'softDelete', 'TrashPage', 'onSearchClick', 'searchPlaceholderMessage'];
+  const BANNED_IDENTIFIERS = new Set(['deletedAt', 'softDelete', 'TrashPage', 'onSearchClick', 'searchPlaceholderMessage']);
   // storage/db.ts is the one legitimate exception for 'deletedAt'/
   // 'softDelete': the v12->v13 migration must reference the retired field
-  // name by that exact string to find and clean up any legacy record that
-  // still carries it (see this file's own top-level doc comment) -- that
-  // is cleanup of the past, not a live reintroduction of the feature.
+  // name by that exact identifier to find and clean up any legacy record
+  // that still carries it (see this file's own top-level doc comment) --
+  // that is cleanup of the past, not a live reintroduction of the feature.
   const dbFile = join(SRC, 'storage', 'db.ts');
   for (const file of allFiles) {
     if (file === dbFile) continue;
-    const text = readFileSync(file, 'utf-8');
-    for (const token of BANNED_TOKENS) {
-      if (text.includes(token)) {
-        violations.push(`Stale Trash/Global-Search identifier '${token}' found: ${relPath(file)}`);
+    const sf = sourceFiles.get(file);
+    ts.forEachChild(sf, function visit(node) {
+      if (ts.isIdentifier(node) && BANNED_IDENTIFIERS.has(node.text)) {
+        violations.push(`Stale Trash/Global-Search identifier '${node.text}' found: ${relPath(file)}`);
       }
-    }
+      ts.forEachChild(node, visit);
+    });
   }
 }
 
