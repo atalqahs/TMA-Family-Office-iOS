@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { getFamilyMember } from '../../family/familyRepository';
 import type { FamilyMember } from '../../family/types';
 import { listActiveHealthProfiles } from '../healthRepository';
@@ -16,28 +17,11 @@ export interface HealthProfileWithFamilyMember {
  * copy of that identity data itself.
  */
 export function useHealthProfiles() {
-  const [entries, setEntries] = useState<HealthProfileWithFamilyMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const profiles = await listActiveHealthProfiles();
-      const familyMembers = await Promise.all(profiles.map((profile) => getFamilyMember(profile.familyMemberId)));
-      setEntries(profiles.map((profile, index) => ({ profile, familyMember: familyMembers[index] })));
-    } catch (err) {
-      console.error('Failed to load health profiles', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
+  const fetcher = useCallback(async (): Promise<HealthProfileWithFamilyMember[]> => {
+    const profiles = await listActiveHealthProfiles();
+    const familyMembers = await Promise.all(profiles.map((profile) => getFamilyMember(profile.familyMemberId)));
+    return profiles.map((profile, index) => ({ profile, familyMember: familyMembers[index] }));
   }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+  const { data: entries, loading, error, refresh } = useAsyncResource<HealthProfileWithFamilyMember[]>(fetcher, []);
   return { entries, loading, error, refresh };
 }

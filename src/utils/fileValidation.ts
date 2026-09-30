@@ -70,18 +70,24 @@ function findFormatByExtension(extension: string): DocumentFormat | undefined {
  * rather than either alone — iOS/browser file pickers don't always report
  * a reliable MIME type (particularly for Word/Excel files picked from
  * Files/iCloud Drive), so extension is the fallback rather than a second
- * independent source of truth:
+ * independent source of truth. This is a format/size gate only, not a
+ * malware or content-safety check.
  *
  * 1. A specific, recognized MIME type (not one of the generic/unreliable
- *    placeholders above) is trusted immediately — this is the normal case
- *    for most desktop browsers and for images.
- * 2. Otherwise, if the MIME type is missing or one of those unreliable
- *    placeholders, the extension decides — this is the common iOS case
- *    for Office documents.
- * 3. A specific MIME type that does NOT match any supported format is
- *    never overridden by the extension — e.g. a '.docx' file reported as
- *    'image/png' is rejected rather than trusted, since that mismatch is
- *    exactly the "disguised file" case validation exists to catch.
+ *    placeholders above) that matches no supported format is rejected
+ *    immediately — this is the normal case for most desktop browsers and
+ *    for images.
+ * 2. That same specific MIME type is also rejected if the file's
+ *    extension is both present AND recognized AND identifies a
+ *    DIFFERENT format — e.g. a file named '.docx' but reported as
+ *    'image/png' is rejected rather than trusted, since a browser-
+ *    reported MIME type contradicted by a clear extension is exactly the
+ *    mismatch this check exists to catch.
+ * 3. Otherwise (MIME missing, one of the unreliable placeholders, or the
+ *    extension doesn't contradict it) the MIME-matched format decides, or
+ *    — when MIME is missing/unreliable — the extension decides on its
+ *    own. This is the common iOS case for Office documents picked from
+ *    Files/iCloud Drive, where the MIME type is often empty or generic.
  */
 export function validateDocumentFile(file: File): TranslationKey | null {
   if (file.size > MAX_DOCUMENT_FILE_SIZE) {
@@ -92,7 +98,13 @@ export function validateDocumentFile(file: File): TranslationKey | null {
   const extension = getExtension(file.name);
 
   if (mimeType && !UNRELIABLE_MIME_TYPES.has(mimeType)) {
-    return findFormatByMimeType(mimeType) ? null : 'validationFileTypeUnsupported';
+    const formatByMimeType = findFormatByMimeType(mimeType);
+    if (!formatByMimeType) return 'validationFileTypeUnsupported';
+    const formatByExtension = extension ? findFormatByExtension(extension) : undefined;
+    if (formatByExtension && formatByExtension !== formatByMimeType) {
+      return 'validationFileTypeUnsupported';
+    }
+    return null;
   }
 
   return findFormatByExtension(extension) ? null : 'validationFileTypeUnsupported';

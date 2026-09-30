@@ -1,6 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { listAllCompletions, listTasks } from '../taskRepository';
 import type { Task, TaskCompletion } from '../types';
+
+interface TasksData {
+  tasks: Task[];
+  completions: TaskCompletion[];
+}
+
+const EMPTY: TasksData = { tasks: [], completions: [] };
 
 /**
  * Loads every task AND every completion for the Tasks list page in one
@@ -10,29 +18,10 @@ import type { Task, TaskCompletion } from '../types';
  * the same pattern already used for Staff salary schedules/payments.
  */
 export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [completions, setCompletions] = useState<TaskCompletion[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const [allTasks, allCompletions] = await Promise.all([listTasks(), listAllCompletions()]);
-      setTasks(allTasks);
-      setCompletions(allCompletions);
-    } catch (err) {
-      console.error('Failed to load tasks', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
+  const fetcher = useCallback(async (): Promise<TasksData> => {
+    const [allTasks, allCompletions] = await Promise.all([listTasks(), listAllCompletions()]);
+    return { tasks: allTasks, completions: allCompletions };
   }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { tasks, completions, loading, error, refresh };
+  const { data, loading, error, refresh } = useAsyncResource(fetcher, EMPTY);
+  return { ...data, loading, error, refresh };
 }

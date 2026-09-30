@@ -1,24 +1,33 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { useFamilyMembers } from '../../src/features/family/hooks/useFamilyMembers';
+import * as familyRepository from '../../src/features/family/familyRepository';
+import type { FamilyMember } from '../../src/features/family/types';
 import { useVehicles } from '../../src/features/vehicles/hooks/useVehicles';
 import * as vehicleRepository from '../../src/features/vehicles/vehicleRepository';
 import type { Vehicle } from '../../src/features/vehicles/types';
 
 /**
- * Phase 9A, Section N: characterization only — NOT a refactor. Every
- * "list" hook (useVehicles, useStaffList, useProperties, useFamilyMembers,
- * useContracts, useTasks, useTaskGroups) fetches via a `refresh()` callback
- * with no stale-request guard, unlike every "detail" hook (useVehicle,
- * useStaffMember, useProperty, useFamilyMember, useContract, useTask),
- * which all tag each fetch with a `requestIdRef` and discard any result
- * that isn't from the most recently started request (see each hook's own
- * doc comment). This test reproduces the concrete failure this gap allows
- * for `useVehicles`, chosen as a representative example — the same
- * structural gap exists identically in every other list hook named above.
+ * Maintenance hardening pass: this used to be a Phase 9A "characterization
+ * only" test proving that every list hook (useVehicles, useStaffList,
+ * useProperties, useFamilyMembers, useContracts, useTasks, useTaskGroups,
+ * useEducationProfiles, useHealthProfiles, useArchivedCards,
+ * useArchiveCategories, useNotifications) let an older, slower `refresh()`
+ * call overwrite a newer one's already-rendered result. All of them now
+ * share the same guarded `refresh()` via `useAsyncResource` (see
+ * src/hooks/useAsyncResource.ts), the same `requestIdRef` pattern every
+ * "detail" hook (useVehicle, useFamilyMember, ...) already used. This test
+ * reproduces the race for `useVehicles` as a representative example and
+ * now proves the fix: the newer result wins and survives the older one
+ * resolving late.
  */
 vi.mock('../../src/features/vehicles/vehicleRepository', () => ({
   listActiveVehicles: vi.fn(),
   listAllMaintenanceRecords: vi.fn(),
+}));
+
+vi.mock('../../src/features/family/familyRepository', () => ({
+  listActiveFamilyMembers: vi.fn(),
 }));
 
 function deferred<T>() {
@@ -37,8 +46,8 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-describe('useVehicles: no stale-request guard (unlike the detail hooks)', () => {
-  it('CURRENT BEHAVIOR: an OLDER in-flight refresh() that resolves LAST overwrites the NEWER one’s already-rendered result', async () => {
+describe('useVehicles: overlapping refresh() no longer lets a stale response win', () => {
+  it('a NEWER refresh() result survives an OLDER, slower one resolving after it', async () => {
     const first = deferred<Vehicle[]>();
     const second = deferred<Vehicle[]>();
 
@@ -53,8 +62,7 @@ describe('useVehicles: no stale-request guard (unlike the detail hooks)', () => 
 
     // A second refresh (e.g. the user pulls to refresh again, or navigates
     // back to this list) starts a NEWER request while the first is still
-    // in flight -- exactly the race window a `requestIdRef` guard closes
-    // on every detail hook, but no list hook has one.
+    // in flight.
     act(() => {
       void result.current.refresh();
     });
@@ -66,13 +74,49 @@ describe('useVehicles: no stale-request guard (unlike the detail hooks)', () => 
     });
     await waitFor(() => expect(result.current.vehicles.map((v) => v.id)).toEqual(['new']));
 
-    // ...but then the OLDER, now-stale request finally resolves too, and
-    // with no guard in place it unconditionally overwrites the state --
-    // silently reverting the list back to stale data despite a newer,
-    // already-displayed result existing.
+    // ...and when the OLDER, now-stale request finally resolves too, the
+    // guard discards it -- the newer, already-displayed result is never
+    // reverted.
     await act(async () => {
       first.resolve([{ id: 'old', name: 'Old Vehicle', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' }]);
     });
-    await waitFor(() => expect(result.current.vehicles.map((v) => v.id)).toEqual(['old']));
+    // Give any (incorrect) pending state update a chance to land, then
+    // assert the list still shows the newer result.
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.vehicles.map((v) => v.id)).toEqual(['new']);
+  });
+});
+
+describe('useFamilyMembers: the exact hook named in the maintenance review now guards overlapping refresh() calls too', () => {
+  it('a NEWER refresh() result survives an OLDER, slower one resolving after it', async () => {
+    const first = deferred<FamilyMember[]>();
+    const second = deferred<FamilyMember[]>();
+
+    const listMembersMock = vi.mocked(familyRepository.listActiveFamilyMembers);
+    listMembersMock.mockReturnValueOnce(first.promise);
+    listMembersMock.mockReturnValueOnce(second.promise);
+
+    const { result } = renderHook(() => useFamilyMembers());
+    expect(listMembersMock).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      void result.current.refresh();
+    });
+    expect(listMembersMock).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      second.resolve([{ id: 'new', fullName: 'New Member', createdAt: '2026-01-02T00:00:00.000Z', updatedAt: '2026-01-02T00:00:00.000Z' }]);
+    });
+    await waitFor(() => expect(result.current.members.map((m) => m.id)).toEqual(['new']));
+
+    await act(async () => {
+      first.resolve([{ id: 'old', fullName: 'Old Member', createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z' }]);
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(result.current.members.map((m) => m.id)).toEqual(['new']);
   });
 });

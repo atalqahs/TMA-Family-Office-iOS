@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { loadNotifications } from '../notificationService';
 import type { NotificationItem } from '../types';
 
@@ -10,26 +11,7 @@ import type { NotificationItem } from '../types';
  * message every other list page already shows (Phase 9B spec Section X).
  */
 export function useNotifications() {
-  const [items, setItems] = useState<NotificationItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      setItems(await loadNotifications());
-    } catch (err) {
-      console.error('Failed to load notifications', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+  const fetcher = useCallback(() => loadNotifications(), []);
+  const { data: items, loading, error, refresh } = useAsyncResource<NotificationItem[]>(fetcher, []);
   return { items, loading, error, refresh };
 }

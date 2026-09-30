@@ -72,11 +72,12 @@ function toFormValues(state: StaffFormState): StaffFormValues {
   };
 }
 
-const TODAY = getLocalToday();
-
 export function StaffForm({ initialValue, onSubmit, onCancel }: StaffFormProps) {
   const { t, locale } = useLanguage();
   const formId = useId();
+  // Computed at render time, not at module load: a form left open across
+  // local midnight must see the new "today" on its next render.
+  const today = getLocalToday();
   const [state, setState] = useState<StaffFormState>(() => toFormState(initialValue));
   const [errors, setErrors] = useState<ReturnType<typeof validateStaffForm>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -163,7 +164,7 @@ export function StaffForm({ initialValue, onSubmit, onCancel }: StaffFormProps) 
           id={`${formId}-dob`}
           className="form-input"
           type="date"
-          max={TODAY}
+          max={today}
           value={state.dateOfBirth}
           onChange={(e) => update('dateOfBirth', e.target.value)}
         />

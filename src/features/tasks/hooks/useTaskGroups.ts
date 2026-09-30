@@ -1,29 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { listTaskGroups } from '../taskRepository';
 import type { TaskGroup } from '../types';
 
 /** Loads every TaskGroup, same `refresh()`-after-mutation shape as useContracts/useTasks. */
 export function useTaskGroups() {
-  const [groups, setGroups] = useState<TaskGroup[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      setGroups(await listTaskGroups());
-    } catch (err) {
-      console.error('Failed to load task groups', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+  const fetcher = useCallback(() => listTaskGroups(), []);
+  const { data: groups, loading, error, refresh } = useAsyncResource<TaskGroup[]>(fetcher, []);
   return { groups, loading, error, refresh };
 }

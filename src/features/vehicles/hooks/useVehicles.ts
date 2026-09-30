@@ -1,6 +1,14 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { listActiveVehicles, listAllMaintenanceRecords } from '../vehicleRepository';
 import type { Vehicle, VehicleMaintenanceRecord } from '../types';
+
+interface VehiclesData {
+  vehicles: Vehicle[];
+  maintenanceByVehicle: Record<string, VehicleMaintenanceRecord[]>;
+}
+
+const EMPTY: VehiclesData = { vehicles: [], maintenanceByVehicle: {} };
 
 /**
  * Loads every vehicle plus every maintenance record grouped by vehicleId in
@@ -8,33 +16,14 @@ import type { Vehicle, VehicleMaintenanceRecord } from '../types';
  * extra IndexedDB query per vehicle.
  */
 export function useVehicles() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [maintenanceByVehicle, setMaintenanceByVehicle] = useState<Record<string, VehicleMaintenanceRecord[]>>({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const [vehicleList, allMaintenance] = await Promise.all([listActiveVehicles(), listAllMaintenanceRecords()]);
-      const grouped: Record<string, VehicleMaintenanceRecord[]> = {};
-      for (const record of allMaintenance) {
-        (grouped[record.vehicleId] ??= []).push(record);
-      }
-      setVehicles(vehicleList);
-      setMaintenanceByVehicle(grouped);
-    } catch (err) {
-      console.error('Failed to load vehicles', err);
-      setError(true);
-    } finally {
-      setLoading(false);
+  const fetcher = useCallback(async (): Promise<VehiclesData> => {
+    const [vehicleList, allMaintenance] = await Promise.all([listActiveVehicles(), listAllMaintenanceRecords()]);
+    const grouped: Record<string, VehicleMaintenanceRecord[]> = {};
+    for (const record of allMaintenance) {
+      (grouped[record.vehicleId] ??= []).push(record);
     }
+    return { vehicles: vehicleList, maintenanceByVehicle: grouped };
   }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
-  return { vehicles, maintenanceByVehicle, loading, error, refresh };
+  const { data, loading, error, refresh } = useAsyncResource(fetcher, EMPTY);
+  return { ...data, loading, error, refresh };
 }

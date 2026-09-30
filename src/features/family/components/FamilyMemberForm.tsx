@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { ProfilePhotoPicker } from '../../../components/ProfilePhotoPicker';
@@ -34,19 +34,32 @@ function toFormValues(member?: FamilyMember): FamilyMemberFormValues {
   };
 }
 
-const TODAY = getLocalToday();
-
 export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMemberFormProps) {
   const { t } = useLanguage();
   const formId = useId();
+  // Computed at render time, not at module load: a form left open across
+  // local midnight must see the new "today" on its next render, not the
+  // day the module happened to first load (see Date of Birth's `max`).
+  const today = getLocalToday();
   const [values, setValues] = useState<FamilyMemberFormValues>(() => toFormValues(initialValue));
   const [errors, setErrors] = useState<ReturnType<typeof validateFamilyMemberForm>>({});
   const [duplicateWarning, setDuplicateWarning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Bumped on every Civil ID edit so an in-flight duplicate check can tell
+  // it's been superseded -- without this, editing the field again (with or
+  // without a second blur) before a slow check resolves could apply that
+  // stale result to the now-different value.
+  const civilIdGenerationRef = useRef(0);
 
   const update = <K extends keyof FamilyMemberFormValues>(key: K, value: FamilyMemberFormValues[K]) => {
     setValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const updateCivilId = (value: string) => {
+    civilIdGenerationRef.current += 1;
+    update('civilId', value);
+    setDuplicateWarning(false);
   };
 
   const handleCivilIdBlur = async () => {
@@ -55,10 +68,13 @@ export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMem
       setDuplicateWarning(false);
       return;
     }
+    const generation = civilIdGenerationRef.current;
     try {
       const matches = await findFamilyMembersByCivilId(civilId, initialValue?.id);
+      if (generation !== civilIdGenerationRef.current) return; // the field was edited again while this check was in flight
       setDuplicateWarning(matches.length > 0);
     } catch (err) {
+      if (generation !== civilIdGenerationRef.current) return;
       console.error('Failed to check for duplicate Civil ID', err);
     }
   };
@@ -131,7 +147,7 @@ export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMem
           id={`${formId}-dob`}
           className="form-input"
           type="date"
-          max={TODAY}
+          max={today}
           value={values.dateOfBirth ?? ''}
           onChange={(e) => update('dateOfBirth', e.target.value)}
         />
@@ -157,10 +173,7 @@ export function FamilyMemberForm({ initialValue, onSubmit, onCancel }: FamilyMem
           className="form-input"
           type="text"
           value={values.civilId ?? ''}
-          onChange={(e) => {
-            update('civilId', e.target.value);
-            setDuplicateWarning(false);
-          }}
+          onChange={(e) => updateCivilId(e.target.value)}
           onBlur={handleCivilIdBlur}
         />
       </FormField>

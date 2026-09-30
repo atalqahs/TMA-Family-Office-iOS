@@ -22,7 +22,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
+  # The full quality gate, inlined as a prerequisite job rather than a
+  # dependency on the separate Quality Gate workflow (quality.yml) running
+  # alongside it: this used to build-and-deploy independently of that
+  # workflow, so a revision whose Quality Gate run failed could still end
+  # up published. A cross-workflow `workflow_run` trigger would only trade
+  # one race for another (it resolves against whichever workflow file is
+  # registered on the default branch, which this repository's default
+  # branch does not currently carry). Running the checks here, in the same
+  # workflow as the build/deploy jobs with `needs:`, makes "deploy" wait on
+  # "verify" a plain, unavoidable job dependency -- the only way this can
+  # publish an unverified revision is deleting this job.
+  verify:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -31,17 +42,45 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Same pinned version as quality.yml -- vitest/jsdom require it
+          # (see that workflow's own comment), and using the same version
+          # everywhere (dev/CI/deploy) is the point of pinning it at all.
+          node-version: 22.22.2
           cache: npm
 
-      - name: Install dependencies
+      - name: Install dependencies (from lockfile)
+        run: npm ci
+
+      - name: Typecheck (app + permanent test suite)
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Permanent regression suite
+        run: npm run test:run
+
+      - name: Architecture quality gate
+        run: npm run test:architecture
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.22.2
+          cache: npm
+
+      - name: Install dependencies (from lockfile)
         run: npm ci
 
       - name: Build (GitHub Pages sub-path)
-        run: npm run build
-        env:
-          # Repository project-site sub-path: https://<owner>.github.io/TMA-Family-Office-iOS/
-          VITE_BASE_PATH: /TMA-Family-Office-iOS/
+        run: npm run build:pages
 
       - name: Upload build artifact
         uses: actions/upload-pages-artifact@v3
