@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { getFamilyMember } from '../../family/familyRepository';
 import type { FamilyMember } from '../../family/types';
 import { listActiveEducationProfiles } from '../educationRepository';
@@ -16,28 +17,11 @@ export interface EducationProfileWithFamilyMember {
  * of that identity data itself.
  */
 export function useEducationProfiles() {
-  const [entries, setEntries] = useState<EducationProfileWithFamilyMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const profiles = await listActiveEducationProfiles();
-      const familyMembers = await Promise.all(profiles.map((profile) => getFamilyMember(profile.familyMemberId)));
-      setEntries(profiles.map((profile, index) => ({ profile, familyMember: familyMembers[index] })));
-    } catch (err) {
-      console.error('Failed to load education profiles', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
+  const fetcher = useCallback(async (): Promise<EducationProfileWithFamilyMember[]> => {
+    const profiles = await listActiveEducationProfiles();
+    const familyMembers = await Promise.all(profiles.map((profile) => getFamilyMember(profile.familyMemberId)));
+    return profiles.map((profile, index) => ({ profile, familyMember: familyMembers[index] }));
   }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+  const { data: entries, loading, error, refresh } = useAsyncResource<EducationProfileWithFamilyMember[]>(fetcher, []);
   return { entries, loading, error, refresh };
 }

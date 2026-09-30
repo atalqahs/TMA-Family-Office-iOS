@@ -1,29 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useAsyncResource } from '../../../hooks/useAsyncResource';
 import { listActiveFamilyMembers } from '../familyRepository';
 import type { FamilyMember } from '../types';
 
 export function useFamilyMembers() {
-  const [members, setMembers] = useState<FamilyMember[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    setError(false);
-    try {
-      const result = await listActiveFamilyMembers();
-      setMembers(result);
-    } catch (err) {
-      console.error('Failed to load family members', err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
-
+  const fetcher = useCallback(() => listActiveFamilyMembers(), []);
+  const { data: members, loading, error, refresh } = useAsyncResource<FamilyMember[]>(fetcher, []);
   return { members, loading, error, refresh };
 }
