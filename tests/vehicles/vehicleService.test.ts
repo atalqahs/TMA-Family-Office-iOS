@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { completeMaintenanceRecord, computeForwardMileageSync } from '../../src/features/vehicles/vehicleService';
 import * as vehicleRepository from '../../src/features/vehicles/vehicleRepository';
+import { getTargetMileage } from '../../src/features/vehicles/types';
 import type { Vehicle, VehicleMaintenanceRecord } from '../../src/features/vehicles/types';
 
 describe('computeForwardMileageSync (pure): mileage never moves backward, only forward', () => {
@@ -75,7 +76,18 @@ describe('completeMaintenanceRecord ("Service Completed" starts the next cycle c
       serviceIntervalKm: 8_000,
     });
     expect(completed.previousTargetMileage).toBe(100_000);
-    // New target = 102,000 + 8,000 = 110,000
+    // New target = 102,000 + 8,000 = 110,000 -- actually verify the derived
+    // target, not just its two inputs, and that it was persisted correctly.
+    expect(completed.mileageAtService).toBe(102_000);
+    expect(completed.serviceIntervalKm).toBe(8_000);
+    expect(getTargetMileage(completed)).toBe(110_000);
+
+    const stored = await vehicleRepository.getMaintenanceRecord(completed.id);
+    expect(stored).toMatchObject({ mileageAtService: 102_000, serviceIntervalKm: 8_000 });
+    expect(getTargetMileage(stored!)).toBe(110_000);
+
+    const updatedVehicle = await vehicleRepository.getVehicle('v1');
+    expect(updatedVehicle?.currentMileage).toBe(102_000); // synced forward to the actual late reading
   });
 
   it('leaves sourceRecord itself completely untouched', async () => {
