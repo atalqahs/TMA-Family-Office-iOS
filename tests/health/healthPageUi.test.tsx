@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitForElementToBeRemoved } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { HealthPage } from '../../src/pages/HealthPage';
@@ -42,6 +42,14 @@ describe('HealthPage: create flow', () => {
     expect(select).toHaveValue('fm1');
     screen.getByRole('button', { name: 'Save' }).click();
 
+    // The create sheet's own "Select Family Member" dropdown already
+    // renders "Ahmad" as an <option> the moment the sheet opens -- well
+    // before Save is clicked -- so waiting on that same text right after
+    // Save would resolve immediately from the still-open sheet, not from
+    // navigating to the new profile. Wait for the sheet to actually close
+    // first (a real signal the awaited creation succeeded), then for the
+    // name to appear on the profile page it navigated to.
+    await waitForElementToBeRemoved(() => screen.queryByLabelText('Select Family Member'));
     await screen.findByText('Ahmad');
   });
 
@@ -55,6 +63,10 @@ describe('HealthPage: create flow', () => {
     (await screen.findByRole('button', { name: '+ Add Health Record' })).click();
     await screen.findByLabelText('Select Family Member');
     screen.getByRole('button', { name: 'Save' }).click();
+    // See the comment on the first test above: wait for the create sheet
+    // to close (a real signal the awaited creation succeeded) before
+    // trusting "Ahmad" as proof of navigating to the new profile.
+    await waitForElementToBeRemoved(() => screen.queryByLabelText('Select Family Member'));
     await screen.findByText('Ahmad');
 
     const afterFirst = await healthRepository.listHealthProfiles();
@@ -69,6 +81,7 @@ describe('HealthPage: create flow', () => {
     (await screen.findByRole('button', { name: '+ Add Health Record' })).click();
     await screen.findByLabelText('Select Family Member');
     screen.getByRole('button', { name: 'Save' }).click();
+    await waitForElementToBeRemoved(() => screen.queryByLabelText('Select Family Member'));
     await screen.findByText('Ahmad');
 
     const afterSecond = await healthRepository.listHealthProfiles();
