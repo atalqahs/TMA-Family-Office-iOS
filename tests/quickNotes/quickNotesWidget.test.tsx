@@ -19,11 +19,26 @@ function renderWithLocale(ui: ReactElement, locale: Locale) {
 
 /**
  * Waits for `text` to appear as a rendered note (a `.quick-notes-widget__text`
- * paragraph) specifically -- never matching the add textarea's own typed
- * content, which (unlike a plain `<input>`) a controlled `<textarea>`
- * renders as a real child text node in the DOM and so WOULD otherwise be
- * found by a plain `getByText`/`findByText` call, resolving before the
- * actual async save completes.
+ * paragraph) specifically, and returns that element.
+ *
+ * This is deliberately NOT a plain `screen.findByText(text)`, for two
+ * independent reasons:
+ *
+ * 1. It never matches the add textarea's own typed content, which
+ *    (unlike a plain `<input>`) a controlled `<textarea>` can render as
+ *    a real child text node in the DOM, which a generic text query would
+ *    otherwise match before the actual async save completes.
+ * 2. Saving an edit (`QuickNotesWidget.saveEdit`) awaits the write, exits
+ *    edit mode (re-rendering the ORIGINAL, pre-edit text for one commit,
+ *    since the in-memory `notes` list hasn't been refreshed yet), and
+ *    only then awaits `refresh()` to show the real updated text -- so
+ *    there is a genuine intermediate render where neither the edit
+ *    textarea nor the final text exists anywhere in the document. A
+ *    one-shot query can land in that exact window and fail outright; a
+ *    query scoped to this specific selector, run via `waitFor`'s retry
+ *    loop, keeps polling through that window until the final, correctly
+ *    saved state commits (or genuinely times out) -- the same fix
+ *    already proven for the add-note race this helper was written for.
  */
 function findRenderedNoteText(text: string) {
   return waitFor(() => {
@@ -31,6 +46,7 @@ function findRenderedNoteText(text: string) {
       (el) => el.textContent === text,
     );
     expect(match).toBeTruthy();
+    return match as HTMLElement;
   });
 }
 
@@ -97,7 +113,7 @@ describe('QuickNotesWidget: editing and deleting', () => {
     fireEvent.change(editArea, { target: { value: 'Updated note text' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(await screen.findByText('Updated note text')).toBeInTheDocument();
+    expect(await findRenderedNoteText('Updated note text')).toBeInTheDocument();
   });
 
   it('canceling an edit leaves the original note untouched', async () => {
