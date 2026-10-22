@@ -7,11 +7,13 @@
   border-radius: var(--radius-lg);
   transition:
     background-color var(--transition-fast),
-    border-color var(--transition-fast);
+    border-color var(--transition-fast),
+    transform 0.2s var(--ease-apple);
 }
 
 .category-card:active {
   background: var(--color-surface-elevated);
+  transform: scale(0.98);
 }
 
 .category-card--active {

@@ -8,11 +8,13 @@
   color: var(--color-text-primary);
   font-size: var(--font-size-body);
   font-family: inherit;
+  transition: border-color var(--transition-fast), outline-color var(--transition-fast);
 }
 
 .form-input:focus {
   outline: 2px solid var(--color-accent);
   outline-offset: 1px;
+  border-color: var(--color-accent);
 }
 
 textarea.form-input {
