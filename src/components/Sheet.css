@@ -2,7 +2,7 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(0, 0, 0, 0.4);
   display: flex;
   align-items: flex-end;
   animation: sheet-fade-in var(--transition-fast) ease-out;
@@ -13,12 +13,18 @@
   max-height: 85dvh;
   display: flex;
   flex-direction: column;
-  background: var(--color-surface-elevated);
+  /* Liquid Glass: sheets are functional-layer chrome (HIG "Sheets, alerts
+     & modality"), so the surface is translucent + blurred rather than a
+     flat fill -- the dimmed content behind stays faintly, correctly
+     perceptible through it. */
+  background: var(--color-glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
   border-top-left-radius: var(--radius-lg);
   border-top-right-radius: var(--radius-lg);
   box-shadow: var(--shadow-sheet);
   padding-bottom: env(safe-area-inset-bottom);
-  animation: sheet-slide-up 200ms ease-out;
+  animation: sheet-slide-up 280ms var(--ease-apple);
 }
 
 .sheet__handle {
@@ -40,6 +46,7 @@
   margin: 0;
   font-size: var(--font-size-lg);
   font-weight: 600;
+  letter-spacing: -0.008em;
   color: var(--color-text-primary);
 }
 

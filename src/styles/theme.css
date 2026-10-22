@@ -1,20 +1,57 @@
+/**
+ * TMA Family Office — Apple Titanium design tokens.
+ *
+ * Obsidian Black / Deep Charcoal / Graphite / Titanium Silver / Snow White
+ * / Cool Gray, per the mandatory TMA color system. Every other stylesheet
+ * in this app consumes ONLY these custom properties -- never a hardcoded
+ * color -- so the entire visual identity lives here, in one place.
+ *
+ * Functional status colors (success/warning/danger) and their *-soft
+ * tints are DELIBERATELY unchanged from the prior theme: they carry real
+ * meaning (expiry warnings, overdue states) and the redesign spec asks
+ * that meaning-bearing color be preserved.
+ *
+ * Two user-facing colors are explicitly OUTSIDE this token system and
+ * must never be derived from it: a Task Group's own stored `color`
+ * (features/tasks/taskGroupColor.ts -- user data, not theme) and the
+ * General Calendar's shared gray non-Task marker
+ * (features/calendar/colors.ts -- already a neutral tone independent of
+ * the accent, left untouched by this redesign).
+ */
 :root {
   color-scheme: dark;
 
+  /* Obsidian Black -- main app background, full-screen pages, nav areas. */
   --color-bg: #0b0c0f;
-  --color-surface: #15171b;
-  --color-surface-elevated: #1c1f24;
-  --color-surface-card: #17191d;
-  --color-border: #2a2d33;
-  --color-border-strong: #383c44;
+  /* Deep Charcoal -- cards, sections, form containers, modal surfaces. */
+  --color-surface: #171a1f;
+  --color-surface-card: #171a1f;
+  /* Graphite -- elevated interactive elements, selected panels, secondary cards. */
+  --color-surface-elevated: #252930;
 
-  --color-text-primary: #f2f3f5;
-  --color-text-secondary: #9aa0aa;
+  /* Borders & separators -- used sparingly; spacing/elevation do most of the work. */
+  --color-border: #343a42;
+  --color-border-strong: #343a42;
+  /* A lighter-weight hairline for floating chrome (sticky header, scroll
+     edges) -- a translucent line reads as a seam between glass and
+     content, where the opaque --color-border would look like a harder,
+     content-layer card edge. */
+  --color-separator: rgba(245, 245, 247, 0.12);
+
+  /* Snow White -- primary text, headings, high-emphasis data. */
+  --color-text-primary: #f5f5f7;
+  /* Cool Gray -- descriptions, metadata, supporting labels. */
+  --color-text-secondary: #969ca5;
   --color-text-muted: #6b7078;
 
-  --color-accent: #c9a24b;
-  --color-accent-muted: #8a7238;
-  --color-accent-soft: rgba(201, 162, 75, 0.12);
+  /* Titanium Silver -- the one official TMA accent. Refined and neutral,
+     never simulated chrome/gradients. */
+  --color-accent: #b5bec8;
+  --color-accent-muted: rgba(181, 190, 200, 0.45);
+  --color-accent-soft: rgba(181, 190, 200, 0.12);
+  /* Text/icon color for content painted ON TOP of a solid --color-accent
+     fill -- Titanium Silver is light, so this is dark, never white. */
+  --color-on-accent: var(--color-bg);
 
   --color-success: #4caf7d;
   --color-success-soft: rgba(76, 175, 125, 0.14);
@@ -25,7 +62,7 @@
 
   --radius-sm: 10px;
   --radius-md: 14px;
-  --radius-lg: 20px;
+  --radius-lg: 22px;
   --radius-pill: 999px;
 
   --space-1: 4px;
@@ -39,7 +76,8 @@
   --touch-target: 48px;
 
   --font-family-base:
-    -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, Arial, sans-serif;
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Tahoma, Arial,
+    sans-serif;
 
   --font-size-xs: 12px;
   --font-size-sm: 13px;
@@ -52,5 +90,30 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.28);
   --shadow-sheet: 0 -8px 32px rgba(0, 0, 0, 0.45);
 
+  /* Liquid Glass -- the functional/chrome layer only (sticky header, bottom
+     sheets/menus), never content-layer cards. Deep Charcoal at high
+     opacity + blur, so floating chrome stays legible over any scrolling
+     content while still reading as translucent glass. */
+  --color-glass-bg: rgba(20, 23, 27, 0.78);
+  --glass-blur: blur(20px) saturate(160%);
+
   --transition-fast: 120ms ease;
+  /* Apple's system easing -- springy settle, used for press feedback and sheet motion. */
+  --ease-apple: cubic-bezier(0.28, 0.11, 0.32, 1);
+}
+
+/* Respect Reduce Motion everywhere: scale/slide/fade transforms collapse
+   to instant or opacity-only, matching "Motion is physics, tied to input
+   ... always honor Reduce Motion." Individual components still handle
+   their own fallback (e.g. press feedback keeps the opacity dim, drops
+   the scale), this is the blanket safety net. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -40,7 +40,7 @@
 .maintenance-record-form__preset--active {
   border-color: var(--color-accent);
   background: var(--color-accent);
-  color: var(--color-on-accent, #fff);
+  color: var(--color-on-accent);
 }
 
 /* A read-only, derived value — styled distinctly from an editable form-input

@@ -10,11 +10,14 @@
   background: transparent;
   color: var(--color-text-primary);
   flex-shrink: 0;
-  transition: background-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    transform 0.2s var(--ease-apple);
 }
 
 .icon-button:active {
   background: var(--color-surface-elevated);
+  transform: scale(0.94);
 }
 
 .icon-button__badge {
