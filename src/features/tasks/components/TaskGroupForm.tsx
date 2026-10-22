@@ -3,6 +3,7 @@ import { FormField } from '../../../components/FormField';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { getTaskGroupColor, TASK_GROUP_COLOR_PALETTE } from '../taskGroupColor';
 import type { TaskGroup, TaskGroupFormValues } from '../types';
 import { validateTaskGroupForm } from '../validation';
 import './TaskGroupForm.css';
@@ -16,18 +17,19 @@ interface TaskGroupFormProps {
 interface TaskGroupFormState {
   name: string;
   notes: string;
+  color: string;
 }
 
 function toFormState(group?: TaskGroup): TaskGroupFormState {
-  return { name: group?.name ?? '', notes: group?.notes ?? '' };
+  return { name: group?.name ?? '', notes: group?.notes ?? '', color: getTaskGroupColor(group ?? {}) };
 }
 
 function toFormValues(state: TaskGroupFormState): TaskGroupFormValues {
-  return { name: state.name.trim(), notes: state.notes.trim() || undefined };
+  return { name: state.name.trim(), notes: state.notes.trim() || undefined, color: state.color };
 }
 
 export function TaskGroupForm({ initialValue, onSubmit, onCancel }: TaskGroupFormProps) {
-  const { t } = useLanguage();
+  const { t, locale } = useLanguage();
   const formId = useId();
   const [state, setState] = useState<TaskGroupFormState>(() => toFormState(initialValue));
   const [errors, setErrors] = useState<ReturnType<typeof validateTaskGroupForm>>({});
@@ -78,6 +80,23 @@ export function TaskGroupForm({ initialValue, onSubmit, onCancel }: TaskGroupFor
           onChange={(e) => update('notes', e.target.value)}
           rows={3}
         />
+      </FormField>
+
+      <FormField label={t('fieldGroupColor')} htmlFor={`${formId}-color`}>
+        <div id={`${formId}-color`} className="task-group-form__colors" role="group">
+          {TASK_GROUP_COLOR_PALETTE.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              className="task-group-form__color-swatch"
+              style={{ backgroundColor: option.value }}
+              aria-label={option.name[locale]}
+              aria-pressed={state.color === option.value}
+              data-selected={state.color === option.value || undefined}
+              onClick={() => update('color', option.value)}
+            />
+          ))}
+        </div>
       </FormField>
 
       {submitError && (

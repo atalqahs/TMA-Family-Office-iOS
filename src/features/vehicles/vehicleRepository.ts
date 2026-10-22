@@ -59,6 +59,12 @@ export async function listDocumentsForVehicle(vehicleId: string): Promise<Vehicl
   return docs.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
+/** Every VehicleDocument across every vehicle, in one bulk read -- the read path for the General Calendar (see features/calendar/), which needs every stored `expiryDate` without an N+1 per-vehicle fetch. */
+export async function listAllVehicleDocuments(): Promise<VehicleDocument[]> {
+  const db = await getDB();
+  return db.getAll('vehicleDocuments');
+}
+
 export async function saveVehicleDocument(document: VehicleDocument): Promise<void> {
   const db = await getDB();
   await db.put('vehicleDocuments', document);

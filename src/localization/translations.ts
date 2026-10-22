@@ -299,8 +299,24 @@ export type TranslationKey =
   | 'calendarPrevMonthLabel'
   | 'calendarNextMonthLabel'
   | 'calendarNoTasksForDate'
+  | 'generalCalendarTitle'
+  | 'generalCalendarSubtitle'
+  | 'generalCalendarExpandAction'
+  | 'generalCalendarNoEventsForDate'
+  | 'backToDashboardLabel'
+  | 'calendarEventCivilIdTitle'
+  | 'calendarEventPassportTitle'
+  | 'calendarEventResidencyTitle'
+  | 'calendarEventVehicleRegistrationTitle'
+  | 'calendarEventVehicleInsuranceTitle'
+  | 'calendarEventVehicleMaintenanceTitle'
+  | 'calendarEventSalaryDueTitle'
+  | 'calendarEventContractStartTitle'
+  | 'calendarEventContractEndTitle'
+  | 'calendarEventDocumentExpiryTitle'
   | 'fieldTaskGroup'
   | 'fieldGroupName'
+  | 'fieldGroupColor'
   | 'addGroupAction'
   | 'taskGroupFormAddTitle'
   | 'taskGroupFormEditTitle'
@@ -705,8 +721,24 @@ export const translations: Record<Locale, Dictionary> = {
     calendarPrevMonthLabel: 'الشهر السابق',
     calendarNextMonthLabel: 'الشهر التالي',
     calendarNoTasksForDate: 'لا توجد مهام مستحقة في هذا التاريخ.',
+    generalCalendarTitle: 'التقويم العام',
+    generalCalendarSubtitle: 'نظرة موحدة على كل المواعيد والمهام القادمة في مكتب العائلة.',
+    generalCalendarExpandAction: 'عرض التقويم الكامل',
+    generalCalendarNoEventsForDate: 'لا توجد أحداث في هذا التاريخ.',
+    backToDashboardLabel: 'رجوع إلى لوحة التحكم',
+    calendarEventCivilIdTitle: 'البطاقة المدنية لـ {name}',
+    calendarEventPassportTitle: 'جواز سفر {name}',
+    calendarEventResidencyTitle: 'إقامة {name}',
+    calendarEventVehicleRegistrationTitle: 'تسجيل {name}',
+    calendarEventVehicleInsuranceTitle: 'تأمين {name}',
+    calendarEventVehicleMaintenanceTitle: '{name} — {maintenanceTitle}',
+    calendarEventSalaryDueTitle: 'راتب {name}',
+    calendarEventContractStartTitle: 'بداية عقد {title}',
+    calendarEventContractEndTitle: 'نهاية عقد {title}',
+    calendarEventDocumentExpiryTitle: '{title} — {name}',
     fieldTaskGroup: 'المجموعة',
     fieldGroupName: 'اسم المجموعة',
+    fieldGroupColor: 'لون المجموعة',
     addGroupAction: '+ إضافة مجموعة',
     taskGroupFormAddTitle: 'إضافة مجموعة',
     taskGroupFormEditTitle: 'تعديل المجموعة',
@@ -1108,8 +1140,24 @@ export const translations: Record<Locale, Dictionary> = {
     calendarPrevMonthLabel: 'Previous month',
     calendarNextMonthLabel: 'Next month',
     calendarNoTasksForDate: 'No tasks due on this date.',
+    generalCalendarTitle: 'General Calendar',
+    generalCalendarSubtitle: 'A unified view of every upcoming date and task across TMA Family Office.',
+    generalCalendarExpandAction: 'View Full Calendar',
+    generalCalendarNoEventsForDate: 'No events on this date.',
+    backToDashboardLabel: 'Back to Dashboard',
+    calendarEventCivilIdTitle: "{name}'s Civil ID",
+    calendarEventPassportTitle: "{name}'s Passport",
+    calendarEventResidencyTitle: "{name}'s Residency",
+    calendarEventVehicleRegistrationTitle: '{name} Registration',
+    calendarEventVehicleInsuranceTitle: '{name} Insurance',
+    calendarEventVehicleMaintenanceTitle: '{name} — {maintenanceTitle}',
+    calendarEventSalaryDueTitle: "{name}'s Salary",
+    calendarEventContractStartTitle: '{title} — Contract Starts',
+    calendarEventContractEndTitle: '{title} — Contract Ends',
+    calendarEventDocumentExpiryTitle: '{title} — {name}',
     fieldTaskGroup: 'Group',
     fieldGroupName: 'Group Name',
+    fieldGroupColor: 'Group Color',
     addGroupAction: '+ Add Group',
     taskGroupFormAddTitle: 'Add Group',
     taskGroupFormEditTitle: 'Edit Group',

@@ -1,6 +1,7 @@
 import { FolderKanban } from 'lucide-react';
 import { useLanguage } from '../../../hooks/useLanguage';
 import { parseLocalDate } from '../../../utils/localDate';
+import { getTaskGroupColor } from '../taskGroupColor';
 import { getTaskGroupDisplayName } from '../taskGroupDisplay';
 import type { TaskGroupStats } from '../taskGroupStats';
 import type { TaskGroup } from '../types';
@@ -25,7 +26,7 @@ export function TaskGroupCard({ group, stats, onClick }: TaskGroupCardProps) {
 
   return (
     <button type="button" className="task-group-card" onClick={onClick}>
-      <span className="task-group-card__icon" aria-hidden="true">
+      <span className="task-group-card__icon" style={{ color: getTaskGroupColor(group) }} aria-hidden="true">
         <FolderKanban size={20} strokeWidth={1.75} />
       </span>
       <div className="task-group-card__body">

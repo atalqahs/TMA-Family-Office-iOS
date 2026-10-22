@@ -9,10 +9,10 @@ import { useTaskGroups } from '../features/tasks/hooks/useTaskGroups';
 import { useTasks } from '../features/tasks/hooks/useTasks';
 import { buildCalendarDayMap, getTasksForDate } from '../features/tasks/taskCalendar';
 import { getTaskGroupDisplayName } from '../features/tasks/taskGroupDisplay';
-import { buildMonthGrid, getMonthRange, shiftYearMonth } from '../features/tasks/monthGrid';
-import { TASK_STATE_LABEL_KEY, TASK_STATE_VARIANT } from '../features/tasks/taskStatus';
 import { useLanguage } from '../hooks/useLanguage';
 import { getLocalToday, getLocalYearMonth, parseLocalDate } from '../utils/localDate';
+import { buildMonthGrid, getMonthRange, shiftYearMonth } from '../utils/monthGrid';
+import { TASK_STATE_LABEL_KEY, TASK_STATE_VARIANT } from '../features/tasks/taskStatus';
 import './TaskCalendarPage.css';
 
 /** A fixed reference week (Jan 1 2023 was a Sunday) purely to derive locale-correct short weekday names in Sunday-first order, matching buildMonthGrid's own week layout. */

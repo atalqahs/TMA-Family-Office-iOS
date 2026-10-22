@@ -119,6 +119,12 @@ export async function listDocumentsForMember(familyMemberId: string): Promise<Fa
   return docs.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
+/** Every FamilyMemberDocument across every member, in one bulk read -- the read path for the General Calendar (see features/calendar/), which needs every stored `expiryDate` without an N+1 per-member fetch. */
+export async function listAllFamilyMemberDocuments(): Promise<FamilyMemberDocument[]> {
+  const db = await getDB();
+  return db.getAll('familyMemberDocuments');
+}
+
 export async function saveFamilyMemberDocument(document: FamilyMemberDocument): Promise<void> {
   const db = await getDB();
   await db.put('familyMemberDocuments', document);

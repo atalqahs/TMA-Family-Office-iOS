@@ -78,6 +78,12 @@ export async function listDocumentsForProperty(propertyId: string): Promise<Prop
   return docs.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
 }
 
+/** Every PropertyDocument across every property, in one bulk read -- the read path for the General Calendar (see features/calendar/), which needs every stored `expiryDate` without an N+1 per-property fetch. */
+export async function listAllPropertyDocuments(): Promise<PropertyDocument[]> {
+  const db = await getDB();
+  return db.getAll('propertyDocuments');
+}
+
 export async function savePropertyDocument(document: PropertyDocument): Promise<void> {
   const db = await getDB();
   await db.put('propertyDocuments', document);

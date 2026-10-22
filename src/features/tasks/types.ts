@@ -45,6 +45,8 @@ export interface TaskGroup {
   id: string;
   name: string;
   notes?: string;
+  /** Optional user-assigned accent color (hex), used only as the dot indicator for this group's tasks on the General Calendar (see features/calendar/) and as a small accent on TaskGroupCard -- purely cosmetic, never read by any Tasks business rule. Absence (a group created before this field existed) is resolved via `getTaskGroupColor` (taskGroupColor.ts), never left to each caller to default separately. */
+  color?: string;
   createdAt: string;
   updatedAt: string;
   archivedAt?: string;

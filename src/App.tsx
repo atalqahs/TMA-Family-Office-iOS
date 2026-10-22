@@ -5,6 +5,7 @@ import { CATEGORIES } from './features/categories/categories';
 import { LanguageProvider } from './localization/LanguageContext';
 import { ArchiveCategoryPage } from './pages/ArchiveCategoryPage';
 import { ArchivePage } from './pages/ArchivePage';
+import { CalendarPage } from './pages/CalendarPage';
 import { CategoryPlaceholderPage } from './pages/CategoryPlaceholderPage';
 import { ContractProfilePage } from './pages/ContractProfilePage';
 import { ContractsPage } from './pages/ContractsPage';
@@ -58,6 +59,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<AppShell />}>
               <Route index element={<DashboardPage />} />
+              <Route path="calendar" element={<CalendarPage />} />
               <Route path="family" element={<FamilyPage />} />
               <Route path="family/:memberId" element={<FamilyMemberProfilePage />} />
               <Route path="properties" element={<PropertiesPage />} />

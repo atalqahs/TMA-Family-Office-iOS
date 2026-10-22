@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * Permanent architecture quality gate (Phase 9A Section M; extended in
- * Phase 9B Section V for the Notifications aggregator's boundaries; and in
- * Phase 10 Section AD for the Archive aggregator's boundaries).
+ * Phase 9B Section V for the Notifications aggregator's boundaries; in
+ * Phase 10 Section AD for the Archive aggregator's boundaries; and again
+ * for the General Calendar aggregator's identical boundaries).
  *
  * A small AST/import-graph implementation (using the TypeScript compiler
  * API already in this project's own devDependencies) rather than fragile
@@ -451,24 +452,81 @@ function relPath(file) {
 }
 
 // ---------------------------------------------------------------------------
-// 15. Notifications must keep seeing archived entities (Phase 10 Section
-//     K, critical regression): features/notifications must never import
+// 15. Notifications/Calendar must keep seeing archived entities (Phase 10
+//     Section K, critical regression; extended for the General Calendar,
+//     which has the identical requirement -- an archived record's dates
+//     must still appear on the Calendar): neither aggregator may import
 //     any active-only `listActiveX`/(active-only `listTaskGroups`)
 //     repository function -- only the excludes-deleted-only variant, so
-//     normal active-list filtering can never silently leak into a
-//     Notification loader.
+//     normal active-list filtering can never silently leak into either
+//     aggregator's loader.
 // ---------------------------------------------------------------------------
 {
-  const notificationsDir = join(SRC, 'features', 'notifications') + '/';
+  const aggregatorDirs = [join(SRC, 'features', 'notifications') + '/', join(SRC, 'features', 'calendar') + '/'];
   for (const file of allFiles) {
-    if (!file.startsWith(notificationsDir)) continue;
+    if (!aggregatorDirs.some((dir) => file.startsWith(dir))) continue;
     const sf = sourceFiles.get(file);
     ts.forEachChild(sf, function visit(node) {
       if ((ts.isImportSpecifier(node) || ts.isBindingElement(node)) && ts.isIdentifier(node.name)) {
         const name = node.name.text;
         if (name.startsWith('listActive') || name === 'listTaskGroups') {
-          violations.push(`Notifications imports an active-only list function '${name}' -- archived entities must still produce Notifications: ${relPath(file)}`);
+          violations.push(`Aggregator imports an active-only list function '${name}' -- archived entities must still produce events: ${relPath(file)}`);
         }
+      }
+      ts.forEachChild(node, visit);
+    });
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 16. The General Calendar is a derived aggregator, never a domain owner
+//     (mirrors rule 9 for Notifications / rule 13 for Archive): every
+//     domain module (family/properties/vehicles/staff/contracts) must NOT
+//     import from features/calendar -- source adapters may import domain
+//     utilities/types, never the other way around. Tasks is excluded from
+//     this particular check because taskGroupColor.ts deliberately lives
+//     in features/tasks (so Calendar depends on Tasks, not the reverse) --
+//     the real direction is enforced by rule 2 (Tasks independence), which
+//     already forbids Tasks from importing any other feature, Calendar
+//     included.
+// ---------------------------------------------------------------------------
+{
+  const calendarDir = join(SRC, 'features', 'calendar') + '/';
+  for (const feature of CROSS_MODULE_FEATURES) {
+    const featureDir = join(SRC, 'features', feature) + '/';
+    for (const file of allFiles) {
+      if (!file.startsWith(featureDir)) continue;
+      for (const target of importGraph.get(file) ?? []) {
+        if (target.startsWith(calendarDir)) {
+          violations.push(`Domain module imports Calendar (inverted dependency): ${relPath(file)} imports ${relPath(target)}`);
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 17. No Calendar persistence store (same reasoning as rule 11/12): the
+//     General Calendar is a derived-only aggregation layer -- no schema
+//     change, no object store of its own. Checked against actual
+//     `createObjectStore(...)` call arguments, not a blunt text scan,
+//     since this file's own doc comments legitimately mention "Calendar"
+//     by name (the TaskGroup.color migration doc comment).
+// ---------------------------------------------------------------------------
+{
+  const dbFile = join(SRC, 'storage', 'db.ts');
+  const dbSf = sourceFiles.get(dbFile);
+  if (dbSf) {
+    ts.forEachChild(dbSf, function visit(node) {
+      if (
+        ts.isCallExpression(node) &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        node.expression.name.text === 'createObjectStore' &&
+        node.arguments[0] &&
+        ts.isStringLiteral(node.arguments[0]) &&
+        /calendar/i.test(node.arguments[0].text)
+      ) {
+        violations.push(`storage/db.ts creates a Calendar-named object store ('${node.arguments[0].text}') -- the General Calendar must never be its own store`);
       }
       ts.forEachChild(node, visit);
     });
@@ -483,5 +541,5 @@ if (violations.length > 0) {
   console.error('');
   process.exit(1);
 } else {
-  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 15 rule categories).`);
+  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 18 rule categories).`);
 }

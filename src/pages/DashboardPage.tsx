@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CategoryCard } from '../components/CategoryCard';
 import { PageHeader } from '../components/PageHeader';
+import { CompactCalendar } from '../features/calendar/components/CompactCalendar';
 import { CATEGORIES, type CategoryDefinition } from '../features/categories/categories';
 import { getOverdueTaskCount } from '../features/tasks/taskService';
 import { useCategoryCount } from '../hooks/useCategoryCount';
@@ -53,6 +54,7 @@ export function DashboardPage() {
 
   return (
     <div className="dashboard-page">
+      <CompactCalendar />
       <PageHeader title={t('dashboardTitle')} subtitle={t('dashboardSubtitle')} />
       <div className="dashboard-page__grid">
         {CATEGORIES.map((category) => (

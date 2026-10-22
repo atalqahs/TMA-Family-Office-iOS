@@ -75,6 +75,12 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  *        normal confirmed flow, which still enforces "empty group only".
  *    Every record that does NOT have `deletedAt` set is completely unaffected beyond the field's removal
  *    from the type (there is nothing to rewrite for it).
+ *
+ * All of that survives the v13 -> v14 upgrade (Family Civil ID/Passport expiry fields -- see that block's
+ * own doc comment) and the v14 -> v15 upgrade, which adds `color` as a new OPTIONAL field on `taskGroups`
+ * (the General Calendar's Task Group color-coding correction): no new store/index, no backfill, and no
+ * record is ever rewritten -- a group simply has no color until the user sets one, resolved to a real
+ * default at read time by `getTaskGroupColor` (features/tasks/taskGroupColor.ts).
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -181,7 +187,7 @@ interface TmaDB extends DBSchema {
 // can open the exact same database by name/version without duplicating
 // these constants — never referenced by application code.
 export const DB_NAME = 'tma-family-office';
-export const DB_VERSION = 14;
+export const DB_VERSION = 15;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -631,6 +637,15 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
           // new store/index, same precedent as the v10->v11 archivedAt/
           // deletedAt addition). Existing records simply lack these fields
           // until a user fills them in -- no backfill, no fabricated dates.
+        }
+
+        if (oldVersion < 15) {
+          // Purely additive: `color` is a new OPTIONAL field on the existing
+          // `taskGroups` record shape (no new store/index). A pre-existing
+          // group simply lacks it until the user opens and saves it again --
+          // `getTaskGroupColor` (features/tasks/taskGroupColor.ts) resolves
+          // that absence to a real default color at read time, so nothing
+          // here needs to fabricate or backfill a color onto old records.
         }
       },
       blocked() {

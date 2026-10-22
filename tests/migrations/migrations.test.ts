@@ -817,3 +817,76 @@ describe('Migration v13 -> v14: Family Civil ID/Passport expiry fields (no-op sc
     expect(reloaded?.civilIdExpiryDate).toBe('2027-06-15');
   });
 });
+
+/**
+ * Permanent migration suite for the General Calendar / Task Group color
+ * correction: the v14 -> v15 upgrade is a no-op in code (no new store/
+ * index -- `color` is a new OPTIONAL field on the existing `taskGroups`
+ * record shape, same precedent as the v13 -> v14 Family expiry fields).
+ * These tests build a REALISTIC pre-v15 database and verify the real
+ * `getDB()` upgrade path preserves every pre-existing TaskGroup untouched.
+ */
+function buildV14Stores(db: IDBDatabase): void {
+  // v13 -> v14 added no new store/index (civilIdExpiryDate/
+  // passportExpiryDate are optional fields on existing familyMembers rows
+  // only) -- the v13 shape already matches v14 exactly.
+  buildV13Stores(db);
+}
+
+describe('Migration v14 -> v15: Task Group color field (no-op schema)', () => {
+  it('preserves every pre-existing TaskGroup untouched, with the new color field simply absent (never fabricated)', async () => {
+    await seedRawVersionedDb(14, (db, tx) => {
+      buildV14Stores(db);
+      tx.objectStore('taskGroups').add({
+        id: 'g1',
+        name: 'Household',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB(); // runs the real v14 -> v15 upgrade (a no-op in code)
+
+    const group = await taskRepository.getTaskGroup('g1');
+    expect(group).toMatchObject({ name: 'Household' });
+    expect(group).not.toHaveProperty('color');
+  });
+
+  it('a pre-v15 TaskGroup can immediately have a color saved after the upgrade, exactly like a group created post-v15', async () => {
+    await seedRawVersionedDb(14, (db, tx) => {
+      buildV14Stores(db);
+      tx.objectStore('taskGroups').add({
+        id: 'g1',
+        name: 'Household',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB();
+
+    const group = await taskRepository.getTaskGroup('g1');
+    await taskRepository.saveTaskGroup({ ...group!, color: '#5B8DEF' });
+
+    const updated = await taskRepository.getTaskGroup('g1');
+    expect(updated?.color).toBe('#5B8DEF');
+  });
+
+  it('idempotency: a second getDB() call against the already-v15 database never loses or duplicates the color field', async () => {
+    await getDB();
+    await taskRepository.saveTaskGroup({
+      id: 'g1',
+      name: 'Household',
+      color: '#5B8DEF',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    const { __resetDbConnectionForTests } = await import('../../src/storage/db');
+    __resetDbConnectionForTests();
+    await getDB();
+
+    const reloaded = await taskRepository.getTaskGroup('g1');
+    expect(reloaded?.color).toBe('#5B8DEF');
+  });
+});

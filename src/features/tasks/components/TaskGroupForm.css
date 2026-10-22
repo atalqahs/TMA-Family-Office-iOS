@@ -19,3 +19,29 @@
   font-size: var(--font-size-sm);
   text-align: center;
 }
+
+.task-group-form__colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+}
+
+.task-group-form__color-swatch {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.task-group-form__color-swatch[data-selected] {
+  border-color: var(--color-text-primary);
+  transform: scale(1.1);
+}
+
