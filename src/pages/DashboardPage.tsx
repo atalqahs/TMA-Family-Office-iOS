@@ -3,6 +3,8 @@ import { CategoryCard } from '../components/CategoryCard';
 import { PageHeader } from '../components/PageHeader';
 import { CompactCalendar } from '../features/calendar/components/CompactCalendar';
 import { CATEGORIES, type CategoryDefinition } from '../features/categories/categories';
+import { QuickNotesWidget } from '../features/quickNotes/components/QuickNotesWidget';
+import { QuickTodoWidget } from '../features/quickTodo/components/QuickTodoWidget';
 import { getOverdueTaskCount } from '../features/tasks/taskService';
 import { useCategoryCount } from '../hooks/useCategoryCount';
 import { useLanguage } from '../hooks/useLanguage';
@@ -61,6 +63,8 @@ export function DashboardPage() {
           <DashboardCategoryCard key={category.id} category={category} />
         ))}
       </div>
+      <QuickTodoWidget />
+      <QuickNotesWidget />
     </div>
   );
 }

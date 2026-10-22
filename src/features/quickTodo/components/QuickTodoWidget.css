@@ -1,0 +1,106 @@
+.quick-todo-widget {
+  margin: 0 var(--space-5) var(--space-4);
+  padding: var(--space-3) var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-card);
+}
+
+.quick-todo-widget__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.quick-todo-widget__title {
+  margin: 0;
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.quick-todo-widget__add-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.quick-todo-widget__add-input {
+  flex: 1;
+  min-height: 40px;
+}
+
+.quick-todo-widget__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.quick-todo-widget__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-1);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.quick-todo-widget__row:last-child {
+  border-bottom: none;
+}
+
+.quick-todo-widget__checkbox {
+  appearance: none;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border-strong);
+  background: var(--color-surface);
+  position: relative;
+}
+
+.quick-todo-widget__checkbox:checked {
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.quick-todo-widget__checkbox:checked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 10px;
+  height: 7px;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-45deg);
+  border-left: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+}
+
+.quick-todo-widget__text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--color-text-primary);
+  font-size: var(--font-size-body);
+}
+
+.quick-todo-widget__text--completed {
+  color: var(--color-text-secondary);
+  text-decoration: line-through;
+  text-decoration-color: var(--color-text-muted);
+}
+
+.quick-todo-widget__edit-input {
+  flex: 1;
+  min-height: 40px;
+}

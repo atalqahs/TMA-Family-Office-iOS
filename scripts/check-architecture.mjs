@@ -2,8 +2,10 @@
 /**
  * Permanent architecture quality gate (Phase 9A Section M; extended in
  * Phase 9B Section V for the Notifications aggregator's boundaries; in
- * Phase 10 Section AD for the Archive aggregator's boundaries; and again
- * for the General Calendar aggregator's identical boundaries).
+ * Phase 10 Section AD for the Archive aggregator's boundaries; again for
+ * the General Calendar aggregator's identical boundaries; and again for
+ * the Dashboard's Quick To-Do List/Quick Notes widgets' stricter, total
+ * isolation from every other feature).
  *
  * A small AST/import-graph implementation (using the TypeScript compiler
  * API already in this project's own devDependencies) rather than fragile
@@ -534,6 +536,60 @@ function relPath(file) {
 }
 
 // ---------------------------------------------------------------------------
+// 19. Quick To-Do / Quick Notes (Dashboard widgets) are fully isolated --
+//     stricter than Tasks' own independence rule (rule 2): no file under
+//     features/quickTodo or features/quickNotes may import from ANY other
+//     features/* directory at all. This is what permanently enforces "no
+//     automatic synchronization or duplication with the Tasks & Reminders
+//     module" and "neither widget should modify existing Tasks or Task
+//     Groups" -- these two widgets have zero business relationship to
+//     anything else in the app.
+// ---------------------------------------------------------------------------
+{
+  const isolatedFeatures = ['quickTodo', 'quickNotes'];
+  for (const feature of isolatedFeatures) {
+    const featureDir = join(SRC, 'features', feature) + '/';
+    for (const file of allFiles) {
+      if (!file.startsWith(featureDir)) continue;
+      for (const target of importGraph.get(file) ?? []) {
+        const featuresRoot = join(SRC, 'features') + '/';
+        if (target.startsWith(featuresRoot) && !target.startsWith(featureDir)) {
+          violations.push(`${feature} must be fully independent of every other feature: ${relPath(file)} imports ${relPath(target)}`);
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 20. Quick To-Do items/Quick Notes must never appear in the General
+//     Calendar or generate Notifications (explicit spec requirement): no
+//     file under features/calendar or features/notifications may import
+//     from features/quickTodo or features/quickNotes. Archive and Tasks
+//     are checked too, for the same reason -- neither widget is archived
+//     or Task-related, so neither aggregator/module should ever reach
+//     into them either.
+// ---------------------------------------------------------------------------
+{
+  const isolatedFeatures = ['quickTodo', 'quickNotes'];
+  const mustNeverImportThese = ['calendar', 'notifications', 'archive', 'tasks'];
+  for (const consumer of mustNeverImportThese) {
+    const consumerDir = join(SRC, 'features', consumer) + '/';
+    for (const file of allFiles) {
+      if (!file.startsWith(consumerDir)) continue;
+      for (const target of importGraph.get(file) ?? []) {
+        for (const isolated of isolatedFeatures) {
+          const isolatedDir = join(SRC, 'features', isolated) + '/';
+          if (target.startsWith(isolatedDir)) {
+            violations.push(`${consumer} must never import ${isolated} (independence rule): ${relPath(file)} imports ${relPath(target)}`);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
 
 if (violations.length > 0) {
   console.error(`\nArchitecture check FAILED with ${violations.length} violation(s):\n`);
@@ -541,5 +597,5 @@ if (violations.length > 0) {
   console.error('');
   process.exit(1);
 } else {
-  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 18 rule categories).`);
+  console.log(`Architecture check passed (${allFiles.length} source files scanned, ${sourceFiles.size} in import graph, 20 rule categories).`);
 }

@@ -4,6 +4,8 @@ import type { EducationDocument, EducationProfile } from '../features/education/
 import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
 import type { HealthDocument, HealthProfile } from '../features/health/types';
 import type { Property, PropertyDocument } from '../features/properties/types';
+import type { QuickNote } from '../features/quickNotes/types';
+import type { QuickTodoItem } from '../features/quickTodo/types';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
 import { MIGRATION_GENERAL_GROUP_ID } from '../features/tasks/types';
 import type { Task, TaskCompletion, TaskGroup } from '../features/tasks/types';
@@ -81,6 +83,14 @@ import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../feat
  * (the General Calendar's Task Group color-coding correction): no new store/index, no backfill, and no
  * record is ever rewritten -- a group simply has no color until the user sets one, resolved to a real
  * default at read time by `getTaskGroupColor` (features/tasks/taskGroupColor.ts).
+ *
+ * All of that survives the v15 -> v16 upgrade, which adds two brand-new, independent stores:
+ * `quickTodoItems` and `quickNotes` (the Dashboard's Quick To-Do List and Quick Notes widgets). Both are
+ * simple, flat, additive stores with no relationship -- no index, no foreign key, no shared id -- to any
+ * other store in this database; they exist purely as fast, informal personal scratch space and must never
+ * be read by Tasks & Reminders, the General Calendar, or the app's alerting feature (see each module's own
+ * doc comment and the architecture gate's isolation rules). No existing store or record is touched by this
+ * upgrade.
  */
 interface TmaDB extends DBSchema {
   settings: {
@@ -181,13 +191,21 @@ interface TmaDB extends DBSchema {
     value: EducationDocument;
     indexes: { educationProfileId: string };
   };
+  quickTodoItems: {
+    key: string;
+    value: QuickTodoItem;
+  };
+  quickNotes: {
+    key: string;
+    value: QuickNote;
+  };
 }
 
 // Exported so the permanent migration regression suite (tests/migrations)
 // can open the exact same database by name/version without duplicating
 // these constants — never referenced by application code.
 export const DB_NAME = 'tma-family-office';
-export const DB_VERSION = 15;
+export const DB_VERSION = 16;
 
 let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
 
@@ -646,6 +664,20 @@ export function getDB(): Promise<IDBPDatabase<TmaDB>> {
           // `getTaskGroupColor` (features/tasks/taskGroupColor.ts) resolves
           // that absence to a real default color at read time, so nothing
           // here needs to fabricate or backfill a color onto old records.
+        }
+
+        if (oldVersion < 16) {
+          // Two brand-new, independent, flat stores for the Dashboard's
+          // Quick To-Do List and Quick Notes widgets -- no index needed on
+          // either (both are small personal lists read in full and sorted
+          // client-side, same as taskGroups). Nothing existing is touched;
+          // both stores simply start empty.
+          if (!db.objectStoreNames.contains('quickTodoItems')) {
+            db.createObjectStore('quickTodoItems', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('quickNotes')) {
+            db.createObjectStore('quickNotes', { keyPath: 'id' });
+          }
         }
       },
       blocked() {

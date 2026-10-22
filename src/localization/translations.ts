@@ -419,7 +419,20 @@ export type TranslationKey =
   | 'educationProfileNotFoundTitle'
   | 'backToEducationLabel'
   | 'educationDeleteConfirmBody'
-  | 'validationEducationStageRequired';
+  | 'validationEducationStageRequired'
+  | 'quickTodoWidgetTitle'
+  | 'quickTodoAddPlaceholder'
+  | 'quickTodoAddLabel'
+  | 'quickTodoEmptyState'
+  | 'quickTodoRemainingCount'
+  | 'quickTodoEditLabel'
+  | 'quickTodoDeleteLabel'
+  | 'quickNotesWidgetTitle'
+  | 'quickNotesAddPlaceholder'
+  | 'quickNotesAddLabel'
+  | 'quickNotesEmptyState'
+  | 'quickNotesEditLabel'
+  | 'quickNotesDeleteLabel';
 
 type Dictionary = Record<TranslationKey, string>;
 
@@ -842,6 +855,19 @@ export const translations: Record<Locale, Dictionary> = {
     backToEducationLabel: 'العودة إلى التعليم',
     educationDeleteConfirmBody: 'حذف نهائي: سيتم حذف هذا السجل التعليمي ومستنداته نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
     validationEducationStageRequired: 'المرحلة الدراسية مطلوبة',
+    quickTodoWidgetTitle: 'قائمة الأعمال السريعة',
+    quickTodoAddPlaceholder: 'أضف مهمة سريعة...',
+    quickTodoAddLabel: 'إضافة مهمة',
+    quickTodoEmptyState: 'لا توجد مهام سريعة حالياً.',
+    quickTodoRemainingCount: '{count} متبقية',
+    quickTodoEditLabel: 'تعديل المهمة',
+    quickTodoDeleteLabel: 'حذف المهمة',
+    quickNotesWidgetTitle: 'ملاحظات سريعة',
+    quickNotesAddPlaceholder: 'أضف ملاحظة سريعة...',
+    quickNotesAddLabel: 'إضافة ملاحظة',
+    quickNotesEmptyState: 'لا توجد ملاحظات حالياً.',
+    quickNotesEditLabel: 'تعديل الملاحظة',
+    quickNotesDeleteLabel: 'حذف الملاحظة',
   },
   en: {
     appName: 'TMA FAMILY OFFICE',
@@ -1261,6 +1287,19 @@ export const translations: Record<Locale, Dictionary> = {
     backToEducationLabel: 'Back to Education',
     educationDeleteConfirmBody: 'Permanent Delete: this Education record and its documents will be permanently deleted. This action cannot be undone.',
     validationEducationStageRequired: 'Education stage is required',
+    quickTodoWidgetTitle: 'To-Do List',
+    quickTodoAddPlaceholder: 'Add a quick task…',
+    quickTodoAddLabel: 'Add task',
+    quickTodoEmptyState: 'No quick tasks yet.',
+    quickTodoRemainingCount: '{count} remaining',
+    quickTodoEditLabel: 'Edit task',
+    quickTodoDeleteLabel: 'Delete task',
+    quickNotesWidgetTitle: 'Quick Notes',
+    quickNotesAddPlaceholder: 'Add a quick note…',
+    quickNotesAddLabel: 'Add note',
+    quickNotesEmptyState: 'No notes yet.',
+    quickNotesEditLabel: 'Edit note',
+    quickNotesDeleteLabel: 'Delete note',
   },
 };
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getDB } from '../../src/storage/db';
+import * as quickNotesRepository from '../../src/features/quickNotes/quickNotesRepository';
+import * as quickTodoRepository from '../../src/features/quickTodo/quickTodoRepository';
 import * as taskRepository from '../../src/features/tasks/taskRepository';
 import * as familyRepository from '../../src/features/family/familyRepository';
 import * as staffRepository from '../../src/features/staff/staffRepository';
@@ -888,5 +890,85 @@ describe('Migration v14 -> v15: Task Group color field (no-op schema)', () => {
 
     const reloaded = await taskRepository.getTaskGroup('g1');
     expect(reloaded?.color).toBe('#5B8DEF');
+  });
+});
+
+/**
+ * Permanent migration suite for the Dashboard's Quick To-Do List/Quick
+ * Notes widgets: the v15 -> v16 upgrade adds two brand-new, independent
+ * stores. These tests build a REALISTIC pre-v16 database (with
+ * pre-existing data in an unrelated store) and verify the real `getDB()`
+ * upgrade path both creates the two new stores AND leaves every
+ * pre-existing record completely untouched.
+ */
+function buildV15Stores(db: IDBDatabase): void {
+  // v14 -> v15 added no new store/index (`color` is an optional field on
+  // existing taskGroups rows only) -- the v14 shape already matches v15.
+  buildV14Stores(db);
+}
+
+describe('Migration v15 -> v16: Quick To-Do List / Quick Notes stores', () => {
+  it('creates both new stores and leaves pre-existing data in unrelated stores untouched', async () => {
+    await seedRawVersionedDb(15, (db, tx) => {
+      buildV15Stores(db);
+      tx.objectStore('taskGroups').add({
+        id: 'g1',
+        name: 'Household',
+        createdAt: '2025-01-01T00:00:00.000Z',
+        updatedAt: '2025-01-01T00:00:00.000Z',
+      });
+    });
+
+    await getDB(); // runs the real v15 -> v16 upgrade
+
+    const group = await taskRepository.getTaskGroup('g1');
+    expect(group).toMatchObject({ name: 'Household' });
+
+    expect(await quickTodoRepository.listQuickTodoItems()).toEqual([]);
+    expect(await quickNotesRepository.listQuickNotes()).toEqual([]);
+  });
+
+  it('a Quick To-Do item and a Quick Note can be saved and read back immediately after the upgrade', async () => {
+    await seedRawVersionedDb(15, (db) => {
+      buildV15Stores(db);
+    });
+
+    await getDB();
+
+    await quickTodoRepository.saveQuickTodoItem({
+      id: 't1',
+      text: 'Get a haircut',
+      completed: false,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+    await quickNotesRepository.saveQuickNote({
+      id: 'n1',
+      text: 'Remember an idea for later',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    expect(await quickTodoRepository.getQuickTodoItem('t1')).toMatchObject({ text: 'Get a haircut' });
+    expect(await quickNotesRepository.getQuickNote('n1')).toMatchObject({ text: 'Remember an idea for later' });
+  });
+
+  it('idempotency: a second getDB() call against the already-v16 database never loses or duplicates either store', async () => {
+    await getDB();
+    await quickTodoRepository.saveQuickTodoItem({
+      id: 't1',
+      text: 'Refuel the car',
+      completed: false,
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    });
+
+    const { __resetDbConnectionForTests } = await import('../../src/storage/db');
+    __resetDbConnectionForTests();
+    await getDB();
+
+    const reloaded = await quickTodoRepository.listQuickTodoItems();
+    expect(reloaded).toHaveLength(1);
+    expect(reloaded[0]).toMatchObject({ text: 'Refuel the car' });
   });
 });
