@@ -4,12 +4,15 @@
   z-index: 50;
   background: rgba(0, 0, 0, 0.4);
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  justify-content: flex-end;
   animation: sheet-fade-in var(--transition-fast) ease-out;
 }
 
 .sheet {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   max-height: 85dvh;
   display: flex;
   flex-direction: column;
@@ -51,7 +54,14 @@
 }
 
 .sheet__body {
+  /* Only the vertical axis is meant to scroll. Leaving overflow-x unset
+     here lets the CSS overflow "paired value" rule silently compute it
+     to auto too (since overflow-y is auto), turning any overlong,
+     unbreakable inline content (e.g. a long file name in a button) into
+     real horizontal drag/scroll inside the sheet. */
   overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
   padding: 0 var(--space-4) var(--space-5);
 }
 

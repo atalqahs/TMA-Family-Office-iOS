@@ -105,3 +105,15 @@
   flex: 1;
   min-height: 40px;
 }
+
+/* A lightweight, borderless empty state scoped to this compact dashboard
+   widget -- the shared <EmptyState> component is sized for full-page
+   contexts, and its own card border + margin stacked a third bordered
+   box inside this widget's single card when the list was empty. */
+.quick-todo-widget__empty {
+  margin: 0;
+  padding: var(--space-2) var(--space-1) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  text-align: center;
+}

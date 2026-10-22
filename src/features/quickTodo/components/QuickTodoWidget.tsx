@@ -1,6 +1,5 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Check, Pencil, Plus, Trash2, X } from 'lucide-react';
-import { EmptyState } from '../../../components/EmptyState';
 import { IconButton } from '../../../components/IconButton';
 import { StatusBadge } from '../../../components/StatusBadge';
 import { useLanguage } from '../../../hooks/useLanguage';
@@ -112,7 +111,9 @@ export function QuickTodoWidget() {
         />
       </form>
 
-      {!loading && displayItems.length === 0 && <EmptyState title={t('quickTodoEmptyState')} />}
+      {!loading && displayItems.length === 0 && (
+        <p className="quick-todo-widget__empty">{t('quickTodoEmptyState')}</p>
+      )}
 
       {!loading && displayItems.length > 0 && (
         <ul className="quick-todo-widget__list">

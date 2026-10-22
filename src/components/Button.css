@@ -3,12 +3,22 @@
   align-items: center;
   justify-content: center;
   min-height: var(--touch-target);
+  max-width: 100%;
   padding: 0 var(--space-5);
   border-radius: var(--radius-md);
   font-size: var(--font-size-body);
   font-weight: 600;
   border: 1px solid transparent;
   background: transparent;
+  /* Buttons sometimes render variable-length, unbreakable content (a
+     chosen file's name, with no spaces to wrap at). Without this, that
+     content can force the button wider than its box, which inside a
+     sheet becomes real horizontal scroll/drag. Truncate instead of
+     overflowing -- every .btn usage in this app renders plain text with
+     no icon sibling, so ellipsis-on-overflow is safe app-wide. */
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
@@ -49,4 +59,18 @@
 
 .btn:disabled {
   opacity: 0.5;
+}
+
+/* A button's text is usually short and centered, but some (a chosen
+   file's name) are variable-length and unbreakable. Centered + clipped
+   text hides the informative start of the string with no ellipsis.
+   Wrapping that content in this span truncates from the end instead,
+   left-aligned, so the most useful part stays visible. */
+.btn__label {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: start;
 }

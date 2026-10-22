@@ -1,6 +1,5 @@
 import { useState, type FormEvent } from 'react';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
-import { EmptyState } from '../../../components/EmptyState';
 import { IconButton } from '../../../components/IconButton';
 import { PrimaryButton } from '../../../components/PrimaryButton';
 import { SecondaryButton } from '../../../components/SecondaryButton';
@@ -82,7 +81,7 @@ export function QuickNotesWidget() {
         />
       </form>
 
-      {!loading && notes.length === 0 && <EmptyState title={t('quickNotesEmptyState')} />}
+      {!loading && notes.length === 0 && <p className="quick-notes-widget__empty">{t('quickNotesEmptyState')}</p>}
 
       {!loading && notes.length > 0 && (
         <ul className="quick-notes-widget__list">

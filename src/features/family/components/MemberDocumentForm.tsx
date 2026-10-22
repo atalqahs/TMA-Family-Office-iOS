@@ -101,7 +101,7 @@ export function MemberDocumentForm({ onSubmit, onCancel }: MemberDocumentFormPro
 
       <FormField label={t('fieldDocumentFile')} htmlFor={`${formId}-file`} error={fileError ?? undefined}>
         <SecondaryButton type="button" onClick={() => fileInputRef.current?.click()}>
-          {file ? file.name : t('documentChooseFileLabel')}
+          <span className="btn__label">{file ? file.name : t('documentChooseFileLabel')}</span>
         </SecondaryButton>
         <input
           ref={fileInputRef}
