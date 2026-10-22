@@ -70,7 +70,41 @@ describe('CalendarPage (expanded General Calendar)', () => {
 });
 
 describe('CompactCalendar (Dashboard widget)', () => {
-  it('renders the General Calendar title and expands to the full page on demand', async () => {
+  it('renders the General Calendar title with no "View Full Calendar" button', async () => {
+    renderWithLocale(
+      <MemoryRouter initialEntries={['/']}>
+        <CompactCalendar />
+      </MemoryRouter>,
+      'en',
+    );
+
+    await waitFor(() => expect(screen.getByText('General Calendar')).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: 'View Full Calendar' })).not.toBeInTheDocument();
+  });
+
+  it('selects a tapped day in place, without navigating away', async () => {
+    renderWithLocale(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<CompactCalendar />} />
+          <Route path="/calendar" element={<div>Full Calendar Page</div>} />
+        </Routes>
+      </MemoryRouter>,
+      'en',
+    );
+
+    await waitFor(() => expect(screen.getByText('No events on this date.')).toBeInTheDocument());
+    // Day 15 never collides with a padding day from an adjacent month (the
+    // grid only ever pads a handful of days at either edge), so this is
+    // the one day number guaranteed to render exactly once.
+    const day15 = screen.getByRole('button', { name: '15' });
+    fireEvent.click(day15);
+
+    await waitFor(() => expect(day15.className).toContain('calendar-month-grid__day--selected'));
+    expect(screen.queryByText('Full Calendar Page')).not.toBeInTheDocument();
+  });
+
+  it('changing months in place updates the month label and keeps selection within the grid, without navigating away', async () => {
     renderWithLocale(
       <MemoryRouter initialEntries={['/']}>
         <Routes>
@@ -82,8 +116,14 @@ describe('CompactCalendar (Dashboard widget)', () => {
     );
 
     await waitFor(() => expect(screen.getByText('General Calendar')).toBeInTheDocument());
-    fireEvent.click(screen.getByRole('button', { name: 'View Full Calendar' }));
-    expect(await screen.findByText('Full Calendar Page')).toBeInTheDocument();
+    const monthLabelBefore = screen.getByText(/\d{4}/).textContent;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Previous month' }));
+    await waitFor(() => expect(screen.getByText(/\d{4}/).textContent).not.toBe(monthLabelBefore));
+    expect(screen.queryByText('Full Calendar Page')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Next month' }));
+    await waitFor(() => expect(screen.getByText(/\d{4}/).textContent).toBe(monthLabelBefore));
   });
 
   it("shows today's event in the compact widget and tapping it navigates straight to the source record", async () => {

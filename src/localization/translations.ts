@@ -31,6 +31,8 @@ export type TranslationKey =
   | 'actionSave'
   | 'actionCancel'
   | 'actionConfirm'
+  | 'statusReasonsCountTwo'
+  | 'statusReasonsCountMany'
   | 'fieldFullName'
   | 'fieldRelationship'
   | 'fieldDateOfBirth'
@@ -41,6 +43,13 @@ export type TranslationKey =
   | 'fieldPhone'
   | 'fieldEmail'
   | 'fieldBloodType'
+  | 'familyStatusGreen'
+  | 'familyStatusOrange'
+  | 'familyStatusRed'
+  | 'familyReasonCivilIdExpired'
+  | 'familyReasonCivilIdExpiringSoon'
+  | 'familyReasonPassportExpired'
+  | 'familyReasonPassportExpiringSoon'
   | 'fieldNotes'
   | 'fieldNotProvided'
   | 'formAddTitle'
@@ -140,6 +149,15 @@ export type TranslationKey =
   | 'vehicleStatusGreen'
   | 'vehicleStatusOrange'
   | 'vehicleStatusRed'
+  | 'vehicleReasonRegistrationExpired'
+  | 'vehicleReasonRegistrationExpiringSoon'
+  | 'vehicleReasonInsuranceExpired'
+  | 'vehicleReasonInsuranceExpiringSoon'
+  | 'vehicleReasonMaintenanceOverdueKm'
+  | 'vehicleReasonMaintenanceServiceDue'
+  | 'vehicleReasonMaintenanceApproachingKm'
+  | 'vehicleReasonMaintenanceOverdueDate'
+  | 'vehicleReasonMaintenanceDueSoonDate'
   | 'maintenanceEmpty'
   | 'maintenanceAddAction'
   | 'maintenanceFormAddTitle'
@@ -252,6 +270,8 @@ export type TranslationKey =
   | 'contractStatusActive'
   | 'contractStatusExpiringSoon'
   | 'contractStatusExpired'
+  | 'contractReasonExpired'
+  | 'contractReasonExpiringSoon'
   | 'contractFormAddTitle'
   | 'contractFormEditTitle'
   | 'contractNotFoundTitle'
@@ -301,7 +321,6 @@ export type TranslationKey =
   | 'calendarNoTasksForDate'
   | 'generalCalendarTitle'
   | 'generalCalendarSubtitle'
-  | 'generalCalendarExpandAction'
   | 'generalCalendarNoEventsForDate'
   | 'backToDashboardLabel'
   | 'calendarEventCivilIdTitle'
@@ -463,6 +482,8 @@ export const translations: Record<Locale, Dictionary> = {
     actionSave: 'حفظ',
     actionCancel: 'إلغاء',
     actionConfirm: 'تأكيد',
+    statusReasonsCountTwo: 'سببان',
+    statusReasonsCountMany: '{count} أسباب',
     fieldFullName: 'الاسم الكامل',
     fieldRelationship: 'صلة القرابة',
     fieldDateOfBirth: 'تاريخ الميلاد',
@@ -473,6 +494,13 @@ export const translations: Record<Locale, Dictionary> = {
     fieldPhone: 'الهاتف',
     fieldEmail: 'البريد الإلكتروني',
     fieldBloodType: 'فصيلة الدم',
+    familyStatusGreen: 'لا توجد مشاكل',
+    familyStatusOrange: 'يتطلب انتباه',
+    familyStatusRed: 'يتطلب إجراء',
+    familyReasonCivilIdExpired: 'البطاقة المدنية منتهية منذ {date}',
+    familyReasonCivilIdExpiringSoon: 'البطاقة المدنية تنتهي بتاريخ {date}',
+    familyReasonPassportExpired: 'جواز السفر منتهي منذ {date}',
+    familyReasonPassportExpiringSoon: 'جواز السفر ينتهي بتاريخ {date}',
     fieldNotes: 'ملاحظات',
     fieldNotProvided: 'غير متوفر',
     formAddTitle: 'إضافة فرد من العائلة',
@@ -574,6 +602,15 @@ export const translations: Record<Locale, Dictionary> = {
     vehicleStatusGreen: 'لا توجد مشاكل',
     vehicleStatusOrange: 'يقترب الموعد',
     vehicleStatusRed: 'متأخر',
+    vehicleReasonRegistrationExpired: 'استمارة المركبة منتهية منذ {date}',
+    vehicleReasonRegistrationExpiringSoon: 'استمارة المركبة تنتهي بتاريخ {date}',
+    vehicleReasonInsuranceExpired: 'التأمين منتهي منذ {date}',
+    vehicleReasonInsuranceExpiringSoon: 'التأمين يقترب من الانتهاء بتاريخ {date}',
+    vehicleReasonMaintenanceOverdueKm: 'صيانة متأخرة بمقدار {km} كم',
+    vehicleReasonMaintenanceServiceDue: 'الصيانة مستحقة الآن',
+    vehicleReasonMaintenanceApproachingKm: 'صيانة تقترب بعد {km} كم',
+    vehicleReasonMaintenanceOverdueDate: 'صيانة متأخرة منذ {date}',
+    vehicleReasonMaintenanceDueSoonDate: 'صيانة تقترب بتاريخ {date}',
     maintenanceEmpty: 'لم تتم إضافة أي سجل صيانة بعد.',
     maintenanceAddAction: '+ إضافة سجل صيانة',
     maintenanceFormAddTitle: 'إضافة سجل صيانة',
@@ -687,6 +724,8 @@ export const translations: Record<Locale, Dictionary> = {
     contractStatusActive: 'ساري',
     contractStatusExpiringSoon: 'يقترب الانتهاء',
     contractStatusExpired: 'منتهٍ',
+    contractReasonExpired: 'انتهى العقد منذ {date}',
+    contractReasonExpiringSoon: 'ينتهي العقد بتاريخ {date}',
     contractFormAddTitle: 'إضافة عقد',
     contractFormEditTitle: 'تعديل العقد',
     contractNotFoundTitle: 'لم يتم العثور على هذا العقد.',
@@ -736,7 +775,6 @@ export const translations: Record<Locale, Dictionary> = {
     calendarNoTasksForDate: 'لا توجد مهام مستحقة في هذا التاريخ.',
     generalCalendarTitle: 'التقويم العام',
     generalCalendarSubtitle: 'نظرة موحدة على كل المواعيد والمهام القادمة في مكتب العائلة.',
-    generalCalendarExpandAction: 'عرض التقويم الكامل',
     generalCalendarNoEventsForDate: 'لا توجد أحداث في هذا التاريخ.',
     backToDashboardLabel: 'رجوع إلى لوحة التحكم',
     calendarEventCivilIdTitle: 'البطاقة المدنية لـ {name}',
@@ -895,6 +933,8 @@ export const translations: Record<Locale, Dictionary> = {
     actionSave: 'Save',
     actionCancel: 'Cancel',
     actionConfirm: 'Confirm',
+    statusReasonsCountTwo: '2 reasons',
+    statusReasonsCountMany: '{count} reasons',
     fieldFullName: 'Full Name',
     fieldRelationship: 'Relationship',
     fieldDateOfBirth: 'Date of Birth',
@@ -905,6 +945,13 @@ export const translations: Record<Locale, Dictionary> = {
     fieldPhone: 'Phone',
     fieldEmail: 'Email',
     fieldBloodType: 'Blood Type',
+    familyStatusGreen: 'No Issues',
+    familyStatusOrange: 'Needs Attention',
+    familyStatusRed: 'Action Required',
+    familyReasonCivilIdExpired: 'Civil ID expired on {date}',
+    familyReasonCivilIdExpiringSoon: 'Civil ID expires on {date}',
+    familyReasonPassportExpired: 'Passport expired on {date}',
+    familyReasonPassportExpiringSoon: 'Passport expires on {date}',
     fieldNotes: 'Notes',
     fieldNotProvided: 'Not provided',
     formAddTitle: 'Add Family Member',
@@ -1006,6 +1053,15 @@ export const translations: Record<Locale, Dictionary> = {
     vehicleStatusGreen: 'Up to Date',
     vehicleStatusOrange: 'Due Soon',
     vehicleStatusRed: 'Overdue',
+    vehicleReasonRegistrationExpired: 'Registration expired on {date}',
+    vehicleReasonRegistrationExpiringSoon: 'Registration expires on {date}',
+    vehicleReasonInsuranceExpired: 'Insurance expired on {date}',
+    vehicleReasonInsuranceExpiringSoon: 'Insurance expiring soon on {date}',
+    vehicleReasonMaintenanceOverdueKm: 'Maintenance overdue by {km} km',
+    vehicleReasonMaintenanceServiceDue: 'Service due now',
+    vehicleReasonMaintenanceApproachingKm: 'Maintenance due in {km} km',
+    vehicleReasonMaintenanceOverdueDate: 'Maintenance overdue since {date}',
+    vehicleReasonMaintenanceDueSoonDate: 'Maintenance due soon on {date}',
     maintenanceEmpty: 'No maintenance records added yet.',
     maintenanceAddAction: '+ Add Maintenance Record',
     maintenanceFormAddTitle: 'Add Maintenance Record',
@@ -1119,6 +1175,8 @@ export const translations: Record<Locale, Dictionary> = {
     contractStatusActive: 'Active',
     contractStatusExpiringSoon: 'Expiring Soon',
     contractStatusExpired: 'Expired',
+    contractReasonExpired: 'Contract ended on {date}',
+    contractReasonExpiringSoon: 'Contract ends on {date}',
     contractFormAddTitle: 'Add Contract',
     contractFormEditTitle: 'Edit Contract',
     contractNotFoundTitle: 'This contract could not be found.',
@@ -1168,7 +1226,6 @@ export const translations: Record<Locale, Dictionary> = {
     calendarNoTasksForDate: 'No tasks due on this date.',
     generalCalendarTitle: 'General Calendar',
     generalCalendarSubtitle: 'A unified view of every upcoming date and task across TMA Family Office.',
-    generalCalendarExpandAction: 'View Full Calendar',
     generalCalendarNoEventsForDate: 'No events on this date.',
     backToDashboardLabel: 'Back to Dashboard',
     calendarEventCivilIdTitle: "{name}'s Civil ID",

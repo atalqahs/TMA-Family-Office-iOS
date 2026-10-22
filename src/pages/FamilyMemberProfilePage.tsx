@@ -8,10 +8,13 @@ import { EmptyState } from '../components/EmptyState';
 import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
+import { StatusBadge } from '../components/StatusBadge';
+import { StatusReasonsList } from '../components/StatusReasonsList';
 import { Sheet } from '../components/Sheet';
 import { FamilyMemberForm } from '../features/family/components/FamilyMemberForm';
 import { MemberDocumentForm } from '../features/family/components/MemberDocumentForm';
 import { MemberDocumentsSection } from '../features/family/components/MemberDocumentsSection';
+import { computeFamilyStatus, FAMILY_STATUS_LABEL_KEY, FAMILY_STATUS_VARIANT } from '../features/family/familyStatus';
 import * as familyService from '../features/family/familyService';
 import { useFamilyMember } from '../features/family/hooks/useFamilyMember';
 import { useDisclosure } from '../hooks/useDisclosure';
@@ -72,6 +75,7 @@ export function FamilyMemberProfilePage() {
   }
 
   const age = calculateAge(member.dateOfBirth);
+  const { level: statusLevel, reasons: statusReasons } = computeFamilyStatus(member);
 
   const infoRows: Array<[string, string | undefined]> = [
     [
@@ -123,6 +127,12 @@ export function FamilyMemberProfilePage() {
           {member.relationship || t('fieldNotProvided')}
           {age !== null && ` · ${age} ${t('ageUnitLabel')}`}
         </p>
+        {statusReasons.length > 0 && (
+          <>
+            <StatusBadge variant={FAMILY_STATUS_VARIANT[statusLevel]}>{t(FAMILY_STATUS_LABEL_KEY[statusLevel])}</StatusBadge>
+            <StatusReasonsList reasons={statusReasons} />
+          </>
+        )}
         <div className="family-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
           <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>

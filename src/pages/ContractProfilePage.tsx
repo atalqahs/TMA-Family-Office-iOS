@@ -8,6 +8,7 @@ import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { StatusBadge } from '../components/StatusBadge';
+import { StatusReasonsList } from '../components/StatusReasonsList';
 import { Sheet } from '../components/Sheet';
 import { ContractDocumentForm } from '../features/contracts/components/ContractDocumentForm';
 import { ContractDocumentsSection } from '../features/contracts/components/ContractDocumentsSection';
@@ -76,7 +77,7 @@ export function ContractProfilePage() {
     );
   }
 
-  const status = computeContractStatus(contract);
+  const { level: status, reasons: statusReasons } = computeContractStatus(contract);
   const typeLabel = CONTRACT_TYPES.find((option) => option.id === contract.contractType)?.title[locale];
 
   const linkedEntity =
@@ -134,6 +135,7 @@ export function ContractProfilePage() {
         </span>
         <h1 className="contract-profile-page__title">{contract.title}</h1>
         <StatusBadge variant={CONTRACT_STATUS_VARIANT[status]}>{t(CONTRACT_STATUS_LABEL_KEY[status])}</StatusBadge>
+        <StatusReasonsList reasons={statusReasons} />
         <div className="contract-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
           <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>

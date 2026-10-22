@@ -44,3 +44,22 @@
   max-width: 100%;
   margin-bottom: 2px;
 }
+
+/* A short, single-line summary of WHY the badge is orange/red -- the full
+   reason list only ever lives on the record's own profile page. */
+.staff-card__status-reason {
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  margin-top: 2px;
+}
+
+.staff-card__status-reason--orange {
+  color: var(--color-warning);
+}
+
+.staff-card__status-reason--red {
+  color: var(--color-danger);
+}

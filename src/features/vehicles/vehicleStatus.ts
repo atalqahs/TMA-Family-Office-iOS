@@ -1,5 +1,6 @@
 import type { TranslationKey } from '../../localization/translations';
 import { computeDateExpiryStatus } from '../../utils/expiryStatus';
+import type { StatusReason } from '../../utils/statusReasons';
 import { getTargetMileage, type Vehicle, type VehicleMaintenanceRecord } from './types';
 
 export type VehicleStatusLevel = 'green' | 'orange' | 'red';
@@ -59,6 +60,13 @@ export function computeMaintenanceRecordStatus(
   return computeDateExpiryStatus(record.nextServiceDate);
 }
 
+export type VehicleStatusReason = StatusReason;
+
+export interface VehicleStatus {
+  level: VehicleStatusLevel;
+  reasons: VehicleStatusReason[];
+}
+
 /**
  * Overall vehicle status: the worst (most severe) signal across
  * registration expiry, insurance expiry, and every maintenance record's
@@ -74,25 +82,70 @@ export function computeMaintenanceRecordStatus(
  * the past) must not keep the whole vehicle stuck red forever — each
  * record still shows its own true historical status in the maintenance
  * list, this only affects the single vehicle-wide badge.
+ *
+ * Alongside the level, returns every independent reason behind it (same
+ * `{level, reasons}` shape as computeStaffStatus) -- a vehicle can be
+ * "Overdue" for the registration, the insurance, AND an active
+ * maintenance cycle all at once, and all of that must stay visible, not
+ * just whichever is most severe.
  */
 export function computeVehicleStatus(
   vehicle: Pick<Vehicle, 'registrationExpiry' | 'insuranceExpiry' | 'currentMileage'>,
   maintenanceRecords: VehicleMaintenanceRecord[],
-): VehicleStatusLevel {
-  let status: VehicleStatusLevel = 'green';
+  now: Date = new Date(),
+): VehicleStatus {
+  const reasons: VehicleStatusReason[] = [];
+  let level: VehicleStatusLevel = 'green';
 
-  const registrationStatus = computeDateExpiryStatus(vehicle.registrationExpiry);
-  if (registrationStatus) status = worse(status, registrationStatus);
+  const addReason = (
+    reasonLevel: 'orange' | 'red',
+    textKey: TranslationKey,
+    params?: Record<string, string>,
+    detail?: string,
+  ) => {
+    reasons.push({ level: reasonLevel, textKey, params, detail });
+    level = worse(level, reasonLevel);
+  };
 
-  const insuranceStatus = computeDateExpiryStatus(vehicle.insuranceExpiry);
-  if (insuranceStatus) status = worse(status, insuranceStatus);
+  if (vehicle.registrationExpiry) {
+    const registrationStatus = computeDateExpiryStatus(vehicle.registrationExpiry, now);
+    if (registrationStatus === 'red') {
+      addReason('red', 'vehicleReasonRegistrationExpired', { date: vehicle.registrationExpiry });
+    } else if (registrationStatus === 'orange') {
+      addReason('orange', 'vehicleReasonRegistrationExpiringSoon', { date: vehicle.registrationExpiry });
+    }
+  }
+
+  if (vehicle.insuranceExpiry) {
+    const insuranceStatus = computeDateExpiryStatus(vehicle.insuranceExpiry, now);
+    if (insuranceStatus === 'red') {
+      addReason('red', 'vehicleReasonInsuranceExpired', { date: vehicle.insuranceExpiry });
+    } else if (insuranceStatus === 'orange') {
+      addReason('orange', 'vehicleReasonInsuranceExpiringSoon', { date: vehicle.insuranceExpiry });
+    }
+  }
 
   for (const record of getActiveMaintenanceRecords(maintenanceRecords)) {
     const recordStatus = computeMaintenanceRecordStatus(record, vehicle.currentMileage);
-    if (recordStatus) status = worse(status, recordStatus);
+    if (recordStatus !== 'orange' && recordStatus !== 'red') continue;
+
+    const targetMileage = getTargetMileage(record);
+    if (targetMileage !== undefined) {
+      const wording = computeMaintenanceMileageWording(record, vehicle.currentMileage);
+      if (wording?.kind === 'overdueByKm') {
+        addReason(recordStatus, 'vehicleReasonMaintenanceOverdueKm', { km: String(wording.km) }, record.title);
+      } else if (wording?.kind === 'serviceDue') {
+        addReason(recordStatus, 'vehicleReasonMaintenanceServiceDue', undefined, record.title);
+      } else if (wording?.kind === 'remainingKm') {
+        addReason(recordStatus, 'vehicleReasonMaintenanceApproachingKm', { km: String(wording.km) }, record.title);
+      }
+    } else if (record.nextServiceDate) {
+      const textKey = recordStatus === 'red' ? 'vehicleReasonMaintenanceOverdueDate' : 'vehicleReasonMaintenanceDueSoonDate';
+      addReason(recordStatus, textKey, { date: record.nextServiceDate }, record.title);
+    }
   }
 
-  return status;
+  return { level, reasons };
 }
 
 /**

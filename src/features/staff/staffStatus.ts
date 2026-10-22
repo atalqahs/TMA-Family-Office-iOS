@@ -1,5 +1,6 @@
-import type { TranslationKey } from '../../localization/translations';
+import type { Locale, TranslationKey } from '../../localization/translations';
 import { computeDateExpiryStatus, type ExpiryStatusLevel } from '../../utils/expiryStatus';
+import { formatMoneyNumber } from '../../utils/money';
 import { getLocalToday } from '../../utils/localDate';
 import { getNextUnpaidOccurrence, type SalaryOccurrence } from './salarySchedule';
 import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from './types';
@@ -127,4 +128,33 @@ export function computeStaffStatus(
   }
 
   return { level, reasons };
+}
+
+/**
+ * Staff's own reason-text renderer, passed to the shared
+ * `<StatusReasonsList>` (and used directly for the Staff card's short
+ * summary) instead of the generic `renderStatusReasonText`: the salary
+ * reason's `{amount}` placeholder needs a trailing currency unit
+ * (`kwdUnitLabel`) that the generic renderer has no notion of, and this
+ * is the one existing reason for which that applies.
+ */
+export function renderStaffReasonText(
+  reason: StaffStatusReason,
+  t: (key: TranslationKey) => string,
+  locale: Locale,
+): string {
+  let text = t(reason.textKey);
+  if (reason.params) {
+    for (const [key, value] of Object.entries(reason.params)) {
+      const displayValue =
+        key === 'date'
+          ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(new Date(`${value}T00:00:00`))
+          : key === 'amount'
+            ? `${formatMoneyNumber(Number(value), locale)} ${t('kwdUnitLabel')}`
+            : value;
+      text = text.replace(`{${key}}`, displayValue);
+    }
+  }
+  if (reason.detail) text += `: ${reason.detail}`;
+  return text;
 }

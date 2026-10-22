@@ -63,6 +63,12 @@
   overflow-x: hidden;
   min-width: 0;
   padding: 0 var(--space-4) var(--space-5);
+  /* Stops scrolling past this box's own top/bottom edge from "chaining"
+     into whatever's behind the sheet -- without it, an iOS Safari swipe
+     that reaches the end of the sheet's content can still rubber-band
+     the page underneath even with the body pinned in Sheet.tsx. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 @keyframes sheet-slide-up {

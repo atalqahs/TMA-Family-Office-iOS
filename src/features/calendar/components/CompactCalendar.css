@@ -22,17 +22,20 @@
   color: var(--color-text-primary);
 }
 
-.compact-calendar__expand {
+.compact-calendar__nav {
   display: flex;
   align-items: center;
-  gap: 4px;
-  border: none;
-  background: transparent;
-  color: var(--color-accent);
-  font-size: var(--font-size-sm);
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.compact-calendar__month-label {
+  min-width: 9em;
+  text-align: center;
   font-weight: 600;
-  padding: 0;
-  white-space: nowrap;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
 }
 
 .compact-calendar__today {

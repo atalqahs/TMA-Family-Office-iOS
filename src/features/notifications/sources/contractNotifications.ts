@@ -16,7 +16,7 @@ export function buildContractNotifications(contracts: Contract[], now: Date = ne
     const endDate = contract.endDate;
     if (!endDate) continue;
 
-    const status = computeContractStatus(contract, now);
+    const { level: status } = computeContractStatus(contract, now);
     if (status !== 'red' && status !== 'orange') continue;
 
     const expired = status === 'red';

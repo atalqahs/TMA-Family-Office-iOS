@@ -9,6 +9,7 @@ import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { StatusBadge } from '../components/StatusBadge';
+import { StatusReasonsList } from '../components/StatusReasonsList';
 import { Sheet } from '../components/Sheet';
 import { SalaryPaymentForm } from '../features/staff/components/SalaryPaymentForm';
 import { SalaryScheduleForm } from '../features/staff/components/SalaryScheduleForm';
@@ -19,7 +20,7 @@ import { StaffForm } from '../features/staff/components/StaffForm';
 import * as staffService from '../features/staff/staffService';
 import { useStaffMember } from '../features/staff/hooks/useStaffMember';
 import type { SalaryOccurrence } from '../features/staff/salarySchedule';
-import { computeStaffStatus, STAFF_STATUS_LABEL_KEY, STAFF_STATUS_VARIANT } from '../features/staff/staffStatus';
+import { computeStaffStatus, renderStaffReasonText, STAFF_STATUS_LABEL_KEY, STAFF_STATUS_VARIANT } from '../features/staff/staffStatus';
 import { getPaymentDueDate, STAFF_ROLES } from '../features/staff/types';
 import type { StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
 import { useDisclosure } from '../hooks/useDisclosure';
@@ -94,23 +95,6 @@ export function StaffProfilePage() {
   const { level: statusLevel, reasons } = computeStaffStatus(staff, documents, salarySchedules, salaryPayments);
   const roleLabel = staff.role ? STAFF_ROLES.find((option) => option.id === staff.role)?.title[locale] : undefined;
   const age = calculateAge(staff.dateOfBirth);
-
-  const renderReasonText = (reason: (typeof reasons)[number]): string => {
-    let text = t(reason.textKey);
-    if (reason.params) {
-      for (const [key, value] of Object.entries(reason.params)) {
-        const displayValue =
-          key === 'date'
-            ? new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long' }).format(new Date(`${value}T00:00:00`))
-            : key === 'amount'
-              ? `${formatMoneyNumber(Number(value), locale)} ${t('kwdUnitLabel')}`
-              : value;
-        text = text.replace(`{${key}}`, displayValue);
-      }
-    }
-    if (reason.detail) text += `: ${reason.detail}`;
-    return text;
-  };
 
   // Only rows that actually have a value are shown — an empty optional
   // field is simply omitted rather than displayed as a "-" placeholder row.
@@ -199,15 +183,7 @@ export function StaffProfilePage() {
         {roleLabel && <p className="staff-profile-page__subtitle">{roleLabel}</p>}
         <StatusBadge variant={STAFF_STATUS_VARIANT[statusLevel]}>{t(STAFF_STATUS_LABEL_KEY[statusLevel])}</StatusBadge>
 
-        {reasons.length > 0 && (
-          <ul className="staff-profile-page__reasons">
-            {reasons.map((reason, index) => (
-              <li key={index} className={`staff-profile-page__reason staff-profile-page__reason--${reason.level}`}>
-                {renderReasonText(reason)}
-              </li>
-            ))}
-          </ul>
-        )}
+        <StatusReasonsList reasons={reasons} renderText={renderStaffReasonText} />
 
         <div className="staff-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>

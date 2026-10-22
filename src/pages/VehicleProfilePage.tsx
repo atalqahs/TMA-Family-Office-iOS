@@ -9,6 +9,7 @@ import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { StatusBadge } from '../components/StatusBadge';
+import { StatusReasonsList } from '../components/StatusReasonsList';
 import { Sheet } from '../components/Sheet';
 import { CompleteServiceForm } from '../features/vehicles/components/CompleteServiceForm';
 import { MaintenanceRecordForm } from '../features/vehicles/components/MaintenanceRecordForm';
@@ -81,7 +82,7 @@ export function VehicleProfilePage() {
     );
   }
 
-  const status = computeVehicleStatus(vehicle, maintenanceRecords);
+  const { level: status, reasons: statusReasons } = computeVehicleStatus(vehicle, maintenanceRecords);
   const subtitleParts = [vehicle.make, vehicle.model, vehicle.year !== undefined ? String(vehicle.year) : undefined]
     .filter(Boolean)
     .join(' ');
@@ -162,6 +163,7 @@ export function VehicleProfilePage() {
         <h1 className="vehicle-profile-page__name">{vehicle.name}</h1>
         {subtitleParts && <p className="vehicle-profile-page__subtitle">{subtitleParts}</p>}
         <StatusBadge variant={VEHICLE_STATUS_VARIANT[status]}>{t(VEHICLE_STATUS_LABEL_KEY[status])}</StatusBadge>
+        <StatusReasonsList reasons={statusReasons} />
         <div className="vehicle-profile-page__header-actions">
           <SecondaryButton onClick={editSheet.open}>{t('profileEditAction')}</SecondaryButton>
           <SecondaryButton onClick={archiveSheet.open}>{t('archiveAction')}</SecondaryButton>

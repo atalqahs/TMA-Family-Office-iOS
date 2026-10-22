@@ -13,6 +13,7 @@ import { describe, expect, it } from 'vitest';
 
 const sheetCss = readFileSync(resolve(__dirname, '../../src/components/Sheet.css'), 'utf-8');
 const buttonCss = readFileSync(resolve(__dirname, '../../src/components/Button.css'), 'utf-8');
+const formsCss = readFileSync(resolve(__dirname, '../../src/styles/forms.css'), 'utf-8');
 
 function ruleBody(css: string, selector: string): string {
   const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -49,5 +50,31 @@ describe('Button.css: .btn truncates overflowing content instead of forcing its 
     expect(label).toMatch(/white-space:\s*nowrap/);
     expect(label).toMatch(/text-overflow:\s*ellipsis/);
     expect(label).toMatch(/text-align:\s*start/);
+  });
+});
+
+describe('forms.css: date inputs size to their content instead of stretching full-width', () => {
+  it('overrides the generic .form-input width:100% for [type="date"] with a content-based, non-hardcoded width', () => {
+    const dateInput = ruleBody(formsCss, '.form-input[type=\'date\']');
+    expect(dateInput).toMatch(/width:\s*auto/);
+    // A floor in `ch` units (content-relative, not a fixed px guess) plus a
+    // ceiling of 100% -- never a hardcoded px width that could clip a
+    // longer locale's formatted date.
+    expect(dateInput).toMatch(/min-width:\s*\d+ch/);
+    expect(dateInput).toMatch(/max-width:\s*100%/);
+    expect(dateInput).not.toMatch(/min-width:\s*\d+px/);
+    expect(dateInput).not.toMatch(/max-width:\s*\d+px/);
+    // Opts out of the parent .form-field column flex's default stretch,
+    // which otherwise overrides width:auto back to full width -- and
+    // resolves against dir (rtl/ltr) automatically, so the compact box
+    // lands on the correct leading edge in both languages.
+    expect(dateInput).toMatch(/align-self:\s*flex-start/);
+  });
+
+  it('keeps the shared 44px+ touch-target height from the generic .form-input rule (not overridden)', () => {
+    const dateInput = ruleBody(formsCss, '.form-input[type=\'date\']');
+    expect(dateInput).not.toMatch(/min-height/);
+    const generic = ruleBody(formsCss, '.form-input');
+    expect(generic).toMatch(/min-height:\s*var\(--touch-target\)/);
   });
 });

@@ -6,6 +6,15 @@ import { afterEach, beforeEach } from 'vitest';
 import { __resetDbConnectionForTests } from '../src/storage/db';
 
 /**
+ * jsdom has no real layout/viewport, so window.scrollTo() is a documented
+ * no-op that otherwise logs a "Not implemented" console warning on every
+ * call -- Sheet.tsx calls it on close to restore the page's scroll
+ * position, which every test that opens/closes a sheet now does. A silent
+ * stub is all jsdom needs here; it changes no test's behavior.
+ */
+window.scrollTo = () => {};
+
+/**
  * Permanent, global test isolation (Phase 9A, Section P): every test gets a
  * brand-new, empty IndexedDB factory and a freshly-reset `storage/db.ts`
  * connection cache, so no test can observe data left behind by another —

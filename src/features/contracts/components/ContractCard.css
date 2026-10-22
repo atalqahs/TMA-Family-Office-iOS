@@ -55,3 +55,20 @@
   white-space: nowrap;
   max-width: 100%;
 }
+
+.contract-card__status-reason {
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  margin-top: 2px;
+}
+
+.contract-card__status-reason--orange {
+  color: var(--color-warning);
+}
+
+.contract-card__status-reason--red {
+  color: var(--color-danger);
+}

@@ -1,5 +1,6 @@
 import type { TranslationKey } from '../../localization/translations';
 import { computeDateExpiryStatus, type ExpiryStatusLevel } from '../../utils/expiryStatus';
+import type { StatusReason } from '../../utils/statusReasons';
 import type { Contract } from './types';
 
 export type ContractStatusLevel = ExpiryStatusLevel;
@@ -17,6 +18,13 @@ export const CONTRACT_STATUS_LABEL_KEY: Record<ContractStatusLevel, TranslationK
   red: 'contractStatusExpired',
 };
 
+export type ContractStatusReason = StatusReason;
+
+export interface ContractStatusResult {
+  level: ContractStatusLevel;
+  reasons: ContractStatusReason[];
+}
+
 /**
  * Contract status is always DERIVED from `endDate`, never manually
  * selected — the single source of truth for this is the same
@@ -31,8 +39,15 @@ export const CONTRACT_STATUS_LABEL_KEY: Record<ContractStatusLevel, TranslationK
  *   all (an open-ended contract is simply active).
  *
  * Used identically by ContractCard and ContractProfilePage so the
- * calculation exists in exactly one place.
+ * calculation exists in exactly one place. Also returns the (single,
+ * since a contract only ever has one expiry signal) reason behind a
+ * non-green level, in the same `{level, reasons}` shape every other
+ * module's status uses, so the same shared presentation components work
+ * here too.
  */
-export function computeContractStatus(contract: Pick<Contract, 'endDate'>, now: Date = new Date()): ContractStatusLevel {
-  return computeDateExpiryStatus(contract.endDate, now) ?? 'green';
+export function computeContractStatus(contract: Pick<Contract, 'endDate'>, now: Date = new Date()): ContractStatusResult {
+  const level = computeDateExpiryStatus(contract.endDate, now) ?? 'green';
+  if (level === 'green' || !contract.endDate) return { level, reasons: [] };
+  const textKey: TranslationKey = level === 'red' ? 'contractReasonExpired' : 'contractReasonExpiringSoon';
+  return { level, reasons: [{ level, textKey, params: { date: contract.endDate } }] };
 }

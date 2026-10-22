@@ -68,54 +68,93 @@ function MaintenanceRow({ record, currentMileage, onEdit, onComplete, onRemoved 
     return template.replace('{km}', km);
   })();
 
+  const mileageUnit = t('mileageUnitLabel');
+  const serviceDateText = record.serviceDate ? new Intl.DateTimeFormat(locale).format(new Date(record.serviceDate)) : undefined;
+  const nextServiceDateText = record.nextServiceDate
+    ? new Intl.DateTimeFormat(locale).format(new Date(record.nextServiceDate))
+    : undefined;
+  const hasNextServiceInfo = serviceIntervalKm !== undefined || targetMileage !== undefined || nextServiceDateText !== undefined;
+
   return (
     <li className="maintenance-row">
-      <span className="maintenance-row__icon" aria-hidden="true">
-        <Wrench size={20} strokeWidth={1.75} />
-      </span>
-      <span className="maintenance-row__text">
-        <span className="maintenance-row__title">{record.title}</span>
-        <span className="maintenance-row__meta">
-          {record.serviceDate ? `${typeLabel} · ${new Intl.DateTimeFormat(locale).format(new Date(record.serviceDate))}` : typeLabel}
-          {mileageAtService !== undefined &&
-            ` · ${t('fieldMileageAtService')}: ${formatMileageNumber(mileageAtService, locale)} ${t('mileageUnitLabel')}`}
+      <div className="maintenance-row__header">
+        <span className="maintenance-row__icon" aria-hidden="true">
+          <Wrench size={20} strokeWidth={1.75} />
         </span>
-        {(serviceIntervalKm !== undefined || targetMileage !== undefined || record.nextServiceDate) && (
-          <span className="maintenance-row__next">
-            {t('nextServiceLabel')}:{' '}
-            {[
-              record.nextServiceDate && new Intl.DateTimeFormat(locale).format(new Date(record.nextServiceDate)),
-              serviceIntervalKm !== undefined &&
-                `${t('fieldServiceIntervalKm')} ${formatMileageNumber(serviceIntervalKm, locale)} ${t('mileageUnitLabel')}`,
-              targetMileage !== undefined &&
-                `${t('fieldTargetMileage')} ${formatMileageNumber(targetMileage, locale)} ${t('mileageUnitLabel')}`,
-            ]
-              .filter(Boolean)
-              .join(' · ')}
-          </span>
+        <div className="maintenance-row__heading">
+          <span className="maintenance-row__title">{record.title}</span>
+          <span className="maintenance-row__type">{typeLabel}</span>
+        </div>
+        {status && (
+          <StatusBadge variant={VEHICLE_STATUS_VARIANT[status]}>{t(VEHICLE_STATUS_LABEL_KEY[status])}</StatusBadge>
         )}
-        {mileageWordingText && <span className="maintenance-row__remaining">{mileageWordingText}</span>}
-        {record.notes && <span className="maintenance-row__notes">{record.notes}</span>}
-        {status && <StatusBadge variant={VEHICLE_STATUS_VARIANT[status]}>{t(VEHICLE_STATUS_LABEL_KEY[status])}</StatusBadge>}
-        {error && <span className="maintenance-row__error">{error}</span>}
-      </span>
-      <span className="maintenance-row__actions">
+      </div>
+
+      {(serviceDateText || mileageAtService !== undefined) && (
+        <dl className="maintenance-row__details">
+          {serviceDateText && (
+            <div className="maintenance-row__detail-row">
+              <dt>{t('fieldServiceDate')}</dt>
+              <dd>{serviceDateText}</dd>
+            </div>
+          )}
+          {mileageAtService !== undefined && (
+            <div className="maintenance-row__detail-row">
+              <dt>{t('fieldMileageAtService')}</dt>
+              <dd>{`${formatMileageNumber(mileageAtService, locale)} ${mileageUnit}`}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      {hasNextServiceInfo && (
+        <dl className="maintenance-row__details maintenance-row__details--next">
+          <div className="maintenance-row__details-heading">{t('nextServiceLabel')}</div>
+          {serviceIntervalKm !== undefined && (
+            <div className="maintenance-row__detail-row">
+              <dt>{t('fieldServiceIntervalKm')}</dt>
+              <dd>{`${formatMileageNumber(serviceIntervalKm, locale)} ${mileageUnit}`}</dd>
+            </div>
+          )}
+          {targetMileage !== undefined && (
+            <div className="maintenance-row__detail-row">
+              <dt>{t('fieldTargetMileage')}</dt>
+              <dd>{`${formatMileageNumber(targetMileage, locale)} ${mileageUnit}`}</dd>
+            </div>
+          )}
+          {nextServiceDateText && (
+            <div className="maintenance-row__detail-row">
+              <dt>{t('fieldNextServiceDate')}</dt>
+              <dd>{nextServiceDateText}</dd>
+            </div>
+          )}
+          {mileageWordingText && <div className="maintenance-row__remaining">{mileageWordingText}</div>}
+        </dl>
+      )}
+
+      {record.notes && <p className="maintenance-row__notes">{record.notes}</p>}
+
+      {error && <p className="maintenance-row__error">{error}</p>}
+
+      <div className="maintenance-row__actions">
         <PrimaryButton type="button" onClick={onComplete}>
           {t('completeServiceAction')}
         </PrimaryButton>
-        <SecondaryButton type="button" onClick={onEdit}>
-          {t('profileEditAction')}
-        </SecondaryButton>
-        {confirming ? (
-          <DangerButton type="button" onClick={handleRemove} disabled={removing}>
-            {removing ? t('formSaving') : t('actionConfirm')}
-          </DangerButton>
-        ) : (
-          <DangerButton type="button" onClick={() => setConfirming(true)}>
-            {t('documentDeleteAction')}
-          </DangerButton>
-        )}
-      </span>
+        <div className="maintenance-row__actions-secondary">
+          <SecondaryButton type="button" onClick={onEdit}>
+            {t('profileEditAction')}
+          </SecondaryButton>
+          {confirming ? (
+            <DangerButton type="button" onClick={handleRemove} disabled={removing}>
+              {removing ? t('formSaving') : t('actionConfirm')}
+            </DangerButton>
+          ) : (
+            <DangerButton type="button" onClick={() => setConfirming(true)}>
+              {t('documentDeleteAction')}
+            </DangerButton>
+          )}
+        </div>
+      </div>
     </li>
   );
 }

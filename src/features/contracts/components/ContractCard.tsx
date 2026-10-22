@@ -1,6 +1,7 @@
 import { FileText } from 'lucide-react';
 import { StatusBadge } from '../../../components/StatusBadge';
 import { useLanguage } from '../../../hooks/useLanguage';
+import { summarizeStatusReasons } from '../../../utils/statusReasons';
 import { findLinkedEntity, getLinkedEntityLabel, type LinkableEntities } from '../linkedEntity';
 import { computeContractStatus, CONTRACT_STATUS_LABEL_KEY, CONTRACT_STATUS_VARIANT } from '../contractStatus';
 import { CONTRACT_TYPES } from '../types';
@@ -17,7 +18,8 @@ export function ContractCard({ contract, linkableEntities, onClick }: ContractCa
   const { t, locale } = useLanguage();
 
   const typeLabel = CONTRACT_TYPES.find((option) => option.id === contract.contractType)?.title[locale];
-  const status = computeContractStatus(contract);
+  const { level: status, reasons } = computeContractStatus(contract);
+  const reasonsSummary = summarizeStatusReasons(reasons, t, locale);
 
   const linkedEntity =
     contract.linkedEntityType && contract.linkedEntityId
@@ -45,6 +47,9 @@ export function ContractCard({ contract, linkableEntities, onClick }: ContractCa
         )}
         {linkedLabel && <span className="contract-card__meta">{t('fieldLinkedTo')}: {linkedLabel}</span>}
         <StatusBadge variant={CONTRACT_STATUS_VARIANT[status]}>{t(CONTRACT_STATUS_LABEL_KEY[status])}</StatusBadge>
+        {reasonsSummary && (
+          <span className={`contract-card__status-reason contract-card__status-reason--${status}`}>{reasonsSummary}</span>
+        )}
       </div>
     </button>
   );

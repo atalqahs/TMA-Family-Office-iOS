@@ -15,12 +15,21 @@
 
 .maintenance-row {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-3);
   padding: var(--space-3);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   background: var(--color-surface-card);
+}
+
+/* Header: icon + title/type on the leading side, the status badge
+   trailing -- never squeezed, since it's now its own row instead of
+   sharing horizontal space with a tall action-button stack. */
+.maintenance-row__header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
 }
 
 .maintenance-row__icon {
@@ -35,7 +44,7 @@
   flex-shrink: 0;
 }
 
-.maintenance-row__text {
+.maintenance-row__heading {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -50,26 +59,66 @@
   overflow-wrap: anywhere;
 }
 
-.maintenance-row__meta {
+.maintenance-row__type {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
 
-.maintenance-row__next {
-  font-size: var(--font-size-xs);
-  color: var(--color-text-muted);
-  overflow-wrap: anywhere;
+/* Service details / Next service: label:value rows, same dt/dd pattern
+   already used by the vehicle profile's own info rows -- dd right-aligns
+   via the logical `end`, so it reads correctly in both RTL and LTR. */
+.maintenance-row__details {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-elevated);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
-.maintenance-row__remaining {
-  font-size: var(--font-size-sm);
+.maintenance-row__details-heading {
+  font-size: var(--font-size-xs);
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-text-secondary);
+  margin-bottom: 2px;
+}
+
+.maintenance-row__detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.maintenance-row__detail-row dt {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.maintenance-row__detail-row dd {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  text-align: end;
+  overflow-wrap: anywhere;
+  max-width: 60%;
+}
+
+/* The remaining/overdue distance is the single most actionable figure in
+   the whole card -- visibly emphasized, per the requested hierarchy. */
+.maintenance-row__remaining {
+  margin-top: 2px;
+  font-size: var(--font-size-body);
+  font-weight: 700;
   color: var(--color-text-primary);
   overflow-wrap: anywhere;
 }
 
 .maintenance-row__notes {
+  margin: 0;
   font-size: var(--font-size-sm);
   color: var(--color-text-primary);
   white-space: pre-wrap;
@@ -77,13 +126,25 @@
 }
 
 .maintenance-row__error {
+  margin: 0;
   font-size: var(--font-size-xs);
   color: var(--color-danger);
 }
 
+/* Actions: their own full-width area below the content, never squeezed
+   beside it. Complete Service is the primary action and gets its own
+   full-width row; Edit/Delete share a secondary row underneath. */
 .maintenance-row__actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-  flex-shrink: 0;
+}
+
+.maintenance-row__actions-secondary {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.maintenance-row__actions-secondary > * {
+  flex: 1;
 }

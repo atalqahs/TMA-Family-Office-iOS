@@ -55,3 +55,22 @@
   color: var(--color-text-secondary);
   overflow-wrap: anywhere;
 }
+
+/* A short, single-line summary of WHY the badge is orange/red -- the full
+   reason list only ever lives on the vehicle's own profile page. */
+.vehicle-card__status-reason {
+  font-size: var(--font-size-xs);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  margin-top: 2px;
+}
+
+.vehicle-card__status-reason--orange {
+  color: var(--color-warning);
+}
+
+.vehicle-card__status-reason--red {
+  color: var(--color-danger);
+}

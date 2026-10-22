@@ -31,29 +31,6 @@
   font-size: var(--font-size-body);
 }
 
-.staff-profile-page__reasons {
-  margin: var(--space-1) 0 0;
-  padding: 0;
-  list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  max-width: 100%;
-}
-
-.staff-profile-page__reason {
-  font-size: var(--font-size-sm);
-  overflow-wrap: anywhere;
-}
-
-.staff-profile-page__reason--orange {
-  color: var(--color-warning);
-}
-
-.staff-profile-page__reason--red {
-  color: var(--color-danger);
-}
-
 .staff-profile-page__header-actions {
   margin-top: var(--space-2);
 }
