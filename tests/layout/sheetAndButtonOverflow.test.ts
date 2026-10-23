@@ -15,11 +15,35 @@ const sheetCss = readFileSync(resolve(__dirname, '../../src/components/Sheet.css
 const buttonCss = readFileSync(resolve(__dirname, '../../src/components/Button.css'), 'utf-8');
 const formsCss = readFileSync(resolve(__dirname, '../../src/styles/forms.css'), 'utf-8');
 
+/**
+ * Every "selector-list { body }" block in the file, as (comma-split,
+ * trimmed) selector entries alongside the body -- comments are stripped
+ * first, since otherwise a multi-line comment immediately preceding a
+ * rule gets swept into its captured "selector list" text (everything
+ * between the previous `}` and the next `{`), and a comma anywhere in
+ * that comment's prose would split it into fragments that never equal a
+ * real selector.
+ */
+function cssBlocks(css: string): Array<{ entries: string[]; body: string }> {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '');
+  return Array.from(withoutComments.matchAll(/([^{}]+)\{([^}]*)\}/g)).map(([, selectorList, body]) => ({
+    entries: selectorList.split(',').map((s) => s.trim()),
+    body,
+  }));
+}
+
+/** The body of the rule whose selector is EXACTLY (and only) `selector` -- never a rule where it's one of several comma-separated selectors. */
 function ruleBody(css: string, selector: string): string {
-  const escaped = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const match = css.match(new RegExp(`${escaped}\\s*\\{([^}]*)\\}`));
-  if (!match) throw new Error(`rule not found: ${selector}`);
-  return match[1];
+  const block = cssBlocks(css).find((b) => b.entries.length === 1 && b.entries[0] === selector);
+  if (!block) throw new Error(`no exclusive rule found for selector: ${selector}`);
+  return block.body;
+}
+
+/** Like ruleBody, but also matches when `selector` is one entry of a comma-separated selector list (e.g. finds the shared body of ".a, .b { ... }" when asked for ".a" or ".b"). */
+function sharedRuleBody(css: string, selector: string): string {
+  const block = cssBlocks(css).find((b) => b.entries.includes(selector));
+  if (!block) throw new Error(`no rule found whose selector list includes: ${selector}`);
+  return block.body;
 }
 
 describe('Sheet.css: .sheet__body does not silently become horizontally scrollable', () => {
@@ -53,27 +77,40 @@ describe('Button.css: .btn truncates overflowing content instead of forcing its 
   });
 });
 
-describe('forms.css: date inputs size to their content instead of stretching full-width', () => {
-  it('overrides the generic .form-input width:100% for [type="date"] with a content-based, non-hardcoded width', () => {
-    const dateInput = ruleBody(formsCss, '.form-input[type=\'date\']');
-    expect(dateInput).toMatch(/width:\s*auto/);
-    // A floor in `ch` units (content-relative, not a fixed px guess) plus a
-    // ceiling of 100% -- never a hardcoded px width that could clip a
-    // longer locale's formatted date.
-    expect(dateInput).toMatch(/min-width:\s*\d+ch/);
-    expect(dateInput).toMatch(/max-width:\s*100%/);
-    expect(dateInput).not.toMatch(/min-width:\s*\d+px/);
-    expect(dateInput).not.toMatch(/max-width:\s*\d+px/);
+describe('forms.css: date and time inputs size to their content instead of stretching full-width', () => {
+  it.each([
+    ["'date'", "date"],
+    ["'time'", "time"],
+  ])('overrides the generic .form-input width:100% for [type=%s] with a content-based, non-hardcoded width', (_label, type) => {
+    const selector = `.form-input[type='${type}']`;
+    const shared = sharedRuleBody(formsCss, selector);
+    expect(shared).toMatch(/width:\s*auto/);
+    expect(shared).toMatch(/max-width:\s*100%/);
+    expect(shared).not.toMatch(/max-width:\s*\d+px/);
     // Opts out of the parent .form-field column flex's default stretch,
     // which otherwise overrides width:auto back to full width -- and
     // resolves against dir (rtl/ltr) automatically, so the compact box
     // lands on the correct leading edge in both languages.
-    expect(dateInput).toMatch(/align-self:\s*flex-start/);
+    expect(shared).toMatch(/align-self:\s*flex-start/);
+
+    // A floor in `ch` units (content-relative, not a fixed px guess),
+    // never a hardcoded px width that could clip a longer locale's
+    // formatted value (e.g. a 12-hour time with AM/PM).
+    const own = ruleBody(formsCss, selector);
+    expect(own).toMatch(/min-width:\s*\d+ch/);
+    expect(own).not.toMatch(/min-width:\s*\d+px/);
   });
 
-  it('keeps the shared 44px+ touch-target height from the generic .form-input rule (not overridden)', () => {
-    const dateInput = ruleBody(formsCss, '.form-input[type=\'date\']');
-    expect(dateInput).not.toMatch(/min-height/);
+  it.each([["'date'"], ["'time'"]])(
+    'keeps the shared 44px+ touch-target height from the generic .form-input rule (not overridden) for [type=%s]',
+    (typeLiteral) => {
+      const type = typeLiteral.replace(/'/g, '');
+      const own = ruleBody(formsCss, `.form-input[type='${type}']`);
+      expect(own).not.toMatch(/min-height/);
+    },
+  );
+
+  it('the generic .form-input rule itself declares the shared touch-target height', () => {
     const generic = ruleBody(formsCss, '.form-input');
     expect(generic).toMatch(/min-height:\s*var\(--touch-target\)/);
   });

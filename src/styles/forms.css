@@ -32,20 +32,33 @@ textarea.form-input {
 /* A date's own content ("21/10/2026" or its Arabic-Indic equivalent) is
    short and fixed-shape -- stretching the control to the form's full
    width (the generic .form-input default) is exactly the "oversized,
-   almost full-width" complaint. Scoped by [type='date'] so every other
-   .form-input keeps stretching as before; no per-form markup changes
-   needed since every date input already carries this shared class.
-   width: auto (not a hardcoded px value) lets the browser size the
-   control to its own native rendering of the CURRENT locale's date
-   format, so nothing is ever clipped in a locale with a longer/shorter
-   formatted date. align-self: flex-start opts the item out of the
-   parent .form-field column flex's default stretch -- which resolves
-   against the document's dir (rtl/ltr), so the compact box lands on the
-   correct leading edge in both Arabic and English automatically. */
-.form-input[type='date'] {
+   almost full-width" complaint. Scoped by [type='date']/[type='time'] so
+   every other .form-input keeps stretching as before; no per-form
+   markup changes needed since every date/time input already carries
+   this shared class. width: auto (not a hardcoded px value) lets the
+   browser size the control to its own native rendering of the CURRENT
+   locale's date/time format, so nothing is ever clipped in a locale
+   with a longer/shorter formatted value (e.g. a 12-hour time with
+   AM/PM). align-self: flex-start opts the item out of the parent
+   .form-field column flex's default stretch -- which resolves against
+   the document's dir (rtl/ltr), so the compact box lands on the correct
+   leading edge in both Arabic and English automatically. */
+.form-input[type='date'],
+.form-input[type='time'] {
   width: auto;
-  min-width: 11ch;
   max-width: 100%;
   align-self: flex-start;
   flex-shrink: 0;
+}
+
+.form-input[type='date'] {
+  min-width: 11ch;
+}
+
+/* A time's own content ("11:45 PM" or its 24h/Arabic-Indic equivalent) is
+   shorter than a formatted date, but still needs its own floor so the
+   control never collapses narrower than a complete time (including
+   AM/PM) plus the native clock-icon affordance can comfortably render. */
+.form-input[type='time'] {
+  min-width: 9ch;
 }
