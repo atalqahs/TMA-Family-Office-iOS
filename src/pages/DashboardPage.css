@@ -1,0 +1,17 @@
+.dashboard-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.dashboard-page__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+@media (max-width: 340px) {
+  .dashboard-page__grid {
+    grid-template-columns: 1fr;
+  }
+}

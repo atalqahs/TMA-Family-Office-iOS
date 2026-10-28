@@ -1,0 +1,21 @@
+.staff-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.staff-page__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.staff-page__add-action {
+  padding: 0 var(--space-5);
+}
+
+.staff-page__status {
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

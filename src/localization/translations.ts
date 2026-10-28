@@ -1,0 +1,1368 @@
+export type Locale = 'ar' | 'en';
+
+/** A piece of category/domain text pre-translated for both locales. */
+export interface LocalizedText {
+  ar: string;
+  en: string;
+}
+
+export type TranslationKey =
+  | 'appName'
+  | 'appTagline'
+  | 'dashboardTitle'
+  | 'dashboardSubtitle'
+  | 'menuTitle'
+  | 'menuOpenLabel'
+  | 'menuCloseLabel'
+  | 'menuMoreSection'
+  | 'homeLabel'
+  | 'notificationsLabel'
+  | 'settingsLabel'
+  | 'comingSoonNotice'
+  | 'settingsTitle'
+  | 'settingsLanguageSectionTitle'
+  | 'settingsLanguageSectionHint'
+  | 'languageNameArabic'
+  | 'languageNameEnglish'
+  | 'settingsAboutSectionTitle'
+  | 'settingsVersionValue'
+  | 'settingsDisclaimer'
+  | 'loadingLabel'
+  | 'actionSave'
+  | 'actionCancel'
+  | 'actionConfirm'
+  | 'statusReasonsCountTwo'
+  | 'statusReasonsCountMany'
+  | 'fieldFullName'
+  | 'fieldRelationship'
+  | 'fieldDateOfBirth'
+  | 'fieldNationality'
+  | 'fieldCivilId'
+  | 'fieldCivilIdExpiryDate'
+  | 'fieldPassportExpiryDate'
+  | 'fieldPhone'
+  | 'fieldEmail'
+  | 'fieldBloodType'
+  | 'familyStatusGreen'
+  | 'familyStatusOrange'
+  | 'familyStatusRed'
+  | 'familyReasonCivilIdExpired'
+  | 'familyReasonCivilIdExpiringSoon'
+  | 'familyReasonPassportExpired'
+  | 'familyReasonPassportExpiringSoon'
+  | 'fieldNotes'
+  | 'fieldNotProvided'
+  | 'formAddTitle'
+  | 'formEditTitle'
+  | 'formSaving'
+  | 'formSaveError'
+  | 'validationFullNameRequired'
+  | 'validationEmailInvalid'
+  | 'validationDateOfBirthInvalid'
+  | 'validationDateOfBirthFuture'
+  | 'validationDateOfBirthTooOld'
+  | 'validationDuplicateCivilId'
+  | 'validationFileTooLarge'
+  | 'validationFileTypeUnsupported'
+  | 'validationFileRequired'
+  | 'photoChooseLabel'
+  | 'photoChangeLabel'
+  | 'photoRemoveLabel'
+  | 'photoProcessingLabel'
+  | 'photoProcessingError'
+  | 'bloodTypeUnknown'
+  | 'ageUnitLabel'
+  | 'memberNotFoundTitle'
+  | 'backToFamilyLabel'
+  | 'profileEditAction'
+  | 'profileDeleteAction'
+  | 'profileDeleteConfirmTitle'
+  | 'profileDeleteConfirmBody'
+  | 'profileDeleteConfirmAction'
+  | 'profileSectionPersonalInfo'
+  | 'profileSectionNotes'
+  | 'profileNotesEmpty'
+  | 'profileSectionDocuments'
+  | 'documentsEmpty'
+  | 'documentsAddAction'
+  | 'documentFormAddTitle'
+  | 'fieldDocumentType'
+  | 'fieldDocumentTitle'
+  | 'fieldDocumentExpiry'
+  | 'fieldDocumentFile'
+  | 'documentChooseFileLabel'
+  | 'documentOpenAction'
+  | 'documentOpenError'
+  | 'documentExternalAppHint'
+  | 'documentDeleteAction'
+  | 'documentExpiryPrefixLabel'
+  | 'validationPropertyNameRequired'
+  | 'propertyFormAddTitle'
+  | 'propertyFormEditTitle'
+  | 'fieldPropertyName'
+  | 'fieldPropertyType'
+  | 'fieldPropertyStatus'
+  | 'fieldCountry'
+  | 'fieldCity'
+  | 'fieldArea'
+  | 'fieldBlock'
+  | 'fieldStreet'
+  | 'fieldAvenue'
+  | 'fieldHouseNumber'
+  | 'fieldPropertyNumber'
+  | 'profileSectionLocation'
+  | 'profileSectionPropertyInfo'
+  | 'propertyNotFoundTitle'
+  | 'backToPropertiesLabel'
+  | 'propertyDeleteAction'
+  | 'propertyDeleteConfirmTitle'
+  | 'propertyDeleteConfirmBody'
+  | 'propertyDeleteConfirmAction'
+  | 'validationVehicleNameRequired'
+  | 'validationYearInvalid'
+  | 'validationMileageNegative'
+  | 'validationMaintenanceTitleRequired'
+  | 'validationMaintenanceDateRequired'
+  | 'vehicleFormAddTitle'
+  | 'vehicleFormEditTitle'
+  | 'fieldVehicleName'
+  | 'fieldMake'
+  | 'fieldModel'
+  | 'fieldYear'
+  | 'fieldTrim'
+  | 'fieldPlateNumber'
+  | 'fieldVin'
+  | 'fieldColor'
+  | 'fieldCurrentMileage'
+  | 'fieldRegistrationExpiry'
+  | 'fieldInsuranceExpiry'
+  | 'mileageUnitLabel'
+  | 'profileSectionVehicleInfo'
+  | 'profileSectionExpiry'
+  | 'profileSectionMaintenance'
+  | 'vehicleNotFoundTitle'
+  | 'backToVehiclesLabel'
+  | 'vehicleDeleteAction'
+  | 'vehicleDeleteConfirmTitle'
+  | 'vehicleDeleteConfirmBody'
+  | 'vehicleDeleteConfirmAction'
+  | 'vehicleStatusGreen'
+  | 'vehicleStatusOrange'
+  | 'vehicleStatusRed'
+  | 'vehicleReasonRegistrationExpired'
+  | 'vehicleReasonRegistrationExpiringSoon'
+  | 'vehicleReasonInsuranceExpired'
+  | 'vehicleReasonInsuranceExpiringSoon'
+  | 'vehicleReasonMaintenanceOverdueKm'
+  | 'vehicleReasonMaintenanceServiceDue'
+  | 'vehicleReasonMaintenanceApproachingKm'
+  | 'vehicleReasonMaintenanceOverdueDate'
+  | 'vehicleReasonMaintenanceDueSoonDate'
+  | 'maintenanceEmpty'
+  | 'maintenanceAddAction'
+  | 'maintenanceFormAddTitle'
+  | 'maintenanceFormEditTitle'
+  | 'fieldMaintenanceType'
+  | 'fieldMaintenanceTitle'
+  | 'fieldServiceDate'
+  | 'fieldServiceDateOptional'
+  | 'fieldMileage'
+  | 'fieldNextServiceDate'
+  | 'fieldNextServiceMileage'
+  | 'nextServiceLabel'
+  | 'fieldMileageAtService'
+  | 'fieldServiceIntervalKm'
+  | 'fieldTargetMileage'
+  | 'serviceIntervalHint'
+  | 'targetMileagePlaceholder'
+  | 'validationServiceIntervalInvalid'
+  | 'validationServiceIntervalTooLarge'
+  | 'maintenanceRemainingKm'
+  | 'maintenanceServiceDue'
+  | 'maintenanceOverdueByKm'
+  | 'completeServiceAction'
+  | 'completeServiceFormTitle'
+  | 'completeServiceSubmitAction'
+  | 'completeServicePreviousTargetLabel'
+  | 'fieldRole'
+  | 'fieldPassportNumber'
+  | 'fieldEmploymentStartDate'
+  | 'fieldCivilIdExpiry'
+  | 'fieldPassportExpiry'
+  | 'fieldResidencyExpiry'
+  | 'fieldMonthlySalary'
+  | 'fieldAmount'
+  | 'fieldPaidDate'
+  | 'fieldAge'
+  | 'profileSectionIdentification'
+  | 'profileSectionEmployment'
+  | 'profileSectionSalaryPayments'
+  | 'staffRoleUnspecified'
+  | 'validationSalaryNegative'
+  | 'validationSalaryAmountInvalid'
+  | 'validationPaidDateRequired'
+  | 'validationDuplicateSalaryOccurrence'
+  | 'validationStartDateRequired'
+  | 'validationEndDateBeforeStart'
+  | 'staffFormAddTitle'
+  | 'staffFormEditTitle'
+  | 'staffNotFoundTitle'
+  | 'backToStaffLabel'
+  | 'staffDeleteAction'
+  | 'staffDeleteConfirmTitle'
+  | 'staffDeleteConfirmBody'
+  | 'staffDeleteConfirmAction'
+  | 'staffStatusGreen'
+  | 'staffStatusOrange'
+  | 'staffStatusRed'
+  | 'staffReasonCivilIdExpiringSoon'
+  | 'staffReasonCivilIdExpired'
+  | 'staffReasonPassportExpiringSoon'
+  | 'staffReasonPassportExpired'
+  | 'staffReasonResidencyExpiringSoon'
+  | 'staffReasonResidencyExpired'
+  | 'staffReasonDocumentExpiringSoon'
+  | 'staffReasonDocumentExpired'
+  | 'staffReasonSalaryUnconfirmed'
+  | 'salaryPaymentsAddAction'
+  | 'salaryPaymentFormEditTitle'
+  | 'salaryPaymentsEmpty'
+  | 'salaryStatusNotYetDue'
+  | 'salaryStatusPending'
+  | 'salaryStatusOverdue'
+  | 'kwdUnitLabel'
+  | 'fieldStartDate'
+  | 'fieldEndDateOptional'
+  | 'frequencyEveryLabel'
+  | 'fieldRecurrence'
+  | 'recurrenceWeekly'
+  | 'recurrenceMonthly'
+  | 'recurrenceYearly'
+  | 'salarySchedulesLabel'
+  | 'salarySchedulesEmpty'
+  | 'salaryScheduleFormAddTitle'
+  | 'salaryScheduleFormEditTitle'
+  | 'salaryNextPaymentLabel'
+  | 'salaryNextPaymentEmpty'
+  | 'salaryHistoryLabel'
+  | 'salaryConfirmPaymentAction'
+  | 'salaryConfirmPaymentTitle'
+  | 'salaryOccurrenceDueLabel'
+  | 'salaryPaidOnLabel'
+  | 'fieldContractTitle'
+  | 'fieldContractType'
+  | 'fieldContractNumber'
+  | 'fieldPartyName'
+  | 'fieldEndDate'
+  | 'fieldCurrency'
+  | 'currencyUnspecifiedLabel'
+  | 'fieldLinkedTo'
+  | 'linkedToNoneLabel'
+  | 'linkedEntityEmptyState'
+  | 'linkedEntitySelectPlaceholder'
+  | 'linkedEntityUnavailableLabel'
+  | 'validationContractTitleRequired'
+  | 'validationContractPartyRequired'
+  | 'validationContractStartDateRequired'
+  | 'validationContractEndDateBeforeStart'
+  | 'validationContractAmountNegative'
+  | 'validationLinkedEntityRequired'
+  | 'contractStatusActive'
+  | 'contractStatusExpiringSoon'
+  | 'contractStatusExpired'
+  | 'contractReasonExpired'
+  | 'contractReasonExpiringSoon'
+  | 'contractFormAddTitle'
+  | 'contractFormEditTitle'
+  | 'contractNotFoundTitle'
+  | 'backToContractsLabel'
+  | 'profileSectionContractInfo'
+  | 'contractDeleteAction'
+  | 'contractDeleteConfirmTitle'
+  | 'contractDeleteConfirmBody'
+  | 'contractDeleteConfirmAction'
+  | 'fieldTaskTitle'
+  | 'fieldDescription'
+  | 'fieldDueDate'
+  | 'fieldDueTime'
+  | 'fieldPriority'
+  | 'fieldTaskRepeat'
+  | 'recurrenceNoneLabel'
+  | 'validationTaskTitleRequired'
+  | 'validationTaskDueDateRequired'
+  | 'validationTaskRecurrenceIntervalInvalid'
+  | 'taskFormAddTitle'
+  | 'taskFormEditTitle'
+  | 'taskNotFoundTitle'
+  | 'backToTasksLabel'
+  | 'profileSectionTaskInfo'
+  | 'profileSectionCompletionHistory'
+  | 'taskStateOverdue'
+  | 'taskStateDueToday'
+  | 'taskStateUpcoming'
+  | 'taskStateCompleted'
+  | 'taskFilterAll'
+  | 'taskFilterOverdue'
+  | 'taskFilterToday'
+  | 'taskFilterUpcoming'
+  | 'taskFilterEmptyMessage'
+  | 'completionHistoryEmpty'
+  | 'taskCompleteAction'
+  | 'taskCompleteOccurrenceAction'
+  | 'taskCompletedOnLabel'
+  | 'duplicateTaskCompletionError'
+  | 'taskDeleteAction'
+  | 'taskDeleteConfirmTitle'
+  | 'taskDeleteConfirmBody'
+  | 'taskDeleteConfirmAction'
+  | 'calendarViewAction'
+  | 'calendarPrevMonthLabel'
+  | 'calendarNextMonthLabel'
+  | 'calendarNoTasksForDate'
+  | 'generalCalendarTitle'
+  | 'generalCalendarSubtitle'
+  | 'generalCalendarNoEventsForDate'
+  | 'backToDashboardLabel'
+  | 'calendarEventCivilIdTitle'
+  | 'calendarEventPassportTitle'
+  | 'calendarEventResidencyTitle'
+  | 'calendarEventVehicleRegistrationTitle'
+  | 'calendarEventVehicleInsuranceTitle'
+  | 'calendarEventVehicleMaintenanceTitle'
+  | 'calendarEventSalaryDueTitle'
+  | 'calendarEventContractStartTitle'
+  | 'calendarEventContractEndTitle'
+  | 'calendarEventDocumentExpiryTitle'
+  | 'fieldTaskGroup'
+  | 'fieldGroupName'
+  | 'fieldGroupColor'
+  | 'addGroupAction'
+  | 'taskGroupFormAddTitle'
+  | 'taskGroupFormEditTitle'
+  | 'validationTaskGroupNameRequired'
+  | 'validationTaskGroupRequired'
+  | 'selectGroupPlaceholder'
+  | 'noGroupsYetMessage'
+  | 'taskGroupsEmptyMessage'
+  | 'taskGroupDeleteAction'
+  | 'taskGroupDeleteConfirmTitle'
+  | 'taskGroupDeleteConfirmBody'
+  | 'taskGroupDeleteConfirmAction'
+  | 'taskGroupNotEmptyError'
+  | 'taskGroupGeneralName'
+  | 'taskGroupTaskCountUnit'
+  | 'taskGroupNextLabel'
+  | 'taskGroupNotFoundTitle'
+  | 'fieldAssignedToName'
+  | 'validationDueTimeRequiresDueDate'
+  | 'taskStateNoDueDate'
+  | 'taskFilterNoDueDate'
+  | 'notificationsEmptyStateTitle'
+  | 'notificationSeverityCriticalLabel'
+  | 'notificationSeverityWarningLabel'
+  | 'notificationSeverityInfoLabel'
+  | 'notificationSourceVehicleLabel'
+  | 'notificationSourceContractLabel'
+  | 'notificationSourceStaffLabel'
+  | 'notificationSourceTaskLabel'
+  | 'notificationSourceFamilyLabel'
+  | 'notificationTitleVehicleRegistrationExpired'
+  | 'notificationTitleVehicleRegistrationExpiringSoon'
+  | 'notificationTitleVehicleInsuranceExpired'
+  | 'notificationTitleVehicleInsuranceExpiringSoon'
+  | 'notificationTitleVehicleMaintenanceOverdue'
+  | 'notificationTitleVehicleMaintenanceApproaching'
+  | 'notificationTitleContractExpired'
+  | 'notificationTitleContractExpiringSoon'
+  | 'notificationTitleStaffResidencyExpired'
+  | 'notificationTitleStaffResidencyExpiringSoon'
+  | 'notificationTitleStaffPassportExpired'
+  | 'notificationTitleStaffPassportExpiringSoon'
+  | 'notificationTitleStaffSalaryOverdue'
+  | 'notificationTitleStaffSalaryDue'
+  | 'notificationTitleTaskOverdue'
+  | 'notificationTitleTaskDueToday'
+  | 'notificationTitleFamilyCivilIdExpired'
+  | 'notificationTitleFamilyCivilIdExpiringSoon'
+  | 'notificationTitleFamilyPassportExpired'
+  | 'notificationTitleFamilyPassportExpiringSoon'
+  | 'notificationMsgExpiredOn'
+  | 'notificationMsgExpiringOn'
+  | 'notificationMsgOverdueByKm'
+  | 'notificationMsgApproachingKm'
+  | 'notificationMsgDueToday'
+  | 'notificationMsgOverdueSince'
+  | 'notificationMsgSalaryAmountDue'
+  | 'archiveAction'
+  | 'archiveGroupAction'
+  | 'archiveConfirmTitle'
+  | 'archiveConfirmBody'
+  | 'archiveConfirmAction'
+  | 'archiveGroupConfirmTitle'
+  | 'archiveGroupConfirmBody'
+  | 'archivedNoticeTitle'
+  | 'archivedNoticeHint'
+  | 'unarchiveAction'
+  | 'deleteCardAction'
+  | 'deleteCardConfirmTitle'
+  | 'deleteCardConfirmBody'
+  | 'archiveEmptyStateTitle'
+  | 'archivedOnLabel'
+  | 'backToArchiveLabel'
+  | 'fieldSelectFamilyMember'
+  | 'fieldHealthStatus'
+  | 'fieldHeight'
+  | 'fieldWeight'
+  | 'fieldAllergies'
+  | 'fieldHealthNotes'
+  | 'unitCm'
+  | 'unitKg'
+  | 'healthFormAddTitle'
+  | 'healthNoFamilyMembersMessage'
+  | 'healthProfileNotFoundTitle'
+  | 'backToHealthLabel'
+  | 'healthSectionFamilyIdentity'
+  | 'healthSectionDetails'
+  | 'healthDeleteConfirmBody'
+  | 'validationHeightInvalid'
+  | 'validationWeightInvalid'
+  | 'fieldEducationStage'
+  | 'fieldInstitution'
+  | 'fieldGradeOrYear'
+  | 'fieldSpecialization'
+  | 'fieldEducationStatus'
+  | 'healthDeleteAction'
+  | 'educationDeleteAction'
+  | 'educationFormAddTitle'
+  | 'educationNoFamilyMembersMessage'
+  | 'educationProfileNotFoundTitle'
+  | 'backToEducationLabel'
+  | 'educationDeleteConfirmBody'
+  | 'validationEducationStageRequired'
+  | 'quickTodoWidgetTitle'
+  | 'quickTodoAddPlaceholder'
+  | 'quickTodoAddLabel'
+  | 'quickTodoEmptyState'
+  | 'quickTodoRemainingCount'
+  | 'quickTodoEditLabel'
+  | 'quickTodoDeleteLabel'
+  | 'quickNotesWidgetTitle'
+  | 'quickNotesAddPlaceholder'
+  | 'quickNotesAddLabel'
+  | 'quickNotesEmptyState'
+  | 'quickNotesEditLabel'
+  | 'quickNotesDeleteLabel';
+
+type Dictionary = Record<TranslationKey, string>;
+
+export const translations: Record<Locale, Dictionary> = {
+  ar: {
+    appName: 'TMA FAMILY OFFICE',
+    appTagline: 'المكتب العائلي',
+    dashboardTitle: 'لوحة التحكم',
+    dashboardSubtitle: 'نظرة عامة على فئات مكتب العائلة.',
+    menuTitle: 'الفئات',
+    menuOpenLabel: 'فتح القائمة',
+    menuCloseLabel: 'إغلاق',
+    menuMoreSection: 'المزيد',
+    homeLabel: 'الانتقال إلى الصفحة الرئيسية',
+    notificationsLabel: 'الإشعارات',
+    settingsLabel: 'الإعدادات',
+    comingSoonNotice: 'ستتوفر هذه الميزة في مرحلة لاحقة.',
+    settingsTitle: 'الإعدادات',
+    settingsLanguageSectionTitle: 'اللغة',
+    settingsLanguageSectionHint: 'اختر لغة عرض التطبيق.',
+    languageNameArabic: 'العربية',
+    languageNameEnglish: 'English',
+    settingsAboutSectionTitle: 'معلومات التطبيق',
+    settingsVersionValue: 'نسخة تجريبية',
+    settingsDisclaimer:
+      'هذه نسخة تجريبية لتجربة الفكرة والتصميم على آيفون. النسخة النهائية ستكون تطبيق ويندوز مستقل.',
+    loadingLabel: 'جارٍ التحميل...',
+    actionSave: 'حفظ',
+    actionCancel: 'إلغاء',
+    actionConfirm: 'تأكيد',
+    statusReasonsCountTwo: 'سببان',
+    statusReasonsCountMany: '{count} أسباب',
+    fieldFullName: 'الاسم الكامل',
+    fieldRelationship: 'صلة القرابة',
+    fieldDateOfBirth: 'تاريخ الميلاد',
+    fieldNationality: 'الجنسية',
+    fieldCivilId: 'الرقم المدني',
+    fieldCivilIdExpiryDate: 'تاريخ انتهاء البطاقة المدنية',
+    fieldPassportExpiryDate: 'تاريخ انتهاء جواز السفر',
+    fieldPhone: 'الهاتف',
+    fieldEmail: 'البريد الإلكتروني',
+    fieldBloodType: 'فصيلة الدم',
+    familyStatusGreen: 'لا توجد مشاكل',
+    familyStatusOrange: 'يتطلب انتباه',
+    familyStatusRed: 'يتطلب إجراء',
+    familyReasonCivilIdExpired: 'البطاقة المدنية منتهية منذ {date}',
+    familyReasonCivilIdExpiringSoon: 'البطاقة المدنية تنتهي بتاريخ {date}',
+    familyReasonPassportExpired: 'جواز السفر منتهي منذ {date}',
+    familyReasonPassportExpiringSoon: 'جواز السفر ينتهي بتاريخ {date}',
+    fieldNotes: 'ملاحظات',
+    fieldNotProvided: 'غير متوفر',
+    formAddTitle: 'إضافة فرد من العائلة',
+    formEditTitle: 'تعديل بيانات الفرد',
+    formSaving: 'جارٍ الحفظ...',
+    formSaveError: 'تعذر الحفظ. حاول مرة أخرى.',
+    validationFullNameRequired: 'الاسم الكامل مطلوب.',
+    validationEmailInvalid: 'صيغة البريد الإلكتروني غير صحيحة.',
+    validationDateOfBirthInvalid: 'تاريخ الميلاد غير صالح.',
+    validationDateOfBirthFuture: 'لا يمكن أن يكون تاريخ الميلاد في المستقبل.',
+    validationDateOfBirthTooOld: 'تاريخ الميلاد غير منطقي.',
+    validationDuplicateCivilId: 'يوجد فرد آخر بنفس الرقم المدني.',
+    validationFileTooLarge: 'حجم الملف كبير جداً.',
+    validationFileTypeUnsupported: 'نوع الملف غير مدعوم.',
+    validationFileRequired: 'الرجاء اختيار ملف.',
+    photoChooseLabel: 'اختيار صورة',
+    photoChangeLabel: 'تغيير الصورة',
+    photoRemoveLabel: 'إزالة الصورة',
+    photoProcessingLabel: 'جارٍ معالجة الصورة...',
+    photoProcessingError: 'تعذرت معالجة هذه الصورة.',
+    bloodTypeUnknown: 'غير محدد',
+    ageUnitLabel: 'سنة',
+    memberNotFoundTitle: 'لم يتم العثور على هذا الفرد.',
+    backToFamilyLabel: 'العودة إلى الأسرة',
+    profileEditAction: 'تعديل',
+    profileDeleteAction: 'حذف الفرد',
+    profileDeleteConfirmTitle: 'هل تريد حذف هذا الفرد؟',
+    profileDeleteConfirmBody:
+      'حذف نهائي: سيتم حذف هذا الفرد ومستنداته نهائيًا، بالإضافة إلى ملفه الصحي والتعليمي ومستنداتهما إن وُجدا. لا يمكن التراجع عن هذا الإجراء.',
+    profileDeleteConfirmAction: 'حذف',
+    profileSectionPersonalInfo: 'المعلومات الشخصية',
+    profileSectionNotes: 'ملاحظات',
+    profileNotesEmpty: 'لا توجد ملاحظات.',
+    profileSectionDocuments: 'المستندات',
+    documentsEmpty: 'لم تتم إضافة أي مستند بعد.',
+    documentsAddAction: '+ إضافة مستند',
+    documentFormAddTitle: 'إضافة مستند',
+    fieldDocumentType: 'نوع المستند',
+    fieldDocumentTitle: 'عنوان المستند',
+    fieldDocumentExpiry: 'تاريخ الانتهاء',
+    fieldDocumentFile: 'الملف',
+    documentChooseFileLabel: 'اختيار ملف',
+    documentOpenAction: 'فتح',
+    documentOpenError: 'تعذر فتح هذا المستند.',
+    documentExternalAppHint: 'قد يُفتح هذا المستند بتطبيق آخر على جهازك.',
+    documentDeleteAction: 'إزالة',
+    documentExpiryPrefixLabel: 'ينتهي في',
+    validationPropertyNameRequired: 'اسم العقار مطلوب.',
+    propertyFormAddTitle: 'إضافة عقار',
+    propertyFormEditTitle: 'تعديل بيانات العقار',
+    fieldPropertyName: 'اسم العقار',
+    fieldPropertyType: 'نوع العقار',
+    fieldPropertyStatus: 'الحالة',
+    fieldCountry: 'الدولة',
+    fieldCity: 'المدينة',
+    fieldArea: 'المنطقة',
+    fieldBlock: 'القطعة',
+    fieldStreet: 'الشارع',
+    fieldAvenue: 'الجادة',
+    fieldHouseNumber: 'رقم المنزل',
+    fieldPropertyNumber: 'رقم العقار',
+    profileSectionLocation: 'الموقع',
+    profileSectionPropertyInfo: 'معلومات العقار',
+    propertyNotFoundTitle: 'لم يتم العثور على هذا العقار.',
+    backToPropertiesLabel: 'العودة إلى العقارات',
+    propertyDeleteAction: 'حذف العقار',
+    propertyDeleteConfirmTitle: 'هل تريد حذف هذا العقار؟',
+    propertyDeleteConfirmBody: 'سيتم حذف هذا العقار وجميع مستنداته نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    propertyDeleteConfirmAction: 'حذف',
+    validationVehicleNameRequired: 'اسم المركبة مطلوب.',
+    validationYearInvalid: 'سنة الصنع غير منطقية.',
+    validationMileageNegative: 'لا يمكن أن يكون العداد رقماً سالباً.',
+    validationMaintenanceTitleRequired: 'عنوان الصيانة مطلوب.',
+    validationMaintenanceDateRequired: 'تاريخ الصيانة مطلوب.',
+    vehicleFormAddTitle: 'إضافة مركبة',
+    vehicleFormEditTitle: 'تعديل بيانات المركبة',
+    fieldVehicleName: 'اسم المركبة',
+    fieldMake: 'الشركة المصنعة',
+    fieldModel: 'الطراز',
+    fieldYear: 'سنة الصنع',
+    fieldTrim: 'الفئة',
+    fieldPlateNumber: 'رقم اللوحة',
+    fieldVin: 'رقم الهيكل (VIN)',
+    fieldColor: 'اللون',
+    fieldCurrentMileage: 'العداد الحالي',
+    fieldRegistrationExpiry: 'انتهاء استمارة التسجيل',
+    fieldInsuranceExpiry: 'انتهاء التأمين',
+    mileageUnitLabel: 'كم',
+    profileSectionVehicleInfo: 'معلومات المركبة',
+    profileSectionExpiry: 'تواريخ الانتهاء',
+    profileSectionMaintenance: 'الصيانة',
+    vehicleNotFoundTitle: 'لم يتم العثور على هذه المركبة.',
+    backToVehiclesLabel: 'العودة إلى المركبات',
+    vehicleDeleteAction: 'حذف المركبة',
+    vehicleDeleteConfirmTitle: 'هل تريد حذف هذه المركبة؟',
+    vehicleDeleteConfirmBody:
+      'سيتم حذف هذه المركبة وجميع مستنداتها وسجلات صيانتها نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    vehicleDeleteConfirmAction: 'حذف',
+    vehicleStatusGreen: 'لا توجد مشاكل',
+    vehicleStatusOrange: 'يقترب الموعد',
+    vehicleStatusRed: 'متأخر',
+    vehicleReasonRegistrationExpired: 'استمارة المركبة منتهية منذ {date}',
+    vehicleReasonRegistrationExpiringSoon: 'استمارة المركبة تنتهي بتاريخ {date}',
+    vehicleReasonInsuranceExpired: 'التأمين منتهي منذ {date}',
+    vehicleReasonInsuranceExpiringSoon: 'التأمين يقترب من الانتهاء بتاريخ {date}',
+    vehicleReasonMaintenanceOverdueKm: 'صيانة متأخرة بمقدار {km} كم',
+    vehicleReasonMaintenanceServiceDue: 'الصيانة مستحقة الآن',
+    vehicleReasonMaintenanceApproachingKm: 'صيانة تقترب بعد {km} كم',
+    vehicleReasonMaintenanceOverdueDate: 'صيانة متأخرة منذ {date}',
+    vehicleReasonMaintenanceDueSoonDate: 'صيانة تقترب بتاريخ {date}',
+    maintenanceEmpty: 'لم تتم إضافة أي سجل صيانة بعد.',
+    maintenanceAddAction: '+ إضافة سجل صيانة',
+    maintenanceFormAddTitle: 'إضافة سجل صيانة',
+    maintenanceFormEditTitle: 'تعديل سجل الصيانة',
+    fieldMaintenanceType: 'نوع الصيانة',
+    fieldMaintenanceTitle: 'عنوان الصيانة',
+    fieldServiceDate: 'تاريخ الصيانة',
+    fieldServiceDateOptional: 'تاريخ الصيانة (اختياري)',
+    fieldMileage: 'قراءة العداد',
+    fieldNextServiceDate: 'تاريخ الصيانة القادمة',
+    fieldNextServiceMileage: 'عداد الصيانة القادمة',
+    nextServiceLabel: 'الصيانة القادمة',
+    fieldMileageAtService: 'العداد وقت الصيانة',
+    fieldServiceIntervalKm: 'الصيانة بعد',
+    fieldTargetMileage: 'العداد المستهدف',
+    serviceIntervalHint: 'أدخل أي قيمة حتى 200,000 كم، أو اختر من الاقتراحات.',
+    targetMileagePlaceholder: 'يُحسب تلقائياً',
+    validationServiceIntervalInvalid: 'يجب أن تكون قيمة "الصيانة بعد" رقماً موجباً.',
+    validationServiceIntervalTooLarge: 'الحد الأقصى لـ "الصيانة بعد" هو 200,000 كم.',
+    maintenanceRemainingKm: 'متبقي {km} كم',
+    maintenanceServiceDue: 'الصيانة مستحقة الآن',
+    maintenanceOverdueByKm: 'متأخر بمقدار {km} كم',
+    completeServiceAction: 'تمت الصيانة',
+    completeServiceFormTitle: 'تسجيل إتمام الصيانة',
+    completeServiceSubmitAction: 'بدء الدورة القادمة',
+    completeServicePreviousTargetLabel: 'الهدف السابق كان',
+    fieldRole: 'الوظيفة',
+    fieldPassportNumber: 'رقم جواز السفر',
+    fieldEmploymentStartDate: 'تاريخ بدء العمل',
+    fieldCivilIdExpiry: 'انتهاء البطاقة المدنية',
+    fieldPassportExpiry: 'انتهاء جواز السفر',
+    fieldResidencyExpiry: 'انتهاء الإقامة',
+    fieldMonthlySalary: 'الراتب الشهري',
+    fieldAmount: 'المبلغ',
+    fieldPaidDate: 'تاريخ الدفع',
+    fieldAge: 'العمر',
+    profileSectionIdentification: 'بيانات الهوية',
+    profileSectionEmployment: 'بيانات التوظيف',
+    profileSectionSalaryPayments: 'الراتب',
+    staffRoleUnspecified: 'غير محدد',
+    validationSalaryNegative: 'لا يمكن أن يكون الراتب رقماً سالباً.',
+    validationSalaryAmountInvalid: 'يجب أن يكون المبلغ أكبر من صفر.',
+    validationPaidDateRequired: 'تاريخ الدفع مطلوب.',
+    validationDuplicateSalaryOccurrence: 'تم تأكيد دفع هذه الدفعة مسبقاً.',
+    validationStartDateRequired: 'تاريخ البدء مطلوب.',
+    validationEndDateBeforeStart: 'لا يمكن أن يكون تاريخ الانتهاء قبل تاريخ البدء.',
+    staffFormAddTitle: 'إضافة عامل',
+    staffFormEditTitle: 'تعديل بيانات العامل',
+    staffNotFoundTitle: 'لم يتم العثور على هذا العامل.',
+    backToStaffLabel: 'العودة إلى العمالة',
+    staffDeleteAction: 'حذف العامل',
+    staffDeleteConfirmTitle: 'هل تريد حذف هذا العامل؟',
+    staffDeleteConfirmBody:
+      'سيتم حذف هذا العامل وجميع مستنداته ودفعات راتبه نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    staffDeleteConfirmAction: 'حذف',
+    staffStatusGreen: 'لا توجد مشاكل',
+    staffStatusOrange: 'يتطلب انتباه',
+    staffStatusRed: 'يتطلب إجراء',
+    staffReasonCivilIdExpiringSoon: 'البطاقة المدنية تنتهي قريباً',
+    staffReasonCivilIdExpired: 'انتهت البطاقة المدنية',
+    staffReasonPassportExpiringSoon: 'جواز السفر ينتهي قريباً',
+    staffReasonPassportExpired: 'انتهى جواز السفر',
+    staffReasonResidencyExpiringSoon: 'الإقامة تنتهي قريباً',
+    staffReasonResidencyExpired: 'انتهت الإقامة',
+    staffReasonDocumentExpiringSoon: 'مستند ينتهي قريباً',
+    staffReasonDocumentExpired: 'انتهى مستند',
+    staffReasonSalaryUnconfirmed: 'راتب {amount} المستحق {date} لم يتم تأكيد دفعه.',
+    salaryPaymentsAddAction: '+ إضافة راتب',
+    salaryPaymentFormEditTitle: 'تعديل الدفعة',
+    salaryPaymentsEmpty: 'لا يوجد سجل دفعات بعد.',
+    salaryStatusNotYetDue: 'لم يحن موعده بعد',
+    salaryStatusPending: 'الدفع معلّق',
+    salaryStatusOverdue: 'متأخر',
+    kwdUnitLabel: 'د.ك',
+    fieldStartDate: 'تاريخ البدء',
+    fieldEndDateOptional: 'تاريخ الانتهاء (اختياري)',
+    frequencyEveryLabel: 'كل',
+    fieldRecurrence: 'التكرار',
+    recurrenceWeekly: 'أسبوعي',
+    recurrenceMonthly: 'شهري',
+    recurrenceYearly: 'سنوي',
+    salarySchedulesLabel: 'رواتب متكررة',
+    salarySchedulesEmpty: 'لم تتم إضافة أي راتب متكرر بعد.',
+    salaryScheduleFormAddTitle: 'إضافة راتب',
+    salaryScheduleFormEditTitle: 'تعديل الراتب',
+    salaryNextPaymentLabel: 'الدفعة القادمة',
+    salaryNextPaymentEmpty: 'لا توجد دفعات مستحقة حالياً.',
+    salaryHistoryLabel: 'سجل الدفعات',
+    salaryConfirmPaymentAction: 'تأكيد الدفع',
+    salaryConfirmPaymentTitle: 'تأكيد دفع الراتب',
+    salaryOccurrenceDueLabel: 'تاريخ الاستحقاق',
+    salaryPaidOnLabel: 'دُفع في',
+    fieldContractTitle: 'عنوان العقد',
+    fieldContractType: 'نوع العقد',
+    fieldContractNumber: 'رقم العقد',
+    fieldPartyName: 'الطرف الآخر',
+    fieldEndDate: 'تاريخ الانتهاء',
+    fieldCurrency: 'العملة',
+    currencyUnspecifiedLabel: 'غير محدد',
+    fieldLinkedTo: 'مرتبط بـ',
+    linkedToNoneLabel: 'بدون ارتباط',
+    linkedEntityEmptyState: 'لا توجد عناصر في هذه الفئة بعد.',
+    linkedEntitySelectPlaceholder: 'اختر...',
+    linkedEntityUnavailableLabel: 'العنصر المرتبط لم يعد متاحاً.',
+    validationContractTitleRequired: 'عنوان العقد مطلوب.',
+    validationContractPartyRequired: 'اسم الطرف الآخر مطلوب.',
+    validationContractStartDateRequired: 'تاريخ بدء العقد مطلوب.',
+    validationContractEndDateBeforeStart: 'لا يمكن أن يكون تاريخ الانتهاء قبل تاريخ البدء.',
+    validationContractAmountNegative: 'لا يمكن أن يكون المبلغ رقماً سالباً.',
+    validationLinkedEntityRequired: 'يرجى اختيار العنصر المرتبط.',
+    contractStatusActive: 'ساري',
+    contractStatusExpiringSoon: 'يقترب الانتهاء',
+    contractStatusExpired: 'منتهٍ',
+    contractReasonExpired: 'انتهى العقد منذ {date}',
+    contractReasonExpiringSoon: 'ينتهي العقد بتاريخ {date}',
+    contractFormAddTitle: 'إضافة عقد',
+    contractFormEditTitle: 'تعديل العقد',
+    contractNotFoundTitle: 'لم يتم العثور على هذا العقد.',
+    backToContractsLabel: 'العودة إلى العقود',
+    profileSectionContractInfo: 'معلومات العقد',
+    contractDeleteAction: 'حذف العقد',
+    contractDeleteConfirmTitle: 'هل تريد حذف هذا العقد؟',
+    contractDeleteConfirmBody: 'سيتم حذف هذا العقد وجميع مستنداته نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    contractDeleteConfirmAction: 'حذف',
+    fieldTaskTitle: 'عنوان المهمة',
+    fieldDescription: 'الوصف',
+    fieldDueDate: 'تاريخ الاستحقاق',
+    fieldDueTime: 'وقت الاستحقاق',
+    fieldPriority: 'الأولوية',
+    fieldTaskRepeat: 'التكرار',
+    recurrenceNoneLabel: 'لا يتكرر',
+    validationTaskTitleRequired: 'يرجى إدخال عنوان المهمة.',
+    validationTaskDueDateRequired: 'يرجى تحديد تاريخ الاستحقاق.',
+    validationTaskRecurrenceIntervalInvalid: 'يرجى إدخال فترة تكرار صحيحة.',
+    taskFormAddTitle: 'إضافة مهمة',
+    taskFormEditTitle: 'تعديل المهمة',
+    taskNotFoundTitle: 'لم يتم العثور على هذه المهمة.',
+    backToTasksLabel: 'العودة إلى المهام والتذكيرات',
+    profileSectionTaskInfo: 'معلومات المهمة',
+    profileSectionCompletionHistory: 'سجل الإنجاز',
+    taskStateOverdue: 'متأخرة',
+    taskStateDueToday: 'مستحقة اليوم',
+    taskStateUpcoming: 'قادمة',
+    taskStateCompleted: 'مكتملة',
+    taskFilterAll: 'الكل',
+    taskFilterOverdue: 'متأخرة',
+    taskFilterToday: 'اليوم',
+    taskFilterUpcoming: 'قادمة',
+    taskFilterEmptyMessage: 'لا توجد مهام ضمن هذا التصنيف.',
+    completionHistoryEmpty: 'لا يوجد سجل إنجاز بعد.',
+    taskCompleteAction: 'تم الإنجاز',
+    taskCompleteOccurrenceAction: 'إنجاز هذه الدورة',
+    taskCompletedOnLabel: 'أُنجزت في',
+    duplicateTaskCompletionError: 'تم إنجاز هذه الدورة مسبقاً.',
+    taskDeleteAction: 'حذف المهمة',
+    taskDeleteConfirmTitle: 'هل تريد حذف هذه المهمة؟',
+    taskDeleteConfirmBody: 'سيتم حذف هذه المهمة وسجل إنجازها بالكامل نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    taskDeleteConfirmAction: 'حذف',
+    calendarViewAction: 'التقويم',
+    calendarPrevMonthLabel: 'الشهر السابق',
+    calendarNextMonthLabel: 'الشهر التالي',
+    calendarNoTasksForDate: 'لا توجد مهام مستحقة في هذا التاريخ.',
+    generalCalendarTitle: 'التقويم العام',
+    generalCalendarSubtitle: 'نظرة موحدة على كل المواعيد والمهام القادمة في مكتب العائلة.',
+    generalCalendarNoEventsForDate: 'لا توجد أحداث في هذا التاريخ.',
+    backToDashboardLabel: 'رجوع إلى لوحة التحكم',
+    calendarEventCivilIdTitle: 'البطاقة المدنية لـ {name}',
+    calendarEventPassportTitle: 'جواز سفر {name}',
+    calendarEventResidencyTitle: 'إقامة {name}',
+    calendarEventVehicleRegistrationTitle: 'تسجيل {name}',
+    calendarEventVehicleInsuranceTitle: 'تأمين {name}',
+    calendarEventVehicleMaintenanceTitle: '{name} — {maintenanceTitle}',
+    calendarEventSalaryDueTitle: 'راتب {name}',
+    calendarEventContractStartTitle: 'بداية عقد {title}',
+    calendarEventContractEndTitle: 'نهاية عقد {title}',
+    calendarEventDocumentExpiryTitle: '{title} — {name}',
+    fieldTaskGroup: 'المجموعة',
+    fieldGroupName: 'اسم المجموعة',
+    fieldGroupColor: 'لون المجموعة',
+    addGroupAction: '+ إضافة مجموعة',
+    taskGroupFormAddTitle: 'إضافة مجموعة',
+    taskGroupFormEditTitle: 'تعديل المجموعة',
+    validationTaskGroupNameRequired: 'يرجى إدخال اسم المجموعة.',
+    validationTaskGroupRequired: 'يرجى اختيار مجموعة.',
+    selectGroupPlaceholder: 'اختر مجموعة',
+    noGroupsYetMessage: 'يرجى إنشاء مجموعة أولاً قبل إضافة المهام.',
+    taskGroupsEmptyMessage: 'لا توجد مجموعات بعد. أنشئ أول مجموعة لبدء إضافة المهام.',
+    taskGroupDeleteAction: 'حذف المجموعة',
+    taskGroupDeleteConfirmTitle: 'هل تريد حذف هذه المجموعة؟',
+    taskGroupDeleteConfirmBody: 'سيتم حذف هذه المجموعة نهائياً. لا يمكن التراجع عن هذا الإجراء.',
+    taskGroupDeleteConfirmAction: 'حذف',
+    taskGroupNotEmptyError: 'لا يمكن حذف مجموعة تحتوي على مهام. يرجى نقل أو حذف مهامها أولاً.',
+    taskGroupGeneralName: 'عام',
+    taskGroupTaskCountUnit: 'مهام',
+    taskGroupNextLabel: 'القادم',
+    taskGroupNotFoundTitle: 'لم يتم العثور على هذه المجموعة.',
+    fieldAssignedToName: 'المسؤول',
+    validationDueTimeRequiresDueDate: 'لا يمكن تحديد وقت بدون تاريخ استحقاق.',
+    taskStateNoDueDate: 'بدون موعد',
+    taskFilterNoDueDate: 'بدون موعد',
+    notificationsEmptyStateTitle: 'لا توجد تنبيهات حالياً',
+    notificationSeverityCriticalLabel: 'عاجل',
+    notificationSeverityWarningLabel: 'تنبيه',
+    notificationSeverityInfoLabel: 'معلومة',
+    notificationSourceVehicleLabel: 'المركبات',
+    notificationSourceContractLabel: 'العقود',
+    notificationSourceStaffLabel: 'العمالة',
+    notificationSourceTaskLabel: 'المهام والتذكيرات',
+    notificationSourceFamilyLabel: 'الأسرة',
+    notificationTitleVehicleRegistrationExpired: 'استمارة {name} منتهية',
+    notificationTitleVehicleRegistrationExpiringSoon: 'استمارة {name} ستنتهي قريباً',
+    notificationTitleVehicleInsuranceExpired: 'تأمين {name} منتهي',
+    notificationTitleVehicleInsuranceExpiringSoon: 'تأمين {name} سينتهي قريباً',
+    notificationTitleVehicleMaintenanceOverdue: '{name} — صيانة {maintenanceTitle} متأخرة',
+    notificationTitleVehicleMaintenanceApproaching: '{name} — صيانة {maintenanceTitle} قريبة',
+    notificationTitleContractExpired: '{title} منتهي',
+    notificationTitleContractExpiringSoon: '{title} سينتهي قريباً',
+    notificationTitleStaffResidencyExpired: 'إقامة {name} منتهية',
+    notificationTitleStaffResidencyExpiringSoon: 'إقامة {name} ستنتهي قريباً',
+    notificationTitleStaffPassportExpired: 'جواز سفر {name} منتهي',
+    notificationTitleStaffPassportExpiringSoon: 'جواز سفر {name} سينتهي قريباً',
+    notificationTitleStaffSalaryOverdue: 'راتب {name} متأخر',
+    notificationTitleStaffSalaryDue: 'راتب {name} مستحق',
+    notificationTitleTaskOverdue: '{title} متأخرة',
+    notificationTitleTaskDueToday: '{title} مستحقة اليوم',
+    notificationTitleFamilyCivilIdExpired: 'البطاقة المدنية لـ {name} منتهية',
+    notificationTitleFamilyCivilIdExpiringSoon: 'البطاقة المدنية لـ {name} ستنتهي قريباً',
+    notificationTitleFamilyPassportExpired: 'جواز سفر {name} منتهي',
+    notificationTitleFamilyPassportExpiringSoon: 'جواز سفر {name} سينتهي قريباً',
+    notificationMsgExpiredOn: 'انتهى بتاريخ {date}',
+    notificationMsgExpiringOn: 'سينتهي بتاريخ {date}',
+    notificationMsgOverdueByKm: 'متأخر بمقدار {km} كم',
+    notificationMsgApproachingKm: 'متبقي {km} كم',
+    notificationMsgDueToday: 'مستحقة اليوم',
+    notificationMsgOverdueSince: 'متأخرة منذ {date}',
+    notificationMsgSalaryAmountDue: '{amount} د.ك مستحقة بتاريخ {date}',
+    archiveAction: 'أرشفة',
+    archiveGroupAction: 'أرشفة المجموعة',
+    archiveConfirmTitle: 'أرشفة البطاقة؟',
+    archiveConfirmBody: 'ستختفي البطاقة من القائمة الرئيسية وستبقى محفوظة بالكامل في الأرشيف.',
+    archiveConfirmAction: 'أرشفة',
+    archiveGroupConfirmTitle: 'أرشفة المجموعة؟',
+    archiveGroupConfirmBody: 'ستختفي المجموعة من قائمة المهام والتذكيرات الرئيسية، وتبقى جميع مهامها وسجل إنجازها محفوظاً بالكامل.',
+    archivedNoticeTitle: 'هذه البطاقة مؤرشفة',
+    archivedNoticeHint: 'قم بإلغاء الأرشفة لعرض المحتوى الكامل وتعديله.',
+    unarchiveAction: 'إلغاء الأرشفة',
+    deleteCardAction: 'حذف البطاقة',
+    deleteCardConfirmTitle: 'حذف البطاقة؟',
+    deleteCardConfirmBody: 'حذف نهائي: سيتم حذف هذه البطاقة وبياناتها التابعة نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
+    archiveEmptyStateTitle: 'لا توجد بطاقات مؤرشفة',
+    archivedOnLabel: 'أُرشفت بتاريخ {date}',
+    backToArchiveLabel: 'العودة إلى الأرشيف',
+    fieldSelectFamilyMember: 'اختر فرد العائلة',
+    fieldHealthStatus: 'الحالة الصحية',
+    fieldHeight: 'الطول',
+    fieldWeight: 'الوزن',
+    fieldAllergies: 'الحساسية',
+    fieldHealthNotes: 'ملاحظات صحية',
+    unitCm: 'سم',
+    unitKg: 'كجم',
+    healthFormAddTitle: 'إضافة سجل صحي',
+    healthNoFamilyMembersMessage: 'يجب إضافة فرد من العائلة أولاً.',
+    healthProfileNotFoundTitle: 'السجل الصحي غير موجود',
+    backToHealthLabel: 'العودة إلى الصحة',
+    healthSectionFamilyIdentity: 'بيانات فرد العائلة',
+    healthSectionDetails: 'التفاصيل',
+    healthDeleteConfirmBody: 'حذف نهائي: سيتم حذف هذا السجل الصحي ومستنداته نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
+    validationHeightInvalid: 'الطول غير صالح',
+    validationWeightInvalid: 'الوزن غير صالح',
+    fieldEducationStage: 'المرحلة الدراسية',
+    fieldInstitution: 'المؤسسة التعليمية',
+    fieldGradeOrYear: 'الصف/السنة',
+    fieldSpecialization: 'التخصص',
+    fieldEducationStatus: 'الحالة التعليمية',
+    healthDeleteAction: 'حذف السجل الصحي',
+    educationDeleteAction: 'حذف السجل التعليمي',
+    educationFormAddTitle: 'إضافة سجل تعليمي',
+    educationNoFamilyMembersMessage: 'يجب إضافة فرد من العائلة أولاً.',
+    educationProfileNotFoundTitle: 'السجل التعليمي غير موجود',
+    backToEducationLabel: 'العودة إلى التعليم',
+    educationDeleteConfirmBody: 'حذف نهائي: سيتم حذف هذا السجل التعليمي ومستنداته نهائيًا ولا يمكن التراجع عن هذا الإجراء.',
+    validationEducationStageRequired: 'المرحلة الدراسية مطلوبة',
+    quickTodoWidgetTitle: 'قائمة الأعمال السريعة',
+    quickTodoAddPlaceholder: 'أضف مهمة سريعة...',
+    quickTodoAddLabel: 'إضافة مهمة',
+    quickTodoEmptyState: 'لا توجد مهام سريعة حالياً.',
+    quickTodoRemainingCount: '{count} متبقية',
+    quickTodoEditLabel: 'تعديل المهمة',
+    quickTodoDeleteLabel: 'حذف المهمة',
+    quickNotesWidgetTitle: 'ملاحظات سريعة',
+    quickNotesAddPlaceholder: 'أضف ملاحظة سريعة...',
+    quickNotesAddLabel: 'إضافة ملاحظة',
+    quickNotesEmptyState: 'لا توجد ملاحظات حالياً.',
+    quickNotesEditLabel: 'تعديل الملاحظة',
+    quickNotesDeleteLabel: 'حذف الملاحظة',
+  },
+  en: {
+    appName: 'TMA FAMILY OFFICE',
+    appTagline: 'Family Office',
+    dashboardTitle: 'Dashboard',
+    dashboardSubtitle: 'An overview of your family office categories.',
+    menuTitle: 'Categories',
+    menuOpenLabel: 'Open menu',
+    menuCloseLabel: 'Close',
+    menuMoreSection: 'More',
+    homeLabel: 'Go to Home',
+    notificationsLabel: 'Notifications',
+    settingsLabel: 'Settings',
+    comingSoonNotice: 'This feature will be available in a later phase.',
+    settingsTitle: 'Settings',
+    settingsLanguageSectionTitle: 'Language',
+    settingsLanguageSectionHint: 'Choose the app display language.',
+    languageNameArabic: 'العربية',
+    languageNameEnglish: 'English',
+    settingsAboutSectionTitle: 'App Information',
+    settingsVersionValue: 'Experimental Prototype',
+    settingsDisclaimer:
+      'This is an experimental prototype for testing the idea and design on iPhone. The final version will be a standalone Windows application.',
+    loadingLabel: 'Loading…',
+    actionSave: 'Save',
+    actionCancel: 'Cancel',
+    actionConfirm: 'Confirm',
+    statusReasonsCountTwo: '2 reasons',
+    statusReasonsCountMany: '{count} reasons',
+    fieldFullName: 'Full Name',
+    fieldRelationship: 'Relationship',
+    fieldDateOfBirth: 'Date of Birth',
+    fieldNationality: 'Nationality',
+    fieldCivilId: 'Civil ID',
+    fieldCivilIdExpiryDate: 'Civil ID Expiry Date',
+    fieldPassportExpiryDate: 'Passport Expiry Date',
+    fieldPhone: 'Phone',
+    fieldEmail: 'Email',
+    fieldBloodType: 'Blood Type',
+    familyStatusGreen: 'No Issues',
+    familyStatusOrange: 'Needs Attention',
+    familyStatusRed: 'Action Required',
+    familyReasonCivilIdExpired: 'Civil ID expired on {date}',
+    familyReasonCivilIdExpiringSoon: 'Civil ID expires on {date}',
+    familyReasonPassportExpired: 'Passport expired on {date}',
+    familyReasonPassportExpiringSoon: 'Passport expires on {date}',
+    fieldNotes: 'Notes',
+    fieldNotProvided: 'Not provided',
+    formAddTitle: 'Add Family Member',
+    formEditTitle: 'Edit Family Member',
+    formSaving: 'Saving…',
+    formSaveError: 'Could not save. Please try again.',
+    validationFullNameRequired: 'Full name is required.',
+    validationEmailInvalid: 'Enter a valid email address.',
+    validationDateOfBirthInvalid: 'Date of birth is not valid.',
+    validationDateOfBirthFuture: 'Date of birth cannot be in the future.',
+    validationDateOfBirthTooOld: 'Date of birth is not realistic.',
+    validationDuplicateCivilId: 'Another family member already has this Civil ID.',
+    validationFileTooLarge: 'This file is too large.',
+    validationFileTypeUnsupported: 'This file type is not supported.',
+    validationFileRequired: 'Please choose a file.',
+    photoChooseLabel: 'Choose Photo',
+    photoChangeLabel: 'Change Photo',
+    photoRemoveLabel: 'Remove Photo',
+    photoProcessingLabel: 'Processing photo…',
+    photoProcessingError: 'Could not process this photo.',
+    bloodTypeUnknown: 'Not specified',
+    ageUnitLabel: 'years',
+    memberNotFoundTitle: 'This family member could not be found.',
+    backToFamilyLabel: 'Back to Family',
+    profileEditAction: 'Edit',
+    profileDeleteAction: 'Delete Member',
+    profileDeleteConfirmTitle: 'Delete this member?',
+    profileDeleteConfirmBody:
+      'Permanent Delete: this member and their documents will be permanently deleted, along with their Health and Education profiles and documents, if any. This action cannot be undone.',
+    profileDeleteConfirmAction: 'Delete',
+    profileSectionPersonalInfo: 'Personal Information',
+    profileSectionNotes: 'Notes',
+    profileNotesEmpty: 'No notes added.',
+    profileSectionDocuments: 'Documents',
+    documentsEmpty: 'No documents added yet.',
+    documentsAddAction: '+ Add Document',
+    documentFormAddTitle: 'Add Document',
+    fieldDocumentType: 'Document Type',
+    fieldDocumentTitle: 'Document Title',
+    fieldDocumentExpiry: 'Expiry Date',
+    fieldDocumentFile: 'File',
+    documentChooseFileLabel: 'Choose File',
+    documentOpenAction: 'Open',
+    documentOpenError: 'Could not open this document.',
+    documentExternalAppHint: 'This document may open in another app on your device.',
+    documentDeleteAction: 'Remove',
+    documentExpiryPrefixLabel: 'Expires',
+    validationPropertyNameRequired: 'Property name is required.',
+    propertyFormAddTitle: 'Add Property',
+    propertyFormEditTitle: 'Edit Property',
+    fieldPropertyName: 'Property Name',
+    fieldPropertyType: 'Property Type',
+    fieldPropertyStatus: 'Status',
+    fieldCountry: 'Country',
+    fieldCity: 'City',
+    fieldArea: 'Area',
+    fieldBlock: 'Block',
+    fieldStreet: 'Street',
+    fieldAvenue: 'Avenue',
+    fieldHouseNumber: 'House Number',
+    fieldPropertyNumber: 'Property Number',
+    profileSectionLocation: 'Location',
+    profileSectionPropertyInfo: 'Property Information',
+    propertyNotFoundTitle: 'This property could not be found.',
+    backToPropertiesLabel: 'Back to Properties',
+    propertyDeleteAction: 'Delete Property',
+    propertyDeleteConfirmTitle: 'Delete this property?',
+    propertyDeleteConfirmBody: 'This property and all of its documents will be permanently deleted. This cannot be undone.',
+    propertyDeleteConfirmAction: 'Delete',
+    validationVehicleNameRequired: 'Vehicle name is required.',
+    validationYearInvalid: 'Enter a realistic model year.',
+    validationMileageNegative: 'Mileage cannot be negative.',
+    validationMaintenanceTitleRequired: 'Maintenance title is required.',
+    validationMaintenanceDateRequired: 'Service date is required.',
+    vehicleFormAddTitle: 'Add Vehicle',
+    vehicleFormEditTitle: 'Edit Vehicle',
+    fieldVehicleName: 'Vehicle Name',
+    fieldMake: 'Make',
+    fieldModel: 'Model',
+    fieldYear: 'Year',
+    fieldTrim: 'Trim',
+    fieldPlateNumber: 'Plate Number',
+    fieldVin: 'VIN',
+    fieldColor: 'Color',
+    fieldCurrentMileage: 'Current Mileage',
+    fieldRegistrationExpiry: 'Registration Expiry',
+    fieldInsuranceExpiry: 'Insurance Expiry',
+    mileageUnitLabel: 'km',
+    profileSectionVehicleInfo: 'Vehicle Information',
+    profileSectionExpiry: 'Expiry',
+    profileSectionMaintenance: 'Maintenance',
+    vehicleNotFoundTitle: 'This vehicle could not be found.',
+    backToVehiclesLabel: 'Back to Vehicles',
+    vehicleDeleteAction: 'Delete Vehicle',
+    vehicleDeleteConfirmTitle: 'Delete this vehicle?',
+    vehicleDeleteConfirmBody:
+      'This vehicle and all of its documents and maintenance records will be permanently deleted. This cannot be undone.',
+    vehicleDeleteConfirmAction: 'Delete',
+    vehicleStatusGreen: 'Up to Date',
+    vehicleStatusOrange: 'Due Soon',
+    vehicleStatusRed: 'Overdue',
+    vehicleReasonRegistrationExpired: 'Registration expired on {date}',
+    vehicleReasonRegistrationExpiringSoon: 'Registration expires on {date}',
+    vehicleReasonInsuranceExpired: 'Insurance expired on {date}',
+    vehicleReasonInsuranceExpiringSoon: 'Insurance expiring soon on {date}',
+    vehicleReasonMaintenanceOverdueKm: 'Maintenance overdue by {km} km',
+    vehicleReasonMaintenanceServiceDue: 'Service due now',
+    vehicleReasonMaintenanceApproachingKm: 'Maintenance due in {km} km',
+    vehicleReasonMaintenanceOverdueDate: 'Maintenance overdue since {date}',
+    vehicleReasonMaintenanceDueSoonDate: 'Maintenance due soon on {date}',
+    maintenanceEmpty: 'No maintenance records added yet.',
+    maintenanceAddAction: '+ Add Maintenance Record',
+    maintenanceFormAddTitle: 'Add Maintenance Record',
+    maintenanceFormEditTitle: 'Edit Maintenance Record',
+    fieldMaintenanceType: 'Maintenance Type',
+    fieldMaintenanceTitle: 'Maintenance Title',
+    fieldServiceDate: 'Service Date',
+    fieldServiceDateOptional: 'Service Date (optional)',
+    fieldMileage: 'Mileage',
+    fieldNextServiceDate: 'Next Service Date',
+    fieldNextServiceMileage: 'Next Service Mileage',
+    nextServiceLabel: 'Next service',
+    fieldMileageAtService: 'Mileage at Service',
+    fieldServiceIntervalKm: 'Service After',
+    fieldTargetMileage: 'Target Mileage',
+    serviceIntervalHint: 'Enter any value up to 200,000 km, or pick a suggestion.',
+    targetMileagePlaceholder: 'Calculated automatically',
+    validationServiceIntervalInvalid: '"Service After" must be a positive number.',
+    validationServiceIntervalTooLarge: '"Service After" cannot exceed 200,000 km.',
+    maintenanceRemainingKm: '{km} km remaining',
+    maintenanceServiceDue: 'Service due',
+    maintenanceOverdueByKm: 'Overdue by {km} km',
+    completeServiceAction: 'Service Completed',
+    completeServiceFormTitle: 'Record Service Completed',
+    completeServiceSubmitAction: 'Start Next Cycle',
+    completeServicePreviousTargetLabel: 'Previous target was',
+    fieldRole: 'Role',
+    fieldPassportNumber: 'Passport Number',
+    fieldEmploymentStartDate: 'Employment Start Date',
+    fieldCivilIdExpiry: 'Civil ID Expiry',
+    fieldPassportExpiry: 'Passport Expiry',
+    fieldResidencyExpiry: 'Residency Expiry',
+    fieldMonthlySalary: 'Monthly Salary',
+    fieldAmount: 'Amount',
+    fieldPaidDate: 'Paid Date',
+    fieldAge: 'Age',
+    profileSectionIdentification: 'Identification',
+    profileSectionEmployment: 'Employment',
+    profileSectionSalaryPayments: 'Salary',
+    staffRoleUnspecified: 'Not specified',
+    validationSalaryNegative: 'Salary cannot be negative.',
+    validationSalaryAmountInvalid: 'Amount must be greater than zero.',
+    validationPaidDateRequired: 'Paid date is required.',
+    validationDuplicateSalaryOccurrence: 'This payment has already been confirmed.',
+    validationStartDateRequired: 'Start date is required.',
+    validationEndDateBeforeStart: 'End date cannot be before the start date.',
+    staffFormAddTitle: 'Add Staff',
+    staffFormEditTitle: 'Edit Staff',
+    staffNotFoundTitle: 'This staff member could not be found.',
+    backToStaffLabel: 'Back to Staff',
+    staffDeleteAction: 'Delete Staff',
+    staffDeleteConfirmTitle: 'Delete this staff member?',
+    staffDeleteConfirmBody:
+      'This staff member and all of their documents and salary payments will be permanently deleted. This cannot be undone.',
+    staffDeleteConfirmAction: 'Delete',
+    staffStatusGreen: 'No Issues',
+    staffStatusOrange: 'Needs Attention',
+    staffStatusRed: 'Action Required',
+    staffReasonCivilIdExpiringSoon: 'Civil ID expires soon',
+    staffReasonCivilIdExpired: 'Civil ID expired',
+    staffReasonPassportExpiringSoon: 'Passport expires soon',
+    staffReasonPassportExpired: 'Passport expired',
+    staffReasonResidencyExpiringSoon: 'Residency expires soon',
+    staffReasonResidencyExpired: 'Residency expired',
+    staffReasonDocumentExpiringSoon: 'Document expiring soon',
+    staffReasonDocumentExpired: 'Document expired',
+    staffReasonSalaryUnconfirmed: 'Salary of {amount} due {date} has not been confirmed as paid.',
+    salaryPaymentsAddAction: '+ Add Salary',
+    salaryPaymentFormEditTitle: 'Edit Payment',
+    salaryPaymentsEmpty: 'No payment history yet.',
+    salaryStatusNotYetDue: 'Not yet due',
+    salaryStatusPending: 'Payment pending',
+    salaryStatusOverdue: 'Overdue',
+    kwdUnitLabel: 'KWD',
+    fieldStartDate: 'Start Date',
+    fieldEndDateOptional: 'End Date (optional)',
+    frequencyEveryLabel: 'Every',
+    fieldRecurrence: 'Recurrence',
+    recurrenceWeekly: 'Weekly',
+    recurrenceMonthly: 'Monthly',
+    recurrenceYearly: 'Yearly',
+    salarySchedulesLabel: 'Recurring Salary Schedules',
+    salarySchedulesEmpty: 'No recurring salary added yet.',
+    salaryScheduleFormAddTitle: 'Add Salary',
+    salaryScheduleFormEditTitle: 'Edit Salary',
+    salaryNextPaymentLabel: 'Next Payment',
+    salaryNextPaymentEmpty: 'Nothing currently due.',
+    salaryHistoryLabel: 'Payment History',
+    salaryConfirmPaymentAction: 'Confirm Payment',
+    salaryConfirmPaymentTitle: 'Confirm Salary Payment',
+    salaryOccurrenceDueLabel: 'Due date',
+    salaryPaidOnLabel: 'Paid on',
+    fieldContractTitle: 'Contract Title',
+    fieldContractType: 'Contract Type',
+    fieldContractNumber: 'Contract Number',
+    fieldPartyName: 'Party Name',
+    fieldEndDate: 'End Date',
+    fieldCurrency: 'Currency',
+    currencyUnspecifiedLabel: 'Unspecified',
+    fieldLinkedTo: 'Linked To',
+    linkedToNoneLabel: 'None',
+    linkedEntityEmptyState: 'No entries in this category yet.',
+    linkedEntitySelectPlaceholder: 'Select...',
+    linkedEntityUnavailableLabel: 'The linked entity is no longer available.',
+    validationContractTitleRequired: 'Contract title is required.',
+    validationContractPartyRequired: 'Party name is required.',
+    validationContractStartDateRequired: 'Contract start date is required.',
+    validationContractEndDateBeforeStart: 'End date cannot be earlier than the start date.',
+    validationContractAmountNegative: 'Amount cannot be negative.',
+    validationLinkedEntityRequired: 'Please select the linked entity.',
+    contractStatusActive: 'Active',
+    contractStatusExpiringSoon: 'Expiring Soon',
+    contractStatusExpired: 'Expired',
+    contractReasonExpired: 'Contract ended on {date}',
+    contractReasonExpiringSoon: 'Contract ends on {date}',
+    contractFormAddTitle: 'Add Contract',
+    contractFormEditTitle: 'Edit Contract',
+    contractNotFoundTitle: 'This contract could not be found.',
+    backToContractsLabel: 'Back to Contracts',
+    profileSectionContractInfo: 'Contract Information',
+    contractDeleteAction: 'Delete Contract',
+    contractDeleteConfirmTitle: 'Delete this contract?',
+    contractDeleteConfirmBody: 'This contract and all of its documents will be permanently deleted. This cannot be undone.',
+    contractDeleteConfirmAction: 'Delete',
+    fieldTaskTitle: 'Task Title',
+    fieldDescription: 'Description',
+    fieldDueDate: 'Due Date',
+    fieldDueTime: 'Due Time',
+    fieldPriority: 'Priority',
+    fieldTaskRepeat: 'Repeat',
+    recurrenceNoneLabel: 'Does not repeat',
+    validationTaskTitleRequired: 'Please enter the task title.',
+    validationTaskDueDateRequired: 'Please select a due date.',
+    validationTaskRecurrenceIntervalInvalid: 'Please enter a valid recurrence interval.',
+    taskFormAddTitle: 'Add Task',
+    taskFormEditTitle: 'Edit Task',
+    taskNotFoundTitle: 'This task could not be found.',
+    backToTasksLabel: 'Back to Tasks & Reminders',
+    profileSectionTaskInfo: 'Task Information',
+    profileSectionCompletionHistory: 'Completion History',
+    taskStateOverdue: 'Overdue',
+    taskStateDueToday: 'Due Today',
+    taskStateUpcoming: 'Upcoming',
+    taskStateCompleted: 'Completed',
+    taskFilterAll: 'All',
+    taskFilterOverdue: 'Overdue',
+    taskFilterToday: 'Today',
+    taskFilterUpcoming: 'Upcoming',
+    taskFilterEmptyMessage: 'No tasks match this filter.',
+    completionHistoryEmpty: 'No completion history yet.',
+    taskCompleteAction: 'Complete',
+    taskCompleteOccurrenceAction: 'Complete This Occurrence',
+    taskCompletedOnLabel: 'Completed on',
+    duplicateTaskCompletionError: 'This occurrence has already been completed.',
+    taskDeleteAction: 'Delete Task',
+    taskDeleteConfirmTitle: 'Delete this task?',
+    taskDeleteConfirmBody: 'This task and all of its completion history will be permanently deleted. This cannot be undone.',
+    taskDeleteConfirmAction: 'Delete',
+    calendarViewAction: 'Calendar',
+    calendarPrevMonthLabel: 'Previous month',
+    calendarNextMonthLabel: 'Next month',
+    calendarNoTasksForDate: 'No tasks due on this date.',
+    generalCalendarTitle: 'General Calendar',
+    generalCalendarSubtitle: 'A unified view of every upcoming date and task across TMA Family Office.',
+    generalCalendarNoEventsForDate: 'No events on this date.',
+    backToDashboardLabel: 'Back to Dashboard',
+    calendarEventCivilIdTitle: "{name}'s Civil ID",
+    calendarEventPassportTitle: "{name}'s Passport",
+    calendarEventResidencyTitle: "{name}'s Residency",
+    calendarEventVehicleRegistrationTitle: '{name} Registration',
+    calendarEventVehicleInsuranceTitle: '{name} Insurance',
+    calendarEventVehicleMaintenanceTitle: '{name} — {maintenanceTitle}',
+    calendarEventSalaryDueTitle: "{name}'s Salary",
+    calendarEventContractStartTitle: '{title} — Contract Starts',
+    calendarEventContractEndTitle: '{title} — Contract Ends',
+    calendarEventDocumentExpiryTitle: '{title} — {name}',
+    fieldTaskGroup: 'Group',
+    fieldGroupName: 'Group Name',
+    fieldGroupColor: 'Group Color',
+    addGroupAction: '+ Add Group',
+    taskGroupFormAddTitle: 'Add Group',
+    taskGroupFormEditTitle: 'Edit Group',
+    validationTaskGroupNameRequired: 'Please enter a group name.',
+    validationTaskGroupRequired: 'Please select a group.',
+    selectGroupPlaceholder: 'Select a group',
+    noGroupsYetMessage: 'Please create a group first before adding tasks.',
+    taskGroupsEmptyMessage: 'No groups yet. Create your first group to start adding tasks.',
+    taskGroupDeleteAction: 'Delete Group',
+    taskGroupDeleteConfirmTitle: 'Delete this group?',
+    taskGroupDeleteConfirmBody: 'This group will be permanently deleted. This cannot be undone.',
+    taskGroupDeleteConfirmAction: 'Delete',
+    taskGroupNotEmptyError: 'Cannot delete a non-empty group. Move or delete its tasks first.',
+    taskGroupGeneralName: 'General',
+    taskGroupTaskCountUnit: 'tasks',
+    taskGroupNextLabel: 'Next',
+    taskGroupNotFoundTitle: 'This group could not be found.',
+    fieldAssignedToName: 'Responsible person',
+    validationDueTimeRequiresDueDate: 'A due time requires a due date.',
+    taskStateNoDueDate: 'No due date',
+    taskFilterNoDueDate: 'No due date',
+    notificationsEmptyStateTitle: 'No notifications right now',
+    notificationSeverityCriticalLabel: 'Critical',
+    notificationSeverityWarningLabel: 'Warning',
+    notificationSeverityInfoLabel: 'Info',
+    notificationSourceVehicleLabel: 'Vehicles',
+    notificationSourceContractLabel: 'Contracts',
+    notificationSourceStaffLabel: 'Staff',
+    notificationSourceTaskLabel: 'Tasks & Reminders',
+    notificationSourceFamilyLabel: 'Family',
+    notificationTitleVehicleRegistrationExpired: '{name} registration has expired',
+    notificationTitleVehicleRegistrationExpiringSoon: '{name} registration is expiring soon',
+    notificationTitleVehicleInsuranceExpired: '{name} insurance has expired',
+    notificationTitleVehicleInsuranceExpiringSoon: '{name} insurance is expiring soon',
+    notificationTitleVehicleMaintenanceOverdue: '{name} — {maintenanceTitle} is overdue',
+    notificationTitleVehicleMaintenanceApproaching: '{name} — {maintenanceTitle} is due soon',
+    notificationTitleContractExpired: '{title} has expired',
+    notificationTitleContractExpiringSoon: '{title} is expiring soon',
+    notificationTitleStaffResidencyExpired: "{name}'s residency has expired",
+    notificationTitleStaffResidencyExpiringSoon: "{name}'s residency is expiring soon",
+    notificationTitleStaffPassportExpired: "{name}'s passport has expired",
+    notificationTitleStaffPassportExpiringSoon: "{name}'s passport is expiring soon",
+    notificationTitleStaffSalaryOverdue: "{name}'s salary payment is overdue",
+    notificationTitleStaffSalaryDue: "{name}'s salary payment is due",
+    notificationTitleTaskOverdue: '{title} is overdue',
+    notificationTitleTaskDueToday: '{title} is due today',
+    notificationTitleFamilyCivilIdExpired: "{name}'s Civil ID has expired",
+    notificationTitleFamilyCivilIdExpiringSoon: "{name}'s Civil ID is expiring soon",
+    notificationTitleFamilyPassportExpired: "{name}'s passport has expired",
+    notificationTitleFamilyPassportExpiringSoon: "{name}'s passport is expiring soon",
+    notificationMsgExpiredOn: 'Expired on {date}',
+    notificationMsgExpiringOn: 'Expiring on {date}',
+    notificationMsgOverdueByKm: 'Overdue by {km} km',
+    notificationMsgApproachingKm: '{km} km remaining',
+    notificationMsgDueToday: 'Due today',
+    notificationMsgOverdueSince: 'Overdue since {date}',
+    notificationMsgSalaryAmountDue: '{amount} KWD due {date}',
+    archiveAction: 'Archive',
+    archiveGroupAction: 'Archive Group',
+    archiveConfirmTitle: 'Archive Card?',
+    archiveConfirmBody: 'The card will be removed from the main list and remain fully preserved in Archive.',
+    archiveConfirmAction: 'Archive',
+    archiveGroupConfirmTitle: 'Archive Group?',
+    archiveGroupConfirmBody: 'The group will be removed from the main Tasks & Reminders list, and all of its Tasks and completion history remain fully preserved.',
+    archivedNoticeTitle: 'This card is archived',
+    archivedNoticeHint: 'Unarchive to view and edit the full content.',
+    unarchiveAction: 'Unarchive',
+    deleteCardAction: 'Delete Card',
+    deleteCardConfirmTitle: 'Delete Card?',
+    deleteCardConfirmBody: 'Permanent Delete: this card and its dependent data will be permanently deleted. This action cannot be undone.',
+    archiveEmptyStateTitle: 'No archived cards',
+    archivedOnLabel: 'Archived on {date}',
+    backToArchiveLabel: 'Back to Archive',
+    fieldSelectFamilyMember: 'Select Family Member',
+    fieldHealthStatus: 'Health Status',
+    fieldHeight: 'Height',
+    fieldWeight: 'Weight',
+    fieldAllergies: 'Allergies',
+    fieldHealthNotes: 'Health Notes',
+    unitCm: 'cm',
+    unitKg: 'kg',
+    healthFormAddTitle: 'Add Health Record',
+    healthNoFamilyMembersMessage: 'You must add a Family Member first.',
+    healthProfileNotFoundTitle: 'Health record not found',
+    backToHealthLabel: 'Back to Health',
+    healthSectionFamilyIdentity: 'Family Member Details',
+    healthSectionDetails: 'Details',
+    healthDeleteConfirmBody: 'Permanent Delete: this Health record and its documents will be permanently deleted. This action cannot be undone.',
+    validationHeightInvalid: 'Height is invalid',
+    validationWeightInvalid: 'Weight is invalid',
+    fieldEducationStage: 'Education Stage',
+    fieldInstitution: 'Institution',
+    fieldGradeOrYear: 'Grade/Year',
+    fieldSpecialization: 'Specialization',
+    fieldEducationStatus: 'Education Status',
+    healthDeleteAction: 'Delete Health Record',
+    educationDeleteAction: 'Delete Education Record',
+    educationFormAddTitle: 'Add Education Record',
+    educationNoFamilyMembersMessage: 'You must add a Family Member first.',
+    educationProfileNotFoundTitle: 'Education record not found',
+    backToEducationLabel: 'Back to Education',
+    educationDeleteConfirmBody: 'Permanent Delete: this Education record and its documents will be permanently deleted. This action cannot be undone.',
+    validationEducationStageRequired: 'Education stage is required',
+    quickTodoWidgetTitle: 'To-Do List',
+    quickTodoAddPlaceholder: 'Add a quick task…',
+    quickTodoAddLabel: 'Add task',
+    quickTodoEmptyState: 'No quick tasks yet.',
+    quickTodoRemainingCount: '{count} remaining',
+    quickTodoEditLabel: 'Edit task',
+    quickTodoDeleteLabel: 'Delete task',
+    quickNotesWidgetTitle: 'Quick Notes',
+    quickNotesAddPlaceholder: 'Add a quick note…',
+    quickNotesAddLabel: 'Add note',
+    quickNotesEmptyState: 'No notes yet.',
+    quickNotesEditLabel: 'Edit note',
+    quickNotesDeleteLabel: 'Delete note',
+  },
+};
+
+export const LOCALE_DIR: Record<Locale, 'rtl' | 'ltr'> = {
+  ar: 'rtl',
+  en: 'ltr',
+};
+
+export const DEFAULT_LOCALE: Locale = 'ar';

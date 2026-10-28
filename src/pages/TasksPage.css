@@ -1,0 +1,29 @@
+.tasks-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.tasks-page__header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-inline-end: var(--space-5);
+}
+
+.tasks-page__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.tasks-page__add-action {
+  padding: 0 var(--space-5);
+}
+
+.tasks-page__status {
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

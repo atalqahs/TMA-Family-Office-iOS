@@ -1,0 +1,21 @@
+.vehicles-page {
+  flex: 1;
+  padding-bottom: max(var(--space-6), env(safe-area-inset-bottom));
+}
+
+.vehicles-page__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-5) var(--space-4);
+}
+
+.vehicles-page__add-action {
+  padding: 0 var(--space-5);
+}
+
+.vehicles-page__status {
+  padding: var(--space-5);
+  color: var(--color-text-secondary);
+  text-align: center;
+}

@@ -1,0 +1,92 @@
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  animation: sheet-fade-in var(--transition-fast) ease-out;
+}
+
+.sheet {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  max-height: 85dvh;
+  display: flex;
+  flex-direction: column;
+  /* Liquid Glass: sheets are functional-layer chrome (HIG "Sheets, alerts
+     & modality"), so the surface is translucent + blurred rather than a
+     flat fill -- the dimmed content behind stays faintly, correctly
+     perceptible through it. */
+  background: var(--color-glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-top-left-radius: var(--radius-lg);
+  border-top-right-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sheet);
+  padding-bottom: env(safe-area-inset-bottom);
+  animation: sheet-slide-up 280ms var(--ease-apple);
+}
+
+.sheet__handle {
+  width: 40px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-border-strong);
+  margin: var(--space-3) auto var(--space-2);
+}
+
+.sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-2) var(--space-2) var(--space-4);
+}
+
+.sheet__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  letter-spacing: -0.008em;
+  color: var(--color-text-primary);
+}
+
+.sheet__body {
+  /* Only the vertical axis is meant to scroll. Leaving overflow-x unset
+     here lets the CSS overflow "paired value" rule silently compute it
+     to auto too (since overflow-y is auto), turning any overlong,
+     unbreakable inline content (e.g. a long file name in a button) into
+     real horizontal drag/scroll inside the sheet. */
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-width: 0;
+  padding: 0 var(--space-4) var(--space-5);
+  /* Stops scrolling past this box's own top/bottom edge from "chaining"
+     into whatever's behind the sheet -- without it, an iOS Safari swipe
+     that reaches the end of the sheet's content can still rubber-band
+     the page underneath even with the body pinned in Sheet.tsx. */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

@@ -1,0 +1,22 @@
+.status-reasons {
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.status-reasons__item {
+  font-size: var(--font-size-sm);
+  overflow-wrap: anywhere;
+}
+
+.status-reasons__item--orange {
+  color: var(--color-warning);
+}
+
+.status-reasons__item--red {
+  color: var(--color-danger);
+}

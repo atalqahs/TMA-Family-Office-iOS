@@ -1,0 +1,743 @@
+import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
+import type { Contract, ContractDocument } from '../features/contracts/types';
+import type { EducationDocument, EducationProfile } from '../features/education/types';
+import type { FamilyMember, FamilyMemberDocument } from '../features/family/types';
+import type { HealthDocument, HealthProfile } from '../features/health/types';
+import type { Property, PropertyDocument } from '../features/properties/types';
+import type { QuickNote } from '../features/quickNotes/types';
+import type { QuickTodoItem } from '../features/quickTodo/types';
+import type { HouseholdStaff, StaffDocument, StaffSalaryPayment, StaffSalarySchedule } from '../features/staff/types';
+import { MIGRATION_GENERAL_GROUP_ID } from '../features/tasks/types';
+import type { Task, TaskCompletion, TaskGroup } from '../features/tasks/types';
+import type { Vehicle, VehicleDocument, VehicleMaintenanceRecord } from '../features/vehicles/types';
+
+/**
+ * Central IndexedDB schema for the prototype.
+ *
+ * Feature modules add their own object stores here, bumping DB_VERSION and
+ * extending `upgrade` — existing stores are left untouched by the
+ * `objectStoreNames.contains` guards, so upgrading never drops previously
+ * persisted data (e.g. Phase 1/2 settings and Phase 3 Family data survive
+ * the v2 -> v3 upgrade that added the property stores in Phase 4, all of
+ * that survives the v3 -> v4 upgrade that added the vehicle stores in
+ * Phase 5, all of that survives the v4 -> v5 upgrade that added the staff
+ * stores in Phase 6, all of that survives the v5 -> v6 upgrade that added
+ * recurring salary schedules, all of that survives the v6 -> v7 upgrade
+ * that added the Contracts stores in Phase 7, all of that survives
+ * the v7 -> v8 upgrade that added the Tasks stores in Phase 8, all of that survives the v8 -> v9
+ * upgrade that added the TaskGroups store for the Phase 8 groups correction (every pre-existing Task is
+ * assigned to a deterministic, automatically-created "General" group so no Task is ever left ungrouped),
+ * and all of that survives the v9 -> v10 upgrade for the Phase 8 independence correction, which strips
+ * the obsolete cross-module `linkedEntityType`/`linkedEntityId` fields from every Task (Tasks & Reminders
+ * no longer has any relationship to other modules) and renames TaskCompletion's `occurrenceDate` field/
+ * index to `occurrenceKey` (which also holds the `UNSCHEDULED_OCCURRENCE_KEY` sentinel for an undated
+ * one-time Task's single occurrence, now that a Task's `dueDate` is optional), and all of that survives
+ * the v10 -> v11 upgrade for Phase 10 (Archive): `archivedAt`/`deletedAt` are new OPTIONAL fields added to
+ * familyMembers/householdStaff/properties/vehicles/contracts/taskGroups, so every pre-existing record
+ * simply lacks them -- which already IS the correct "active" state (see each type's own doc comment) --
+ * with no data to rewrite and no new store/index required. The version is still bumped (rather than
+ * silently reusing v10) purely to mark the schema-meaning change and keep the migration chain testable.
+ * All of that survives the v11 -> v12 upgrade for Phase 10.1 (Staff salary recurrence simplification):
+ * every existing `staffSalarySchedules` row's legacy `frequency`/`interval`/`dueDayOfMonth`/`dueMonth`
+ * fields are rewritten to the new `recurrence: 'weekly'|'monthly'|'yearly'` field (see StaffSalarySchedule's
+ * own doc comment) -- `startDate` itself is NEVER rewritten (it is already a valid anchor date under both
+ * models, and every payment's own `dueDate` is a separate, already-confirmed historical record completely
+ * unaffected by this). No store or index changes; only existing rows are transformed in place, which is
+ * why this DOES need a real version bump (unlike the v10 -> v11 no-op).
+ *
+ * All of that survives the v12 -> v13 upgrade for Phase 11 (Health + Education + Trash removal):
+ *
+ * 1. Four new stores are added: `healthProfiles`/`healthDocuments` and `educationProfiles`/
+ *    `educationDocuments`, mirroring every other module's own-record + own-documents shape. Each profile
+ *    store has a UNIQUE `familyMemberId` index (enforcing "at most one Health/Education profile per Family
+ *    Member" atomically at the IndexedDB level, the same unique-index pattern already proven for Staff
+ *    salary payments/Task completions), and each document store has a plain (non-unique)
+ *    `healthProfileId`/`educationProfileId` index. No existing Family Member gets a fabricated Health/
+ *    Education profile -- these stores start empty; a profile is created only when a user explicitly adds
+ *    one for a specific Family Member.
+ *
+ * 2. The Trash/Deleted-Items feature (and its `deletedAt` soft-delete field on familyMembers/
+ *    householdStaff/properties/vehicles/contracts/taskGroups) is cancelled as a product decision -- the
+ *    lifecycle is now ACTIVE <-> ARCHIVED -> PERMANENT DELETE, with no Trash state in between. `deletedAt`
+ *    is removed from every one of those types. Any record that ALREADY had `deletedAt` set (from prior
+ *    prototype testing of the old "Delete Card" soft-delete) represents an explicit, already-expressed user
+ *    intent to delete that card -- resurrecting it back to "active" would silently undo that choice, which
+ *    is worse than completing it, so this migration finishes the deletion for real:
+ *      - familyMembers/householdStaff/properties/vehicles/contracts: the record and all of its own
+ *        documents (and, for Staff, salary schedules/payments) are deleted outright, using the exact same
+ *        cascade each module's own hard-delete-with-children function already performs -- never leaving an
+ *        orphaned document/schedule/payment behind. (No pre-existing Health/Education profile can reference
+ *        a deleted Family Member here, since those stores are brand new in this same version.)
+ *      - taskGroups is the one exception: completing a permanent delete could silently orphan that group's
+ *        Tasks (or worse, cascade-delete Tasks/TaskCompletions the user never asked to remove) -- the
+ *        established rule that a TaskGroup may only ever be hard-deleted while empty (see
+ *        `deleteTaskGroupIfEmpty`) must never be bypassed by a migration. So a soft-deleted TaskGroup is
+ *        instead demoted to ARCHIVED (never destroyed) if it wasn't already, preserving every Task/
+ *        TaskCompletion untouched -- the user can then explicitly permanently delete it later through the
+ *        normal confirmed flow, which still enforces "empty group only".
+ *    Every record that does NOT have `deletedAt` set is completely unaffected beyond the field's removal
+ *    from the type (there is nothing to rewrite for it).
+ *
+ * All of that survives the v13 -> v14 upgrade (Family Civil ID/Passport expiry fields -- see that block's
+ * own doc comment) and the v14 -> v15 upgrade, which adds `color` as a new OPTIONAL field on `taskGroups`
+ * (the General Calendar's Task Group color-coding correction): no new store/index, no backfill, and no
+ * record is ever rewritten -- a group simply has no color until the user sets one, resolved to a real
+ * default at read time by `getTaskGroupColor` (features/tasks/taskGroupColor.ts).
+ *
+ * All of that survives the v15 -> v16 upgrade, which adds two brand-new, independent stores:
+ * `quickTodoItems` and `quickNotes` (the Dashboard's Quick To-Do List and Quick Notes widgets). Both are
+ * simple, flat, additive stores with no relationship -- no index, no foreign key, no shared id -- to any
+ * other store in this database; they exist purely as fast, informal personal scratch space and must never
+ * be read by Tasks & Reminders, the General Calendar, or the app's alerting feature (see each module's own
+ * doc comment and the architecture gate's isolation rules). No existing store or record is touched by this
+ * upgrade.
+ */
+interface TmaDB extends DBSchema {
+  settings: {
+    key: string;
+    value: unknown;
+  };
+  familyMembers: {
+    key: string;
+    value: FamilyMember;
+  };
+  familyMemberDocuments: {
+    key: string;
+    value: FamilyMemberDocument;
+    indexes: { familyMemberId: string };
+  };
+  properties: {
+    key: string;
+    value: Property;
+  };
+  propertyDocuments: {
+    key: string;
+    value: PropertyDocument;
+    indexes: { propertyId: string };
+  };
+  vehicles: {
+    key: string;
+    value: Vehicle;
+  };
+  vehicleDocuments: {
+    key: string;
+    value: VehicleDocument;
+    indexes: { vehicleId: string };
+  };
+  vehicleMaintenanceRecords: {
+    key: string;
+    value: VehicleMaintenanceRecord;
+    indexes: { vehicleId: string };
+  };
+  householdStaff: {
+    key: string;
+    value: HouseholdStaff;
+  };
+  staffDocuments: {
+    key: string;
+    value: StaffDocument;
+    indexes: { staffId: string };
+  };
+  staffSalarySchedules: {
+    key: string;
+    value: StaffSalarySchedule;
+    indexes: { staffId: string };
+  };
+  staffSalaryPayments: {
+    key: string;
+    value: StaffSalaryPayment;
+    indexes: { staffId: string; scheduleId_dueDate: [string, string] };
+  };
+  contracts: {
+    key: string;
+    value: Contract;
+  };
+  contractDocuments: {
+    key: string;
+    value: ContractDocument;
+    indexes: { contractId: string };
+  };
+  tasks: {
+    key: string;
+    value: Task;
+    indexes: { groupId: string };
+  };
+  taskCompletions: {
+    key: string;
+    value: TaskCompletion;
+    indexes: { taskId: string; taskId_occurrenceKey: [string, string] };
+  };
+  taskGroups: {
+    key: string;
+    value: TaskGroup;
+  };
+  healthProfiles: {
+    key: string;
+    value: HealthProfile;
+    indexes: { familyMemberId: string };
+  };
+  healthDocuments: {
+    key: string;
+    value: HealthDocument;
+    indexes: { healthProfileId: string };
+  };
+  educationProfiles: {
+    key: string;
+    value: EducationProfile;
+    indexes: { familyMemberId: string };
+  };
+  educationDocuments: {
+    key: string;
+    value: EducationDocument;
+    indexes: { educationProfileId: string };
+  };
+  quickTodoItems: {
+    key: string;
+    value: QuickTodoItem;
+  };
+  quickNotes: {
+    key: string;
+    value: QuickNote;
+  };
+}
+
+// Exported so the permanent migration regression suite (tests/migrations)
+// can open the exact same database by name/version without duplicating
+// these constants — never referenced by application code.
+export const DB_NAME = 'tma-family-office';
+export const DB_VERSION = 16;
+
+let dbPromise: Promise<IDBPDatabase<TmaDB>> | null = null;
+
+/**
+ * IndexedDB connection lifecycle state, for the rare cases where opening
+ * the database can't just quietly succeed:
+ *
+ * - 'blocked': this tab's open/upgrade request is stuck behind another
+ *   tab/window/app-instance that still holds an older-version connection
+ *   open. We NEVER delete/reset the database to force past this — the
+ *   only safe fix is for that other instance to close, so we surface a
+ *   clear message asking the user to close other instances, with a Retry
+ *   (a plain reload, which is safe and re-attempts the open).
+ * - 'terminated': the browser abnormally killed our connection (a rare
+ *   engine-level event, not something app code triggers). The poisoned
+ *   cached connection/promise is dropped so the next `getDB()` call
+ *   attempts a fresh, real reopen; we surface a recoverable message with
+ *   the same Retry action rather than silently failing later operations.
+ *
+ * This state (and all handling of `blocked`/`blocking`/`terminated`) lives
+ * entirely here in the storage layer — UI only ever reads it via
+ * `subscribeDbLifecycle`, never re-implements any of this logic itself.
+ */
+export type DbLifecycleState = { status: 'ok' } | { status: 'blocked' } | { status: 'terminated' };
+
+let lifecycleState: DbLifecycleState = { status: 'ok' };
+const lifecycleListeners = new Set<(state: DbLifecycleState) => void>();
+
+function setLifecycleState(next: DbLifecycleState): void {
+  lifecycleState = next;
+  for (const listener of lifecycleListeners) listener(next);
+}
+
+export function getDbLifecycleState(): DbLifecycleState {
+  return lifecycleState;
+}
+
+/** Subscribes to lifecycle changes; call the returned function to unsubscribe. Immediately invokes `listener` with the current state. */
+export function subscribeDbLifecycle(listener: (state: DbLifecycleState) => void): () => void {
+  lifecycleListeners.add(listener);
+  listener(lifecycleState);
+  return () => {
+    lifecycleListeners.delete(listener);
+  };
+}
+
+export function getDB(): Promise<IDBPDatabase<TmaDB>> {
+  if (!dbPromise) {
+    dbPromise = openDB<TmaDB>(DB_NAME, DB_VERSION, {
+      async upgrade(db, oldVersion, _newVersion, transaction) {
+        if (!db.objectStoreNames.contains('settings')) {
+          db.createObjectStore('settings');
+        }
+        if (!db.objectStoreNames.contains('familyMembers')) {
+          db.createObjectStore('familyMembers', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('familyMemberDocuments')) {
+          const store = db.createObjectStore('familyMemberDocuments', { keyPath: 'id' });
+          store.createIndex('familyMemberId', 'familyMemberId');
+        }
+        if (!db.objectStoreNames.contains('properties')) {
+          db.createObjectStore('properties', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('propertyDocuments')) {
+          const store = db.createObjectStore('propertyDocuments', { keyPath: 'id' });
+          store.createIndex('propertyId', 'propertyId');
+        }
+        if (!db.objectStoreNames.contains('vehicles')) {
+          db.createObjectStore('vehicles', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('vehicleDocuments')) {
+          const store = db.createObjectStore('vehicleDocuments', { keyPath: 'id' });
+          store.createIndex('vehicleId', 'vehicleId');
+        }
+        if (!db.objectStoreNames.contains('vehicleMaintenanceRecords')) {
+          const store = db.createObjectStore('vehicleMaintenanceRecords', { keyPath: 'id' });
+          store.createIndex('vehicleId', 'vehicleId');
+        }
+        if (!db.objectStoreNames.contains('householdStaff')) {
+          db.createObjectStore('householdStaff', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('staffDocuments')) {
+          const store = db.createObjectStore('staffDocuments', { keyPath: 'id' });
+          store.createIndex('staffId', 'staffId');
+        }
+        if (!db.objectStoreNames.contains('staffSalarySchedules')) {
+          const store = db.createObjectStore('staffSalarySchedules', { keyPath: 'id' });
+          store.createIndex('staffId', 'staffId');
+        }
+
+        // staffSalaryPayments existed since Phase 6 with a unique
+        // (staffId, salaryMonth) index enforcing "one payment per staff per
+        // calendar month". The redesigned recurring-schedule model
+        // intentionally allows multiple schedules due the same day, so that
+        // rule no longer holds — replaced with uniqueness on
+        // (salaryScheduleId, dueDate) instead. Existing records and all
+        // their fields (including `salaryMonth`) are left completely
+        // untouched; only the index structure changes.
+        const paymentsStore = db.objectStoreNames.contains('staffSalaryPayments')
+          ? transaction.objectStore('staffSalaryPayments')
+          : (() => {
+              const store = db.createObjectStore('staffSalaryPayments', { keyPath: 'id' });
+              store.createIndex('staffId', 'staffId');
+              return store;
+            })();
+        // `idb`'s typed `deleteIndex` only accepts index names from the
+        // CURRENT schema, but this index only ever existed under the
+        // pre-redesign schema — cast to the underlying native
+        // IDBObjectStore for this one legacy-cleanup call.
+        const legacyPaymentsStore = paymentsStore as unknown as IDBObjectStore;
+        if (legacyPaymentsStore.indexNames.contains('staffId_salaryMonth')) {
+          legacyPaymentsStore.deleteIndex('staffId_salaryMonth');
+        }
+        if (!paymentsStore.indexNames.contains('scheduleId_dueDate')) {
+          paymentsStore.createIndex('scheduleId_dueDate', ['salaryScheduleId', 'dueDate'], { unique: true });
+        }
+
+        if (!db.objectStoreNames.contains('contracts')) {
+          db.createObjectStore('contracts', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('contractDocuments')) {
+          const store = db.createObjectStore('contractDocuments', { keyPath: 'id' });
+          store.createIndex('contractId', 'contractId');
+        }
+
+        if (!db.objectStoreNames.contains('tasks')) {
+          db.createObjectStore('tasks', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('taskCompletions')) {
+          const store = db.createObjectStore('taskCompletions', { keyPath: 'id' });
+          store.createIndex('taskId', 'taskId');
+          // Enforced at the IndexedDB level (not just app-level pre-checks)
+          // so a duplicate completion for the same occurrence is rejected
+          // atomically, the same pattern already proven for Staff salary
+          // occurrences (scheduleId, dueDate).
+          store.createIndex('taskId_occurrenceKey', ['taskId', 'occurrenceKey'], { unique: true });
+        }
+
+        // Phase 8 groups correction: every Task now belongs to exactly one
+        // TaskGroup. This whole block only ever runs ONCE, the first time
+        // a database crosses into this version (guarded on the NEW store
+        // not existing yet) -- it adds the store, adds the `groupId` index
+        // to the existing `tasks` store, and deterministically backfills
+        // every pre-existing Task (which has no `groupId` yet) into one
+        // migration-created "General" group, so no Task is ever left
+        // ungrouped and nothing about existing Tasks/TaskCompletions is
+        // touched beyond adding that one field.
+        if (!db.objectStoreNames.contains('taskGroups')) {
+          const groupsStore = db.createObjectStore('taskGroups', { keyPath: 'id' });
+          const tasksStore = transaction.objectStore('tasks');
+          if (!tasksStore.indexNames.contains('groupId')) {
+            tasksStore.createIndex('groupId', 'groupId');
+          }
+
+          const now = new Date().toISOString();
+          let generalGroupNeeded = false;
+          let cursor = await tasksStore.openCursor();
+          while (cursor) {
+            if (!cursor.value.groupId) {
+              generalGroupNeeded = true;
+              await cursor.update({ ...cursor.value, groupId: MIGRATION_GENERAL_GROUP_ID });
+            }
+            cursor = await cursor.continue();
+          }
+          if (generalGroupNeeded) {
+            await groupsStore.put({
+              id: MIGRATION_GENERAL_GROUP_ID,
+              name: 'General',
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
+        }
+
+        // Phase 8 independence correction: Tasks & Reminders no longer has
+        // any relationship to other modules, and a Task's `dueDate` is now
+        // optional. This whole block only ever runs ONCE, the first time a
+        // database crosses into this version (guarded on the NEW
+        // `taskId_occurrenceKey` index not existing yet).
+        const taskCompletionsStore = transaction.objectStore('taskCompletions');
+        if (!taskCompletionsStore.indexNames.contains('taskId_occurrenceKey')) {
+          // Rename every existing completion's `occurrenceDate` field to
+          // `occurrenceKey` (same string value -- a real date always was,
+          // and still is, a perfectly valid occurrence key; only undated
+          // one-time Tasks going forward use the new sentinel instead).
+          let completionCursor = await taskCompletionsStore.openCursor();
+          while (completionCursor) {
+            const legacyValue = completionCursor.value as unknown as { occurrenceDate?: string } & Record<string, unknown>;
+            if (legacyValue.occurrenceDate !== undefined) {
+              const { occurrenceDate, ...rest } = legacyValue;
+              await completionCursor.update({ ...rest, occurrenceKey: occurrenceDate } as unknown as TaskCompletion);
+            }
+            completionCursor = await completionCursor.continue();
+          }
+          // `idb`'s typed `deleteIndex` only accepts index names from the
+          // CURRENT schema, but this index only ever existed under the
+          // pre-correction schema -- cast to the underlying native
+          // IDBObjectStore for this one legacy-cleanup call (same pattern
+          // already used above for staffSalaryPayments).
+          const legacyCompletionsStore = taskCompletionsStore as unknown as IDBObjectStore;
+          if (legacyCompletionsStore.indexNames.contains('taskId_occurrenceDate')) {
+            legacyCompletionsStore.deleteIndex('taskId_occurrenceDate');
+          }
+          taskCompletionsStore.createIndex('taskId_occurrenceKey', ['taskId', 'occurrenceKey'], { unique: true });
+
+          // Strip the obsolete cross-module link fields from every Task --
+          // Tasks & Reminders must have zero relationship to other
+          // modules. Every other field (groupId, title, dueDate/dueTime,
+          // priority, recurrence, notes, timestamps) is left completely
+          // untouched, so every existing Task remains fully valid (it
+          // already has a real dueDate, so none of them become "undated"
+          // as a side effect of this migration).
+          const tasksStoreForCleanup = transaction.objectStore('tasks');
+          let taskCursor = await tasksStoreForCleanup.openCursor();
+          while (taskCursor) {
+            const legacyTask = taskCursor.value as unknown as { linkedEntityType?: unknown; linkedEntityId?: unknown } & Record<
+              string,
+              unknown
+            >;
+            if ('linkedEntityType' in legacyTask || 'linkedEntityId' in legacyTask) {
+              const { linkedEntityType: _linkedEntityType, linkedEntityId: _linkedEntityId, ...rest } = legacyTask;
+              await taskCursor.update(rest as unknown as Task);
+            }
+            taskCursor = await taskCursor.continue();
+          }
+        }
+
+        // Phase 10 (Archive), v10 -> v11: intentionally no code here. The
+        // new `archivedAt`/`deletedAt` fields are optional additions to
+        // familyMembers/householdStaff/properties/vehicles/contracts/
+        // taskGroups; a record that predates this version simply lacks
+        // them, which already means "active" (see each type's own doc
+        // comment) -- there is nothing to backfill, no store, and no index
+        // to add.
+
+        // Phase 10.1 correction, v11 -> v12: every existing
+        // staffSalarySchedules row created under the old arbitrary
+        // "repeats every N day/month/year" + separate due-day/due-month
+        // model is rewritten, once, to the new simplified
+        // `recurrence: 'weekly'|'monthly'|'yearly'` model (see
+        // StaffSalarySchedule's own doc comment). `oldVersion` (rather than
+        // an added-index guard, since this transform adds no new
+        // store/index) is what makes this run exactly once, the first time
+        // a database crosses into v12.
+        if (oldVersion < 12) {
+          const schedulesStore = transaction.objectStore('staffSalarySchedules');
+          let scheduleCursor = await schedulesStore.openCursor();
+          while (scheduleCursor) {
+            const legacy = scheduleCursor.value as unknown as {
+              frequency?: 'day' | 'month' | 'year';
+              interval?: number;
+              dueDayOfMonth?: number;
+              dueMonth?: number;
+              recurrence?: 'weekly' | 'monthly' | 'yearly';
+              startDate: string;
+              notes?: string;
+            } & Record<string, unknown>;
+
+            if (legacy.recurrence === undefined && legacy.frequency !== undefined) {
+              const recurrence = legacy.frequency === 'day' ? 'weekly' : legacy.frequency === 'month' ? 'monthly' : 'yearly';
+
+              // The new model has no interval/due-day/due-month at all --
+              // `startDate` alone is the anchor. `startDate` itself is
+              // NEVER rewritten (it is already a valid, already-used date
+              // for this schedule under either model, and every payment's
+              // own `dueDate` is a separate, already-confirmed historical
+              // record that this transform never touches). When the old
+              // schedule's interval/due-day/due-month diverged from a
+              // plain "every 1 unit, due on startDate's own day" schedule,
+              // this simplification cannot preserve that extra precision
+              // -- rather than silently changing future due dates without
+              // a trace, a note is appended so the user can review/adjust
+              // the migrated schedule.
+              const startDay = Number(legacy.startDate.slice(8, 10));
+              const startMonth = Number(legacy.startDate.slice(5, 7));
+              const impreciseInterval = legacy.interval !== undefined && legacy.interval !== 1;
+              const impreciseDueDay = legacy.dueDayOfMonth !== undefined && legacy.dueDayOfMonth !== startDay;
+              const impreciseDueMonth = legacy.dueMonth !== undefined && legacy.dueMonth !== startMonth;
+
+              const { frequency: _frequency, interval: _interval, dueDayOfMonth: _dueDayOfMonth, dueMonth: _dueMonth, ...rest } = legacy;
+              const updated = { ...rest, recurrence } as typeof rest & { recurrence: 'weekly' | 'monthly' | 'yearly' };
+
+              if (impreciseInterval || impreciseDueDay || impreciseDueMonth) {
+                const migrationNote =
+                  'تم ترحيل هذا الجدول من تكرار مخصص (فاصل/يوم استحقاق مختلف) — يرجى التحقق من تاريخ الاستحقاق القادم. / Migrated from a custom recurrence (interval/due-day) — please verify the next due date.';
+                updated.notes = rest.notes ? `${rest.notes}\n\n${migrationNote}` : migrationNote;
+              }
+
+              await scheduleCursor.update(updated as unknown as StaffSalarySchedule);
+            }
+            scheduleCursor = await scheduleCursor.continue();
+          }
+        }
+
+        // Phase 11, v12 -> v13: new Health/Education stores + Trash removal
+        // (see this file's top-level doc comment for the full policy).
+        if (!db.objectStoreNames.contains('healthProfiles')) {
+          const store = db.createObjectStore('healthProfiles', { keyPath: 'id' });
+          store.createIndex('familyMemberId', 'familyMemberId', { unique: true });
+        }
+        if (!db.objectStoreNames.contains('healthDocuments')) {
+          const store = db.createObjectStore('healthDocuments', { keyPath: 'id' });
+          store.createIndex('healthProfileId', 'healthProfileId');
+        }
+        if (!db.objectStoreNames.contains('educationProfiles')) {
+          const store = db.createObjectStore('educationProfiles', { keyPath: 'id' });
+          store.createIndex('familyMemberId', 'familyMemberId', { unique: true });
+        }
+        if (!db.objectStoreNames.contains('educationDocuments')) {
+          const store = db.createObjectStore('educationDocuments', { keyPath: 'id' });
+          store.createIndex('educationProfileId', 'educationProfileId');
+        }
+
+        if (oldVersion < 13) {
+          // Any record that already has `deletedAt` set represents an
+          // explicit prior "delete this card" intent (the cancelled Trash
+          // feature's soft-delete) -- completing that deletion for real
+          // (rather than silently resurrecting it back to active) is the
+          // deterministic policy documented at the top of this file.
+          {
+            const entityStore = transaction.objectStore('familyMembers');
+            const documentsStore = transaction.objectStore('familyMemberDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('familyMemberId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const entityStore = transaction.objectStore('properties');
+            const documentsStore = transaction.objectStore('propertyDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('propertyId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const entityStore = transaction.objectStore('contracts');
+            const documentsStore = transaction.objectStore('contractDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('contractId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const entityStore = transaction.objectStore('vehicles');
+            const documentsStore = transaction.objectStore('vehicleDocuments');
+            let cursor = await entityStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const docIds = await documentsStore.index('vehicleId').getAllKeys(value.id);
+                for (const docId of docIds) await documentsStore.delete(docId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+
+          // Vehicles also own maintenance records, and Staff owns
+          // documents/salary schedules/salary payments -- both need an
+          // extra store cascaded beyond the simple entity+documents purge
+          // above.
+          {
+            const vehiclesStore = transaction.objectStore('vehicles');
+            const maintenanceStore = transaction.objectStore('vehicleMaintenanceRecords');
+            // The vehicle records themselves were already deleted by the
+            // purge above; their maintenance records would otherwise be
+            // orphaned, so re-scan for maintenance rows whose vehicleId no
+            // longer resolves to any existing vehicle. This only ever
+            // matches rows belonging to a vehicle that just got purged
+            // for having `deletedAt` set -- a vehicle without `deletedAt`
+            // was never deleted, so its maintenance records are untouched.
+            let cursor = await maintenanceStore.openCursor();
+            while (cursor) {
+              const stillExists = await vehiclesStore.get(cursor.value.vehicleId);
+              if (!stillExists) {
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+          {
+            const staffStore = transaction.objectStore('householdStaff');
+            const staffDocsStore = transaction.objectStore('staffDocuments');
+            const schedulesStore = transaction.objectStore('staffSalarySchedules');
+            const paymentsStore = transaction.objectStore('staffSalaryPayments');
+            let cursor = await staffStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { id: string; deletedAt?: string };
+              if (value.deletedAt) {
+                const [docIds, scheduleIds, paymentIds] = await Promise.all([
+                  staffDocsStore.index('staffId').getAllKeys(value.id),
+                  schedulesStore.index('staffId').getAllKeys(value.id),
+                  paymentsStore.index('staffId').getAllKeys(value.id),
+                ]);
+                for (const docId of docIds) await staffDocsStore.delete(docId);
+                for (const scheduleId of scheduleIds) await schedulesStore.delete(scheduleId);
+                for (const paymentId of paymentIds) await paymentsStore.delete(paymentId);
+                await cursor.delete();
+              }
+              cursor = await cursor.continue();
+            }
+          }
+
+          // TaskGroups are the one exception: a permanent delete could
+          // silently orphan (or force cascade-deleting) that group's
+          // Tasks, bypassing the established "only ever hard-delete an
+          // EMPTY group" rule (deleteTaskGroupIfEmpty). So a soft-deleted
+          // group is demoted to archived instead of being destroyed,
+          // never touching its Tasks/TaskCompletions.
+          {
+            const groupsStore = transaction.objectStore('taskGroups');
+            let cursor = await groupsStore.openCursor();
+            while (cursor) {
+              const value = cursor.value as unknown as { deletedAt?: string; archivedAt?: string } & Record<string, unknown>;
+              if (value.deletedAt) {
+                const { deletedAt: _deletedAt, ...rest } = value;
+                await cursor.update({ ...rest, archivedAt: rest.archivedAt ?? new Date().toISOString() } as unknown as TaskGroup);
+              }
+              cursor = await cursor.continue();
+            }
+          }
+
+        }
+
+        if (oldVersion < 14) {
+          // Purely additive: `civilIdExpiryDate`/`passportExpiryDate` are new
+          // OPTIONAL fields on the existing `familyMembers` record shape (no
+          // new store/index, same precedent as the v10->v11 archivedAt/
+          // deletedAt addition). Existing records simply lack these fields
+          // until a user fills them in -- no backfill, no fabricated dates.
+        }
+
+        if (oldVersion < 15) {
+          // Purely additive: `color` is a new OPTIONAL field on the existing
+          // `taskGroups` record shape (no new store/index). A pre-existing
+          // group simply lacks it until the user opens and saves it again --
+          // `getTaskGroupColor` (features/tasks/taskGroupColor.ts) resolves
+          // that absence to a real default color at read time, so nothing
+          // here needs to fabricate or backfill a color onto old records.
+        }
+
+        if (oldVersion < 16) {
+          // Two brand-new, independent, flat stores for the Dashboard's
+          // Quick To-Do List and Quick Notes widgets -- no index needed on
+          // either (both are small personal lists read in full and sorted
+          // client-side, same as taskGroups). Nothing existing is touched;
+          // both stores simply start empty.
+          if (!db.objectStoreNames.contains('quickTodoItems')) {
+            db.createObjectStore('quickTodoItems', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('quickNotes')) {
+            db.createObjectStore('quickNotes', { keyPath: 'id' });
+          }
+        }
+      },
+      blocked() {
+        // Another tab/window/app-instance still holds an older-version
+        // connection open — never force past this by deleting/recreating
+        // the database. Just surface it; the request resolves on its own
+        // once that other instance closes.
+        setLifecycleState({ status: 'blocked' });
+      },
+      blocking() {
+        // This tab's own (now-stale) connection is blocking a newer
+        // version from opening elsewhere (e.g. another tab loaded a
+        // newer deployment). Close it so that upgrade can proceed without
+        // any data loss — IndexedDB upgrades are additive by construction
+        // here, so releasing the old connection is always safe.
+        void dbPromise?.then((db) => db.close());
+      },
+      terminated() {
+        // The browser killed our connection unexpectedly. Drop the cached
+        // promise so the next getDB() call performs a genuine fresh
+        // reopen instead of reusing a dead connection, and surface a
+        // recoverable (not destructive) error state.
+        dbPromise = null;
+        setLifecycleState({ status: 'terminated' });
+      },
+    })
+      .then((db) => {
+        if (lifecycleState.status === 'blocked') {
+          setLifecycleState({ status: 'ok' });
+        }
+        return db;
+      })
+      .catch((error) => {
+        // Don't cache a broken connection forever — let the next call retry.
+        dbPromise = null;
+        throw error;
+      });
+  }
+  return dbPromise;
+}
+
+/**
+ * Test-only: drops the cached connection/promise and resets lifecycle
+ * state, so the next `getDB()` call opens a fresh connection against
+ * whatever `indexedDB` global is currently installed (the permanent test
+ * suite swaps in a brand-new fake-indexeddb factory between tests for
+ * isolation — see tests/setup.ts). Never called from application code.
+ */
+export function __resetDbConnectionForTests(): void {
+  dbPromise = null;
+  lifecycleState = { status: 'ok' };
+}
+
+export async function getSetting<T>(key: string, fallback: T): Promise<T> {
+  const db = await getDB();
+  const value = await db.get('settings', key);
+  return value === undefined ? fallback : (value as T);
+}
+
+export async function setSetting<T>(key: string, value: T): Promise<void> {
+  const db = await getDB();
+  await db.put('settings', value, key);
+}
